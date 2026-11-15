@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-15T13:15:17Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, but if you need me to go to the console to do something, give me the URL, do not tell me stuff like "Activate Global Admin" tell me which user and which panel

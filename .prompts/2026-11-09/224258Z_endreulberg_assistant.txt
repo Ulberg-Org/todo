@@ -1,0 +1,22 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-09T22:42:58Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Agreed. The GitHub organization is now in PLAN.md (v10):
+- **D42:** the tenant lockdown, so members can't create anything on their own.
+- **D43:** the organization (Free) plus one shared Claude GitHub App. Claude acts *on your behalf*, shown as "<you> via Claude", with contents and pull-request permissions only. Your owner bypass (D34) stays.
+- **§13:** GitHub accounts created from Entra (EMU) are recorded as the upgrade path.
+- **Phase 0b, "Agent identities":** comes before Phase 1, with the migration order chosen so CI keeps its access to Azure.
+
+**The order:**
+1. **You:** create the organization.
+2. **Me:** a platform PR that points the `access` stack at the organization. It covers org settings, teams from `people.yaml`, CODEOWNERS with teams, and the new OIDC credentials, added *next to* the old ones.
+3. **You:** transfer the two repos and then the three GitHub Apps to the organization, and install the apps there. CI is briefly interrupted for those minutes. After an apply has verified everything, the old credentials are removed.
+4. **Together:** the Claude app with device-code sign-in, the hook's GitHub part, and a test PR from Claude that you approve.
+
+**Two things for you:**
+1. **Pick the organization's name.** I'll need it in the code (e.g. `ulberg-dev`). Create it here, on the Free plan: https://github.com/account/organizations/new?plan=free
+2. **PR #16 (tenant lockdown) is still open.** It needs the permission command first: activate Global Admin, run `az login` in your own terminal, then `bootstrap/grant-graph-permission.sh id-platform-apply Policy.ReadWrite.Authorization`. Then say "merge".
+
+I've deleted the half-started machine-user branch; nothing from it was committed.

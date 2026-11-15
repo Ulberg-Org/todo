@@ -1,0 +1,36 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-15T13:15:17Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Understood, and saved: from now on every step names the account and links the exact page.
+
+The re-run preview **passed**, and `pulumi up` is waiting for your approval. Do the grant first:
+
+**1. Activate Global Admin**
+- Account: `endre@adminazurestubble162simplel.onmicrosoft.com`
+- Page: https://portal.azure.com/#@adminazurestubble162simplel.onmicrosoft.com/view/Microsoft_Azure_PIMCommon/ActivationMenuBlade/~/aadmigratedroles
+- **Global Administrator** → **Activate**, any justification, and confirm with your passkey.
+
+**2. Grant the permission, in your own terminal** (not through me), signed in as the same account:
+```
+az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+cd ~/Github/Private/platform && bootstrap/grant-graph-permission.sh id-platform-apply Policy.ReadWrite.Authorization
+```
+
+**3. Approve the apply**
+- Account: GitHub `Ulberg`
+- Page: https://github.com/Ulberg/platform/actions/runs/43717837738
+- **Review deployments** → tick `dev` → **Approve and deploy**.
+
+**4. Sign my agent in again, in your own terminal:**
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+```
+- Account: `endre-agent@adminazurestubble162simplel.onmicrosoft.com`, with its passkey.
+
+Tell me when the apply is green. I'll then run the smoke test and add the nightly check.
+
+**About the failure:** the first preview failed because the runner it landed on answered Azure's managed-identity check with an error. That stopped Pulumi from falling back to the `az` sign-in it should have used, so it couldn't read its state. Nothing in our change caused it. It can happen again on any run, so I'll add a small hardening fix to the follow-up PR: point Pulumi's state login straight at the `az` sign-in.
+
+The GitHub org name is still open. Create it on the Free plan at https://github.com/account/organizations/new?plan=free, signed in as `Ulberg`, then tell me the name.

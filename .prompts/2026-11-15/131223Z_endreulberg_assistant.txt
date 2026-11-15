@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-15T13:12:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I merged PR #16 (`8fb5cc0`). The apply will wait for your approval: https://github.com/Ulberg/platform/actions/runs/43717837738
+
+**Before you approve,** if you haven't run the grant yet:
+1. Activate Global Admin.
+2. In your own terminal, run `az login`.
+3. Run `bootstrap/grant-graph-permission.sh id-platform-apply Policy.ReadWrite.Authorization`.
+
+Without the grant, the tenant-policy step of the apply will fail. That's harmless: you'd grant it and re-run the apply.
+
+**Also, my agent's `az` session has expired** (the Temporary Access Pass it was tied to ran out). In your own terminal, sign it in again with its passkey:
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+```
+Once the apply has run, I'll rerun the smoke test and add the nightly tenant-defaults check.
+
+**GitHub organization:** what should it be called? Once you've picked a name, create it on the Free plan here: https://github.com/account/organizations/new?plan=free. Then tell me the name and I'll start the migration PR.

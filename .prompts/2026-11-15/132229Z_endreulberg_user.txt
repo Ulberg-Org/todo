@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-15T13:22:29Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Let us write a TODO that logging in for the agent cannot require Global Admin Activiation. So we need to review the process

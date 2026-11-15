@@ -1,0 +1,22 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-09T22:44:36Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Thanks. I've saved where we stopped in project memory, and PLAN.md (Phase 0b) holds the order.
+
+**Done today:**
+- **Phase 0 complete:**
+  - Nobody holds standing Global Admin or Owner except the break-glass accounts.
+  - PIM requires a fresh passkey on every activation, and each escalation emails you.
+  - Conditional Access is enforced, with 4 h sessions for Azure tools and 12 h otherwise.
+  - Every rule is set in code, read back on apply, and checked nightly.
+- **Claude's own Azure identity** (`endre-agent`) works, tested with the smoke test:
+  - it can read;
+  - creating resources, making itself Owner and reading the Pulumi state are all refused.
+- **One gap found by that test:** Entra still lets any member create groups. PR #16 closes it once it's applied.
+
+**Tomorrow, in order:**
+1. **PR #16:** run the permission command, then merge it. Then I rerun the smoke test, including the group and app probes, and add the nightly check for the tenant defaults.
+2. **GitHub organization:** pick a name and create it. Then the migration PR, the repo transfer, and the shared Claude app.
+3. **Phase 1:** the backend.
