@@ -68,7 +68,7 @@ One-time setup, after the apply has created the agent account (direct links are 
 2. Create a **Temporary Access Pass** for it.
 3. In a private browser window, sign in as the agent at <https://aka.ms/mysecurityinfo> with the pass and **add a passkey**.
 4. In your own terminal (not through Claude): `AZURE_CONFIG_DIR=~/.azure-agent az login --tenant <tenant-id>`, and sign in as the agent with its passkey.
-5. Add this to `~/.claude/settings.json` (with your home directory) and restart Claude Code:
+5. Add this to `~/.claude/settings.json`, with `<home>` replaced by your home directory written out (e.g. `/Users/you`; neither `~` nor `$HOME` is expanded there), and restart Claude Code:
 
    ```json
    "env": {
