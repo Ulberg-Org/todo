@@ -1,0 +1,2 @@
+# Accepted vulnerabilities (D55). One per line: the ID, then `exp:YYYY-MM-DD` (the exception ends that day and
+# the scan fails again) and a comment saying why it is accepted. Keep this empty whenever possible.

@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T20:49:32Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've written it into the plan as **D60**: the final version derives both local and cloud from the same model. https://github.com/Ulberg-Org/todo/pull/10
+
+> **D60: one model, every environment derived from it.** `platform.yaml` plus small overlays (`environments/{local,dev,prod}`) that hold only what must differ: sizes, addresses and how you sign in. The platform's F# renderer generates everything from them:
+> - tier 1: `compose.yaml`, Envoy's config, the number of instances in `make up`, the collector config;
+> - tier 2 (kind);
+> - dev and prod: Kubernetes manifests including Envoy Gateway routes, and Pulumi inputs.
+>
+> Nothing per environment is written by hand, and a test fails if an overlay changes something that belongs in the model. Today's hand-written local files are the starting point and are replaced by the renderer in Phase 2.
+
+Phase 2's renderer step in PLAN now says the same.
+
+**Two PRs are waiting for your approval:**
+- https://github.com/Ulberg-Org/todo/pull/9: the local stack (`make up`), green and tested locally;
+- https://github.com/Ulberg-Org/todo/pull/10: D60 in PLAN.
+
+Once they're merged, the next step is **PR 3**: CI builds the image, scans it with Trivy, generates the SBOM, and on `main` pushes, locks, signs and attests it in ACR.
