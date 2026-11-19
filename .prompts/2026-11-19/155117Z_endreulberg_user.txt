@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T15:51:17Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I have logged in, but what am i supposed to do with that temrinal?

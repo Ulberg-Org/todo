@@ -1,0 +1,17 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T15:42:32Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Item 1 of 5:
+
+## 1. Lockdown bug: park enforcement, add detection
+
+**The problem:** the tenant settings are correct, and the portal and Graph agree on them, but at the last valid test (2026-11-15) Entra still let the agent create security groups and register apps. Microsoft 365 group creation is blocked. Investigating further means more rounds of you checking portal pages.
+
+**The proposal:** one platform PR with no clicks from you.
+1. **Fix the smoke test.** A write probe passes only when Azure answers with an authorization denial. "Not signed in", or any other error, fails the test, and the test stops as soon as a read fails. Today an expired session falsely reports "all writes refused".
+2. **Detection in the nightly check.** It reads the Entra audit log for the last 25 hours and fails if any group or app was created by anyone other than `id-platform-apply`. That catches the agent, a human or a new Microsoft setting, whether or not enforcement works.
+3. **The enforcement bug becomes a known issue in PLAN,** with the evidence so far. I'll retest at the next agent sign-in and only reopen the investigation if it still fails.
+
+**What I need from you:** a yes or no. After the PR, the only manual step is the usual agent sign-in when I next run the smoke test.

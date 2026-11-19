@@ -1,0 +1,18 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T15:43:15Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+You only need to do one thing now: my agent's session has expired again (12 h limit), and I need it to check this approach and to run the smoke test.
+
+**In your own terminal**, signing in as `endre-agent@adminazurestubble162simplel.onmicrosoft.com` with its passkey:
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+```
+
+**After that, from you:**
+- **Nothing in the portal,** if the ownership check works. Groups and apps owned by a user would be the signal, and the preview identity can already read owners. If it doesn't work, the fallback is the audit log, which needs one more Global Admin grant. I'd tell you before going that way.
+- **"Merge"** once the PR is green.
+- **Approving the apply** on the run page I'll link. It changes only CI scripts, so the apply has nothing to create, but `main` always waits for your approval.
+
+Tell me when the agent is signed in.

@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T12:52:12Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+PLAN v11 is pushed (`45308d9`):
+- **New decisions D44–D51** cover purpose, on-demand environments, MCP clients, the `platform.yaml` building blocks, policy-based approval, portability, share notifications and account deletion.
+- **D38 is amended:** same subscription, started on demand.
+- **D43 now names `Ulberg-Org`.**
+- **Phases 2 and 3 and §13 are updated to match.**
+
+## Minimising the portal work
+
+Phase 3 and later is all Pulumi, so the clicking is concentrated in what's left of Phase 0b. Here is each remaining manual step and how to cut it:
+
+| Remaining | Manual work today | Proposal |
+|---|---|---|
+| **Lockdown bug** (agent can still create groups and apps) | More investigation rounds, with you checking portal pages | **Park the enforcement bug** as a known issue. Fix the smoke test (it counted "not signed in" as "refused") and add **detection**: the nightly check fails if anyone except the apply identity creates a group or app. No portal work, and we're protected either way. |
+| **Org migration** (transfer 2 repos and 3 apps, reinstall, swap OIDC credentials) | About 15 clicks across GitHub, plus a window where CI is broken | **Defer it.** It's team machinery, and D44 says that waits. Both repos stay under `Ulberg` for now. |
+| **Claude's GitHub app** | Creating an app means filling in a long form | **One click:** I prepare a GitHub App *manifest* (all permissions predefined: contents and pull requests, no workflows), and you open one URL and press "Create". The app is owned by `Ulberg-Org` and made installable, so it can be installed on your personal repos without moving them. A second click installs it. |
+| **Agent sign-in** every 4 h / 12 h | One terminal command with a passkey | Keep it. That's Conditional Access working as designed (D39), and it's never more than a command. |
+| **External ID tenant** (Phase 3/6) | Created in the portal | Create it with Pulumi (`azure-native` has the External ID tenant resource). Only the initial admin consent in the new tenant stays manual, and I'll check what that involves when we get there. |
+
+The net result: Phase 0b shrinks to the smoke-test fix with detection (one PR, no clicks from you) and the Claude app (two clicks). After that, Phase 1 starts the backend.
+
+This changes D43's order: the Claude app first, the repo move later. Shall I go ahead on that basis?

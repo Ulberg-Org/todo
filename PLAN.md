@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v11 (design grilled 2026-11-19, D44–D51).** Phase 0 done (2026-11-09). Before Phase 1, "Phase 0b: agent identities": Claude's Azure identity is done (D41); tenant lockdown (D42) applied, one bug open; next the GitHub organization `Ulberg-Org` and the Claude app (D43). Then Phase 1.
+> **Status: v11 (design grilled 2026-11-19, D44–D51).** Phase 0 done (2026-11-09). Before Phase 1, "Phase 0b: agent identities": Claude's Azure identity is done (D41); tenant lockdown (D42) done; next the GitHub organization `Ulberg-Org` and the Claude app (D43). Then Phase 1.
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -346,7 +346,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 
 ### Phase 0b: Agent identities (Claude acts as itself, on behalf of a developer)
 - ✅ **Azure** (D41, platform PRs #13–#15): agent account per developer, read roles only, P2 by group, smoke test + nightly check.
-- **Tenant lockdown** (D42, platform PR #16): members can't create anything on their own; the nightly check verifies it after the apply.
+- ✅ **Tenant lockdown** (D42, platform PRs #16–#18): members can't create groups (security or Microsoft 365), apps or tenants, consent to apps or invite guests; the nightly check verifies the settings and fails on any group or app made outside Pulumi. Lesson: Entra keeps a session's rights from when it was signed in, so test a permission change with a fresh sign-in.
 - **GitHub organization** (D43), in this order, so CI never loses access:
   1. You create the organization (Free).
   2. Platform PR: the `access` stack targets the org: org settings (2FA required, base permission none, members can't create repos, fine-grained tokens need approval and expire, classic tokens off), teams from `people.yaml` (leads, infra developers, app developers) with repo access per team, `CODEOWNERS` naming teams, environment reviewers as teams. Federated credentials for the new OIDC subjects (org ID) are added *next to* the old ones.
