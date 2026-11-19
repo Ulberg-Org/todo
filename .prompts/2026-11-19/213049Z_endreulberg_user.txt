@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T21:30:49Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q16) That sounds nice, also when talking about that is there any simple way of making bumping version always lag 1-2 weeks behind last minor/patch? Or is that not a concern here? Q17) Yes Q18) sounds good!

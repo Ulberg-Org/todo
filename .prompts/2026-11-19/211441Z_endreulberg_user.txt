@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T21:14:41Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) Is there no way to add hot reloading? Because honestly it would be better to have less to maintain. Q2) what do you mean by renderer. Q3) What render? Q4) Yes, Same as in Azure. Q5) a) but let us keep it as lightweight and integrated into the local development stack as possible, not a sidepath. Q6) Yes just raise docker, but I am also uncertain, are we running in docker or Kubernetes now? Q7) I want flexbility locally so no signing.

@@ -1,0 +1,42 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:18:54Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Settled:
+- **Q1/Q8:** one tier, the local cluster with hot reload, replacing today's compose setup.
+- **Q2/Q3:** the renderer, built now as a **thin end-to-end slice**.
+- **Q9:** (b), every `make up` starts from a fresh cluster.
+- **Q10:** the same Helm charts as in the cloud.
+
+**Q11:** fair challenge. To be precise, it wouldn't be "CI for your laptop". It would check that the *platform setup itself* still works after a change. Your point stands, though: calling the app shows whether it runs. What a call can't show is the **network rules** (§9.1: only the backend may reach the database, everything else is blocked). Those are security claims, and you only notice they're broken when it matters. The smallest version: `make test-platform` runs those few rules against your local cluster, with no CI job. That's my recommendation, Q15 below.
+
+Round 3:
+
+❓ **Q12** - **What's in the first thin slice?** Everything once, minimally:
+- **kind + Cilium + Envoy Gateway + ArgoCD**, with Cilium from day one (kind's default network doesn't enforce rules, and switching the network layer later means rebuilding);
+- **the backend**, two pods behind the gateway, hot reload, Postgres outside the cluster;
+- **telemetry:** collector, Loki, Tempo, Prometheus and Grafana from their Helm charts;
+- **the renderer**, generating the backend's Kubernetes files and the gateway route from `platform.yaml`.
+
+Done when `make up` works from scratch and a request through the gateway shows up in Grafana with its database step. That's the Phase 1 test again, now through Kubernetes.
+
+➡️ Yes.
+
+---
+
+❓ **Q13** - **What does the renderer output?**
+
+➡️ Plain Kubernetes YAML files: no Helm or Kustomize for the app's own resources, so what's applied is exactly what you can read. Helm stays for third-party components (Envoy Gateway, ArgoCD, the telemetry stack).
+
+---
+
+❓ **Q14** - **Where do the environment files (local, dev, prod) live?**
+
+➡️ In the **platform repo** (`environments/`), because the platform decides sizes, addresses and sign-in. The todo repo holds only `platform.yaml`, what the app needs.
+
+---
+
+❓ **Q15** - **The network rules: tested how?**
+
+➡️ `make test-platform`, run by hand against your local cluster, with no CI job. A few checks: the backend can reach Postgres, other pods can't, and a pod without a label has no outbound access at all.

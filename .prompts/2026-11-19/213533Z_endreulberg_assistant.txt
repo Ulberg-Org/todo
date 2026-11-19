@@ -1,0 +1,35 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:35:33Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Partly today, and fully from Phase 2 if you agree. What's collected **today (Phase 1):**
+
+| Source | Collected | Missing |
+|---|---|---|
+| **Backend** | Per instance: process CPU and memory, garbage collection, thread pool, exceptions (from .NET's runtime metrics), plus requests per endpoint | nothing for now |
+| **Postgres** | Only its **logs** (connections, errors, slow queries) | **No metrics**: connections, database size, transactions, locks, cache hits |
+| **Containers and machines** | Nothing | CPU, memory, network and restarts per container; the machine's CPU, memory and disk |
+| **Envoy** | Only its access log on stdout | Requests and latency per route, as seen by the load balancer |
+
+In Kubernetes, the missing part is standard equipment, and it's collected **for every pod automatically**, without any app doing anything:
+
+❓ **Q21** - **Full resource metrics for everything, from the first Phase 2 slice:**
+- **Every pod and container:** CPU, memory, network, restarts and throttling, read from the Kubernetes node itself (kubelet) by the collector;
+- **Kubernetes' own view:** desired vs running replicas, pods stuck or crash-looping (kube-state-metrics);
+- **The machines (nodes):** CPU, memory and disk;
+- **Postgres:** connections, size, transactions, locks and cache hits (the collector's Postgres receiver), through a **fourth role, `todo_monitor`**, which may only read Postgres's statistics and never data;
+- **Envoy Gateway:** requests, errors and latency per route.
+
+All of it goes through the same collector into Prometheus, labelled with service and environment, the same locally and in Azure (D60). In Azure the same set covers AKS and the Flexible Server.
+
+➡️ Yes. Because it's platform-level, every future service gets it for free.
+
+---
+
+If that's a yes, the frontier is empty, and I'll write Phase 2 into PLAN:
+- the summary from two messages back;
+- the Dependabot cooldown (Q19) and the hash pins (Q20);
+- the full resource metrics (Q21).
+
+Then we build the thin slice.

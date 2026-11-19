@@ -1,0 +1,38 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:22:00Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Settled: **Q12** (the thin slice first, then extended into the cloud) and **Q15** (`make test-platform`).
+
+**Helm and Kustomize, briefly:**
+- **Helm:** a package manager for Kubernetes. A *chart* is a set of templated YAML files plus default settings. You install it with your own values (`helm install envoy-gateway --set …`). It's how third-party software like ArgoCD, Envoy Gateway and Loki is distributed.
+- **Kustomize:** no templates. You have plain base YAML files, plus per-environment "patches" that change specific fields (e.g. "in prod, replicas: 3"). It's built into `kubectl`.
+
+Both solve "the same thing, slightly different per environment". **Our renderer solves exactly that too**, from `platform.yaml` plus the environment files. So for our own app, Kustomize would be a second layer doing the same job.
+
+Round 4:
+
+❓ **Q13 (refined)** - **One output format, the same locally and in Azure: plain Kubernetes YAML,** one folder per environment, rendered by the renderer. ArgoCD reads plain YAML folders directly, locally and in Azure. Helm only for third-party components, with their values files also generated per environment. No Kustomize, because it would only duplicate what the renderer already does.
+
+➡️ Yes.
+
+---
+
+❓ **Q14 (refined)** - **Who owns which environment settings?** Two layers:
+- **Platform repo, `environments/{local,dev,prod}.yaml`:** what the platform decides, such as cluster sizes, addresses, how to sign in, telemetry endpoints and the signature check (off locally, Q7).
+- **App repo, optional `platform.local.yaml`, `platform.dev.yaml`, `platform.prod.yaml`:** what the *app* decides per environment, like hot reload locally, its log level, or more replicas in prod. The schema limits these files to app-level keys, and D48's policy limits still apply, so a `platform.prod.yaml` can't drop below 2 replicas or claim something the platform owns.
+
+➡️ Yes. "Local partially in the app" means `platform.local.yaml`, and dev/prod get the same option, used only when the app actually needs it.
+
+---
+
+❓ **Q16** - **Kubernetes version locally?**
+
+➡️ The same minor version that AKS uses by default in our region, pinned in `environments/local.yaml` and `dev.yaml` together. A Kubernetes upgrade is then one change that applies to local and cloud at the same time.
+
+---
+
+❓ **Q17** - **Where do you call the app locally?**
+
+➡️ http://localhost:8080 through Envoy Gateway, the same address as today, so your habits and the README stay the same. Grafana stays at http://localhost:3000.

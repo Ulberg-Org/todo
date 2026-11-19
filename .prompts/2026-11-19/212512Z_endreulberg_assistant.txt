@@ -1,0 +1,31 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:25:12Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The facts:
+- **AKS:** 1.37 has been generally available since October 2026 and is supported until October 2027. 1.38 is only in preview.
+- **kind:** has a node image for **v1.37.0**.
+- **Ports 9875 and 9876** are free on your Mac.
+
+Round 5:
+
+❓ **Q16** - **Pin Kubernetes 1.37 for local and cloud, in one place.** The *minor* version is identical everywhere. The *patch* can differ slightly: kind publishes fewer patch images than AKS (kind has 1.37.0, AKS rolls patches itself). That's harmless; patches don't change behavior. Upgrading is one change in one file, for all environments.
+
+➡️ Yes.
+
+---
+
+❓ **Q17** - **Ports:** the app on **http://localhost:9875**, Grafana on **http://localhost:9876**. Both are free on your Mac and rarely used by other tools. That also moves Grafana off 3000, which the frontend's dev server would otherwise collide with later.
+
+➡️ Yes.
+
+---
+
+❓ **Q18** - **One "platform CLI" for everything local.** Setting up the local cluster belongs to the platform: kind, Cilium, Envoy Gateway, ArgoCD and the telemetry charts. Rendering is the platform's job too. Proposal: the platform repo ships **one public container image**, `platform`, that does both:
+- `platform up`: create the cluster, install the platform components, render `platform.yaml` for local, and deploy the app through ArgoCD;
+- `platform down`, `platform test` (the network rules).
+
+The todo repo's `make up` just runs that image with the pinned version. App developers never touch platform internals, and a platform change reaches every app by bumping one version.
+
+➡️ Yes: built, scanned and signed by platform CI like our app image, and public on GitHub's registry, since the repos are public anyway.

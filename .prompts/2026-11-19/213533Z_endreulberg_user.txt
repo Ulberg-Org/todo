@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T21:35:33Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q20, yes. All of this is pretty much fine, but I have one final question. Do we collect all the data on CPU, mem, etc for all services?

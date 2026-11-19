@@ -1,0 +1,47 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:14:41Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Short answers to your questions first, then round 2.
+
+**Q1, hot reload in Kubernetes:** yes, that's possible. In the local cluster, the backend pods can run the .NET SDK image with your source folder mounted in, running `dotnet watch`, just like today. That's a "dev" overlay value. So **one tier is enough**: the kind cluster with hot reload replaces today's compose setup, and there's less to maintain. The trade-offs: a slower first start (creating the cluster takes 2–3 minutes; after that it keeps running) and more memory.
+
+**Q2/Q3, "renderer":** a small F# program in the platform repo. It reads `platform.yaml` (what the app needs) plus an environment file (local, dev or prod), and **writes out the concrete config files**: Kubernetes YAML, Envoy routes, collector config and so on. "Rendering" just means generating those files. It's what D60 needs so that nothing per environment is written by hand.
+
+**Q6, Docker or Kubernetes today:** today (Phase 1) it's **only Docker**: containers via `docker compose`, plus the backend running directly on your Mac. There's no Kubernetes yet. Phase 2 introduces it: kind runs a real Kubernetes cluster *inside* Docker, which is why Docker needs more memory.
+
+Settled:
+- **Q4:** Postgres outside the cluster, as in Azure.
+- **Q5:** (a), part of `make up` and never a side path; you won't interact with the git server at all.
+- **Q6:** Docker gets 12 GiB.
+- **Q7:** no signature check locally.
+
+Round 2:
+
+❓ **Q8** - **One tier: the local cluster replaces today's `make up`.**
+- `make up` creates the kind cluster if it doesn't exist, then deploys everything through ArgoCD from your local checkout.
+- The backend pods run with hot reload; Postgres runs outside the cluster.
+- Today's `compose.yaml`, `local/envoy.yaml` and Makefile logic disappear.
+
+➡️ Yes.
+
+---
+
+❓ **Q9** - **What does `make down` do?**
+- (a) It stops the cluster but keeps it, so the next `make up` takes seconds.
+- (b) It deletes the cluster every time, a clean start each time.
+
+➡️ (a) for daily use, plus a `make reset` that deletes the cluster and starts from scratch, used when something is weird and occasionally in CI.
+
+---
+
+❓ **Q10** - **Telemetry inside the cluster.** Today it's the all-in-one `otel-lgtm` container. Azure (Phase 5) will run Loki, Tempo, Prometheus and Grafana from their official Helm charts.
+
+➡️ Use the **same Helm charts locally**, in their smallest single-instance mode, with only sizes differing in the overlay. One way of running telemetry everywhere, so dashboards and queries behave identically.
+
+---
+
+❓ **Q11** - **Does CI run the local cluster too?** A kind cluster in CI would check that `make up` really works from scratch and that the network rules hold, for example "the frontend pod can't reach Postgres".
+
+➡️ Yes, a CI job `local platform (kind)` on the ARM runner: `make reset`, then the policy tests. It runs on every platform PR, and on todo PRs that change `platform.yaml`.

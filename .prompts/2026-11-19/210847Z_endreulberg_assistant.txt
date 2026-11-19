@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:08:47Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I merged both PRs: platform #33 and todo #12. Phase 1 is complete.
+
+**What you need to do:** approve #33's apply. It makes `image (build, scan, SBOM)` a required check for todo: https://github.com/Ulberg-Org/platform/actions/runs/44615940490
+
+**Phase 1 delivered:**
+- **Backend skeleton:** .NET 11 with Oxpecker 2, in the reference app's folder structure.
+  - Endpoints: `/health/live`, `/health/ready` (checks the database as the app's own role) and `/version`.
+  - Errors come back as ProblemDetails with the trace ID.
+- **Telemetry:** traces, metrics (including calls per endpoint) and logs. A request shows up in Grafana with the database step included.
+- **Local stack:** `make up` runs two instances behind Envoy, Postgres 18 with the three roles, and telemetry through one collector into Grafana. My two MCP servers for Grafana and Postgres are read-only.
+- **Image:** chiseled arm64, scanned by Trivy, with an SBOM.
+  - On every merge to `main` it's pushed to ACR, the tag is locked, and it's signed.
+  - I checked the first one, `todo/backend:55fb0bd`, in Sigstore's public log: signed by todo's CI on `main`.
+- **CI:** format, build, tests (against a real Postgres) and the image job, all required checks.
+
+**Next in the plan is Phase 2, the local platform:**
+- **Local Kubernetes:** kind with Cilium, Envoy Gateway and ArgoCD.
+- **The D60 renderer:** it generates local and cloud setups from `platform.yaml`, replacing today's hand-written local files.
+
+Phase 2 has a lot of new parts. Shall I start with a grilling round on it, like we did for Phase 1, before building?
