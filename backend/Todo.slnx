@@ -1,8 +1,9 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Todo.Api/Todo.Api.fsproj" />
+    <Project Path="src/Core/Core.fsproj" />
+    <Project Path="src/TodoBackend/TodoBackend.fsproj" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Todo.Api.Tests/Todo.Api.Tests.fsproj" />
+  <Folder Name="/test/">
+    <Project Path="test/TodoBackend.Test/TodoBackend.Test.fsproj" />
   </Folder>
 </Solution>

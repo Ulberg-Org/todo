@@ -365,7 +365,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 
 ### Phase 1: Walking skeleton backend + local tier 1 + CI
 - **First, the `shared` stack and ACR** (D53, D54): stack order file, `up`/teardown workflows, ACR, todo's push identity.
-- **Layout:** `backend/` (`src/Todo.Api`, `tests/`), later `frontend/`; `platform.yaml` at the root.
+- **Layout:** the reference app's structure inside `backend/`: `Todo.slnx`, `src/Core/domain/` (pure domain), `src/Database/` (roles now, migrations later), `src/TodoBackend/` (`Program.fs`, `Telemetry.fs`, `api/`, `storage/`, later `service/` and `mcp/`), `test/TodoBackend.Test/`. Later `frontend/`; `platform.yaml` at the root.
 - **Backend:** F# Oxpecker (.NET 11, D59): `/health/live`, `/health/ready` (also checks the database as the app role), `/version` (commit SHA, build time, image tag).
 - **Telemetry:** OpenTelemetry traces/metrics/logs over OTLP; JSON logs carrying `trace_id`; `ProblemDetails` errors that include `trace_id`; no PII.
 - **Database:** Postgres 18 with the three roles (§9.2) from day one, no tables yet.

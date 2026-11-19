@@ -1,4 +1,4 @@
-module Todo.Api.Tests.Main
+module TodoBackend.Test.Main
 
 open Expecto
 

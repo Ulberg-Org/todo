@@ -60,8 +60,8 @@ jobs:
           global-json-file: global.json
       - run: dotnet tool restore
       - name: Format (Fantomas)
-        run: dotnet fantomas --check backend/src backend/tests
+        run: dotnet fantomas --check backend/src backend/test
       - name: Build (warnings are errors)
         run: dotnet build backend/Todo.slnx -c Release
       - name: Test (real Postgres 18 via Testcontainers)
-        run: dotnet run --project backend/tests/Todo.Api.Tests -c Release --no-build
+        run: dotnet run --project backend/test/TodoBackend.Test -c Release --no-build

@@ -1,6 +1,6 @@
 /// Runs the real app (Program.create, as in production) on a free local port, against a real Postgres 18
 /// started by Testcontainers with the same role script as local development.
-module Todo.Api.Tests.Server
+module TodoBackend.Test.Server
 
 open System
 open System.IO
@@ -41,7 +41,7 @@ let unreachable =
 let withApi (connectionString: string) (test: HttpClient -> Task<unit>) : Task<unit> =
     task {
         let app =
-            Todo.Api.Program.create
+            TodoBackend.Program.create
                 [|
                     "--urls"
                     "http://127.0.0.1:0"

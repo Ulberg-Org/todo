@@ -1,11 +1,12 @@
 /// Health and version endpoints: what the platform's probes and you (or an agent) ask first.
-module Todo.Api.Health
+module TodoBackend.Api.Health
 
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.Logging
 open Npgsql
 open Oxpecker
-open Todo.Api.BuildInfo
+open Core.BuildInfo
+open TodoBackend.Storage
 
 /// The process is up. Never touches dependencies, so a database outage doesn't get pods restarted.
 let live: EndpointHandler = %TypedResults.Ok {| status = "live" |}
@@ -18,7 +19,7 @@ let ready: EndpointHandler =
             match! Database.ping (ctx.GetService<NpgsqlDataSource>()) ctx.RequestAborted with
             | Ok() -> return! ctx.Write(TypedResults.Ok {| status = "ready" |})
             | Error reason ->
-                ctx.GetLogger("Todo.Api.Health").LogWarning("Not ready: database unreachable: {Reason}", reason)
+                ctx.GetLogger("TodoBackend.Health").LogWarning("Not ready: database unreachable: {Reason}", reason)
                 return! Problem.respond StatusCodes.Status503ServiceUnavailable "Database unreachable" ctx
         }
 

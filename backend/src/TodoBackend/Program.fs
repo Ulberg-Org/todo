@@ -1,12 +1,13 @@
 /// The API as a pipeline: input (configuration, environment) → setup → run, with a report at startup.
-module Todo.Api.Program
+module TodoBackend.Program
 
 open System
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
 open Oxpecker
-open Todo.Api.BuildInfo
+open Core.BuildInfo
+open TodoBackend.Api
 
 let endpoints (build: BuildInfo) =
     [

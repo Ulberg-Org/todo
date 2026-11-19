@@ -1,6 +1,6 @@
 /// Traces, metrics and logs over OTLP (D12): to the local otel-lgtm in tier 1, to the cluster's collector
 /// later. Where to is configuration (OTEL_EXPORTER_OTLP_ENDPOINT), not code.
-module Todo.Api.Telemetry
+module TodoBackend.Telemetry
 
 open Microsoft.Extensions.DependencyInjection
 open OpenTelemetry
@@ -9,7 +9,7 @@ open OpenTelemetry.Metrics
 open OpenTelemetry.Resources
 open OpenTelemetry.Trace
 open Npgsql
-open Todo.Api.BuildInfo
+open Core.BuildInfo
 
 let serviceName = "todo-backend"
 

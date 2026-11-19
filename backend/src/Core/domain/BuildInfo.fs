@@ -1,5 +1,5 @@
 /// What is running: for /version, telemetry and logs.
-module Todo.Api.BuildInfo
+module Core.BuildInfo
 
 /// The commit it was built from, when, the image tag (the commit SHA in CI, D54) and which instance
 /// answered (D57: there are always at least two).

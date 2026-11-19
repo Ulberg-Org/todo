@@ -1,6 +1,6 @@
 /// Every error a client sees is a ProblemDetails body carrying the request's trace ID, so it can be found
 /// in Grafana (traces and logs) from the response alone.
-module Todo.Api.Problem
+module TodoBackend.Api.Problem
 
 open System
 open System.Diagnostics
@@ -36,7 +36,7 @@ let exceptionMiddleware: Func<HttpContext, RequestDelegate, Task> =
             try
                 return! next.Invoke ctx
             with ex ->
-                ctx.GetLogger("Todo.Api").LogError(ex, "Unhandled exception")
+                ctx.GetLogger("TodoBackend").LogError(ex, "Unhandled exception")
 
                 if ctx.Response.HasStarted then
                     ctx.Abort()

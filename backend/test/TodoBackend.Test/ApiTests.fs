@@ -1,10 +1,10 @@
-module Todo.Api.Tests.ApiTests
+module TodoBackend.Test.ApiTests
 
 open System.Net
 open System.Net.Http
 open System.Text.Json
 open Expecto
-open Todo.Api.Tests.Server
+open TodoBackend.Test.Server
 
 let private json (response: HttpResponseMessage) =
     task {

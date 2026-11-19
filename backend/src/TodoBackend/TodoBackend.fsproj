@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
-    <Compile Include="BuildInfo.fs" />
-    <Compile Include="Problem.fs" />
     <Compile Include="Telemetry.fs" />
-    <Compile Include="Database.fs" />
-    <Compile Include="Health.fs" />
+    <Compile Include="api/Problem.fs" />
+    <Compile Include="storage/Database.fs" />
+    <Compile Include="api/Health.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Core/Core.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Oxpecker" Version="2.1.1" />

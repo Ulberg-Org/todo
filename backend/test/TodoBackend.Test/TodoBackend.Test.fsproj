@@ -8,13 +8,13 @@
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="../../db/init/*.sql" LinkBase="db/init" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Database/init/*.sql" LinkBase="db/init" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Expecto" Version="11.1.1" />
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.17.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Todo.Api/Todo.Api.fsproj" />
+    <ProjectReference Include="../../src/TodoBackend/TodoBackend.fsproj" />
   </ItemGroup>
 </Project>

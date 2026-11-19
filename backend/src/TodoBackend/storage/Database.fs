@@ -1,5 +1,5 @@
 /// The database connection (Npgsql 10 with Npgsql.FSharp on top). Phase 1 only checks that it answers.
-module Todo.Api.Database
+module TodoBackend.Storage.Database
 
 open System.Threading
 open System.Threading.Tasks
