@@ -1,0 +1,68 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T20:10:31Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Just FYI: from another service this is how we did traces in a microservice environment: 
+
+<pasted_content id="3c6e">
+⏺ Tracing here is mostly done by hand on top of Spring Cloud Sleuth. Sleuth assigns trace IDs, and the code copies the ID into message envelopes, HTTP headers and database rows so other services can carry it on. Nothing sends spans to a tracing backend, so
+  in practice "tracing" means finding the same traceId in the logs of each service.
+
+  1. Inside this service (Sleuth plus logs)
+
+  - Dependency: pom.xml:126 pulls in spring-cloud-starter-sleuth (Spring Boot 2.7 / Cloud 2021.0.6). Neither application*.yml has any spring.sleuth.* config, and there's no Zipkin or OpenTelemetry exporter, so Sleuth runs on defaults:
+    - It uses B3 propagation, reading and writing headers like X-B3-TraceId and X-B3-SpanId.
+    - For every incoming HTTP request it starts a trace, or continues one if the caller sent B3 headers.
+    - It puts traceId and spanId into the SLF4J MDC.
+  - Logging: logback-spring.xml uses the LogstashEncoder for qa-ordr/prod-ordr, which writes every MDC entry as a JSON field. Each log line therefore carries traceId, spanId and a user field, which JWTAuthorizationFilter.java:61-72 sets. Your log platform
+    can filter on traceId to follow one request.
+
+  2. Across services: two separate mechanisms
+
+  a) HTTP calls: B3 headers plus a custom header
+
+  - Sleuth adds B3 headers to outgoing calls made through Spring-managed RestTemplate beans, such as the plain bean in WebConfig.java:70. A downstream Spring service that also runs Sleuth continues the same trace.
+  - IntegrationService.java:304 also sends the ID by hand as a header, correlationId: MDC.get("traceId"), to integration-service. The other service has to read that header itself.
+  - MenuBuilderConfig.java:29 builds its template with new RestTemplateBuilder(), not Spring's injected builder. Sleuth probably doesn't instrument that one, so calls to menubuilder likely start a fresh trace. I haven't verified this.
+
+  b) SNS/SQS messages: a hand-built JSON envelope
+
+  The ID can't travel in SNS/SQS headers here because messages are published as plain JSON strings. Instead every message is wrapped in common/sns/SnsMessage.java:
+  { timestamp, traceId, type, payload }
+
+  Publishing copies the current trace ID into that envelope:
+  - MessagePublishService.java:136: email receipt created
+  - BookingPaymentUpdatedPublisher.java:47: booking payment updated
+  - PrintReceiptService.java:56: POS receipt request (PosReceiptRequestMessage.traceId)
+  - BackfillTransactionPublisher.java:38: re-publishes a stored trace ID (see below)
+
+  Consuming restores the ID from the envelope into the MDC, so logs on this side match the sender's logs:
+  - PaymentNotificationQueueListenerService.java:71: MDC.put("traceId", snsMessage.getTraceId()), then MDC.clear() in finally
+  - BookingPaymentUpdatedNotificationQueueListenerService.java:35: same pattern
+
+  A typical chain looks like this. Payments sends PaymentNotification {traceId: X} over SNS/SQS. ordr-service logs it with traceId=X, persists it, and publishes BookingPaymentUpdated {traceId: X}. The next consumer can then keep logging under X.
+
+  c) Persisted trace IDs
+
+  The ID is also stored in the database, so you can get from a database row back to the logs:
+  - processed_payment_event.trace_id (ProcessedPaymentEventService.java:20)
+  - payment_accounting_event.trace_id (UpsertPaymentAccountingEventRepository.java)
+
+  The backfill feature reads it back. BackfillReportsMapper.java:44 takes the stored trace ID, or creates a new one if it's blank. BackfillTransactionPublisher then sends it out again, so backfilled events stay linked to the original payment flow.
+
+  3. Gaps worth knowing about
+
+  1. The SQS listeners only update the logs, not Sleuth's active trace. MDC.put("traceId", …) changes what gets logged. Sleuth's current span still has its own ID. If a listener makes an HTTP call through an instrumented RestTemplate, the B3 headers would
+     carry Sleuth's ID, not the one from the message. That breaks the chain in a confusing way. I haven't traced whether these listeners actually make such calls. The proper fix would be to rebuild the trace context with the Tracer API instead of writing
+     to the MDC.
+  2. MDC.clear() also deletes Sleuth's own entries (spanId and so on) on that thread. Normally that's harmless, but it's a blunt tool.
+  3. The @JmsListener consumers in QueueListenerService.java (updated locations, account holder updates, POS receipt responses) never restore a trace ID. A POS receipt request goes out with a traceId, but the response comes back under a new trace, unless
+     PosReceiptResponseMessage carries the ID and someone wires it up.
+  4. No span export. You get log correlation only, with no timing waterfall. A Zipkin, OpenTelemetry or X-Ray exporter would be needed for that.
+
+  I've only looked at this repo. To confirm how it connects end to end, check how the payments service and integration-service fill in SnsMessage.traceId and whether they read the correlationId header. I can look at either of those repos if you open them.
+
+✻ Baked for 56s · done 9:09 PM
+
+</pasted_content id="3c6e">

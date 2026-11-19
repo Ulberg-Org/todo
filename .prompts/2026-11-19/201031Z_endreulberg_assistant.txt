@@ -1,0 +1,22 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T20:10:31Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Thanks, that's useful. The comparison shows where we're already ahead, and what to get right when messages arrive.
+
+**Already covered by our setup:**
+- **Real spans, not log correlation only:** traces go to Tempo, so you get the timing waterfall, not just a shared ID to grep for. That's their gap 4.
+- **Standard propagation over HTTP:** W3C `traceparent` instead of B3, added automatically by the HttpClient instrumentation. No hand-made `correlationId` headers.
+- **Logs get the trace ID automatically,** from the active trace. Nothing is copied into log context by hand, so there's nothing that can drift apart (their gaps 1 and 2).
+
+**Lessons to apply when queues and the outbox arrive** (the D50 notifications):
+1. **Carry the whole `traceparent`, not just the trace ID,** in every message and outbox row, written by the code that publishes.
+2. **Consumers restore it as the parent of a real span,** not only in the logs. That's the proper fix for their gap 1. For a batch of messages, link each message's trace to the batch span.
+3. **Every consumer does this, enforced by a test,** so no listener silently starts a fresh trace (their gap 3).
+4. **Outgoing HTTP only through instrumented clients,** created by the framework's client factory, never `new HttpClient()` in app code. Their MenuBuilder call breaks the chain exactly this way.
+5. **Keep the trace ID on stored rows where it helps** (outbox, audit), so you can get from a row back to the trace.
+
+I'd write those five as "tracing rules" into AGENTS.md now, so they're in place before the first message exists, and as a decision in PLAN. Shall I?
+
+**About the change you interrupted:** I was adding `RollForward=Major` to the platform's build settings, so its .NET 10 tests run on your Mac's .NET 11 runtime without an extra environment variable. Platform #32 itself (style guide sync and the new required check) is published and green without it. Should I add that setting, or leave it out?

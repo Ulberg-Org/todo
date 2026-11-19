@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T20:13:40Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+keave it out. Also on the traces, just take the high-level most important one , not all of them, too much info
