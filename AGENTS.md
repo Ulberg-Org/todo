@@ -86,3 +86,10 @@ One-time setup, after the apply has created the agent account (direct links are 
 When Claude reports that the agent's session expired, repeat step 4 with the passkey (never the pass: a session started with a pass ends when the pass expires). That needs no admin role. The GitHub token renews itself through Claude.
 
 Tests: `.claude/hooks/test_agent_identity.py` (CI, both repos); `.github/scripts/check_agent_access.sh` (platform) compares each agent's real rights with the above on every PR, on main and nightly; `scripts/agent-smoke-test.sh` (platform) is the manual test Claude runs as the agent (reads work, writes are refused).
+
+## 5. Local development
+
+`make up` starts the app as it runs in the cloud: two backend instances behind Envoy (http://localhost:8080), Postgres 18 with the three roles, and telemetry through one collector into Grafana (http://localhost:3000). Always test through Envoy, never an instance directly. See README.md.
+
+Claude reads the local system through two MCP servers in `.mcp.json`, both read-only: `grafana` (logs, traces and metrics of the app and of Postgres) and `postgres` (queries as `todo_readonly`). Debug from a request's trace ID, which every error response contains.
+

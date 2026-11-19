@@ -1,0 +1,58 @@
+# Local development, tier 1 (PLAN §11). `make up` starts this plus two backend instances; `make down` stops all.
+# The backend runs on the host with `dotnet watch` (hot reload); everything else runs here.
+name: todo
+
+services:
+  # A fresh log volume belongs to root; hand it to Postgres's user (999) before Postgres starts.
+  postgres-logs:
+    image: postgres:18.7
+    entrypoint: ["chown", "postgres:postgres", "/var/log/postgresql"]
+    volumes: ["postgres-logs:/var/log/postgresql"]
+
+  # Postgres 18 (D56) with the same roles as on Azure (D58). Logs as JSON files for the collector.
+  postgres:
+    image: postgres:18.7
+    environment:
+      POSTGRES_DB: todo
+      POSTGRES_PASSWORD: local-only-superuser
+    command: >-
+      postgres -c logging_collector=on -c log_destination=jsonlog -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql.log -c log_rotation_age=0 -c log_connections=on -c log_disconnections=on
+      -c log_min_duration_statement=200 -c log_file_mode=0644
+    ports: ["127.0.0.1:5432:5432"]
+    volumes:
+      - ./backend/src/Database/init:/docker-entrypoint-initdb.d:ro
+      - postgres-logs:/var/log/postgresql
+    depends_on:
+      postgres-logs: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "todo"]
+      interval: 2s
+      retries: 30
+
+  # Everything telemetry goes through one collector (D58): the app's OTLP and Postgres's own logs, labelled the
+  # same way as in the cloud later, then on to Grafana's stack.
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.165.0
+    command: ["--config=/etc/collector.yaml"]
+    volumes:
+      - ./local/collector.yaml:/etc/collector.yaml:ro
+      - postgres-logs:/var/log/postgresql:ro
+    ports: ["127.0.0.1:4317:4317", "127.0.0.1:4318:4318"]
+    depends_on: [lgtm]
+
+  # Grafana with Loki (logs), Tempo (traces) and Prometheus (metrics).
+  lgtm:
+    image: grafana/otel-lgtm:0.41.0
+    ports: ["127.0.0.1:3000:3000"]
+
+  # The load balancer in front of the two backend instances (D57). Always go through it: http://localhost:8080.
+  envoy:
+    image: envoyproxy/envoy:distroless-v1.40.2
+    command: ["--config-path", "/etc/envoy.yaml"]
+    volumes: ["./local/envoy.yaml:/etc/envoy.yaml:ro"]
+    ports: ["127.0.0.1:8080:8080"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+
+volumes:
+  postgres-logs:

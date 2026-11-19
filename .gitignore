@@ -8,3 +8,6 @@
 # .NET build output
 bin/
 obj/
+
+# Local development state (make up)
+.local/
