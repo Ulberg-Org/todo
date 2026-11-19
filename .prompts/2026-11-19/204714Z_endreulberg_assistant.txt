@@ -1,0 +1,27 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T20:47:14Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Not overcomplication. It's the right idea, and the plan is already halfway there: **`platform.yaml` is meant to be that one model.** The app declares what it needs, the platform renders it. The gap is that the plan renders it only for the cluster (kind locally in tier 2, then dev and prod), while my `make up` stack was written by hand. That's exactly where drift would creep in.
+
+**My recommendation: one model, small environment overlays, everything rendered.**
+
+```
+platform.yaml (what the app needs)          ← one source
+   + environments/{local,dev,prod}.yaml     ← only what *must* differ
+   → renderer (F#, platform repo)
+       → local:     compose.yaml + Envoy + collector config   (tier 1)
+       → kind:      Kubernetes manifests                       (tier 2)
+       → dev/prod:  Kubernetes manifests + Pulumi inputs
+```
+
+- **The model holds what must be identical everywhere:** services, replicas (at least 2), health paths, routes, the database roles, telemetry labels, environment variable names.
+- **The overlays hold only legitimate differences:** sizes, addresses, and *how* you sign in (local password vs Entra). Nothing else.
+- **A test fails the build** if an overlay tries to change something that belongs in the model.
+
+**What it isn't:** rendering everything from day one. The renderer is planned for Phase 2 anyway. I'd build it there, with tier 1 as its first output, and have it replace today's hand-written `compose.yaml`. PR 4 of Phase 1 already plans the "one contract" file with role names, labels and tools; that becomes the start of the model, not a separate file.
+
+So the cost is small: the renderer gets one more output (compose), and in return local, kind, dev and prod can't drift apart unnoticed.
+
+Shall I record this as a decision in PLAN (Phase 2's renderer also generates tier 1, environment overlays limited to legitimate differences, with a drift test) and shape PR 4 as the first piece of that model?

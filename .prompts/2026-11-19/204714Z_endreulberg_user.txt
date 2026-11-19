@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T20:47:14Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I see, we need to make sure to minimise the drift between Azure and local. Would it be helpful to define the model one place and derive the settings for local, dev and prod from that shared source, or is that overcomplication?

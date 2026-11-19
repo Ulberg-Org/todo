@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T20:42:02Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes. Our app counts calls per endpoint the same way, just as a standard metric instead of a hand-written middleware. Measured against the running stack:
+
+```
+GET /health/ready 200: 35     ← mostly Envoy's health checks (every 2 s)
+GET /version      200: 11     ← my 3 calls plus make up's readiness wait
+GET (no route)    404: 1      ← unknown path
+```
+
+Compared with the reference:
+
+| | Reference | Ours |
+|---|---|---|
+| How | Its own middleware, `PutMetricData` to CloudWatch per request | OpenTelemetry's ASP.NET instrumentation, no code of our own |
+| Tags | route pattern, status code | route pattern (`http.route`), method, status code, **and which instance** |
+| Extra | count only | count **and** response times (a histogram), so p50/p95 per endpoint for free |
+| Unknown paths | | grouped without a route, so random URLs can't create thousands of metric series |
+
+In Grafana it's this query (the same one I used):
+`sum by (http_route, http_response_status_code) (http_server_request_duration_seconds_count{service_name="todo-backend"})`. A dashboard panel for it comes with Phase 5 (dashboards as code). Locally, Claude can already query it through `mcp-grafana`.
+
+**PR 2** (the local stack) is green and waiting for your approval: https://github.com/Ulberg-Org/todo/pull/9

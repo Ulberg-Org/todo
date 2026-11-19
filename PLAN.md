@@ -167,6 +167,7 @@ Pulumi (F#) turns this into:
 | D57 | **Always at least two instances behind a load balancer**, locally too: two `dotnet watch` instances behind Envoy in tier 1, and in the cluster the platform policy (D48) rejects `replicas.min` below 2 and replicas must sit on different nodes. Nothing may rely on being the only instance (no in-process shared state, nothing run once per process). No inbox/outbox/worker is built now | msg 2026-11-19 |
 | D58 | **Claude reads local telemetry and data from day one, through one contract**: `mcp-grafana` (app logs, traces, Postgres's own logs) and a Postgres MCP server as the read-only role only. Labels, role names and tools are defined once in the platform repo; Azure plugs into the same contract in Phase 3/5, with a drift test | msg 2026-11-19 |
 | D59 | **The app runs the newest .NET: .NET 11 / F# 11** (supported as long as .NET 10 LTS, until 2028-11-14); the platform repo targets .NET 10 and builds with the same SDK (`rollForward: latestMajor`). SDKs come from Homebrew via the developer's nix-darwin flake. Latest stable packages: Oxpecker 2, Npgsql 10 with **Npgsql.FSharp** on top (as in `reference/`), OpenTelemetry 1.21, Expecto 11, Testcontainers 4; Dependabot keeps NuGet, the SDK and Actions current | msg 2026-11-19 |
+| D60 | **One model, every environment derived from it.** `platform.yaml` (what the app needs) plus small overlays (`environments/{local,dev,prod}`) that hold only what must differ: sizes, addresses and how you sign in (password locally, Entra in Azure). The platform's F# renderer generates everything from them: tier 1 (`compose.yaml`, Envoy's config, the number of instances in `make up`, the collector config), tier 2 (kind) and dev/prod (Kubernetes manifests incl. Envoy Gateway routes, Pulumi inputs). Nothing per environment is written by hand; a test fails if an overlay changes something that belongs in the model. Today's hand-written local files are the starting point and are replaced by the renderer in Phase 2 | msg 2026-11-19 |
 
 ## 4. Sign-off and bootstrap
 
@@ -376,7 +377,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - **Done when** CI is green, and one request through Envoy shows locally as trace + log + metric including the database hop, readable by Claude through `mcp-grafana`.
 
 ### Phase 2: Local platform (tier 2, kind)
-- Platform repo: `platform.yaml` schema + F# renderer → K8s manifests, with tests. Building blocks per D47: services, workers, schedules, databases, email; the D48 policy limits as code.
+- Platform repo: `platform.yaml` schema + environment overlays + F# renderer (D60) → tier 1 (`compose.yaml`, Envoy, collector, `make up` instances, replacing Phase 1's hand-written files) and K8s manifests, with tests, including the test that overlays only change what may differ. Building blocks per D47: services, workers, schedules, databases, email; the D48 policy limits as code.
 - kind + Cilium + Envoy Gateway + ArgoCD + LGTM, the same Helm values as Azure, synced from the local checkout.
 - Automated policy tests, e.g. "frontend pod can't reach Postgres", "pod without a label has no egress".
 - **Done when** `make up` brings the full stack up locally and the Phase 1 app deploys via ArgoCD.
