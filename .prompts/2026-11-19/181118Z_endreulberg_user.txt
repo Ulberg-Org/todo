@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T18:11:18Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q21) sure, do it that way. Q22) yes. Q23) yes, but also document in regular readme. Q24) sure, if that is the most reason LTS. Q25) Yes. But also we need to make sure that the system always runs with a load balancer and atleast 2 nodes. Ideally locally as well so we can have the skeleton for writting advisory locks etc for inbox and outbox processing of msg

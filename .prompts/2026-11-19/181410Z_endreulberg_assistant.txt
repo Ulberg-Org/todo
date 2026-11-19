@@ -1,0 +1,46 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T18:14:10Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Settled: **Q26** yes, **Q29** yes. **Q27/Q28:** nothing gets built. The rule is only that the system *can* run as several instances, so nothing may depend on being the only instance: no in-memory state shared between requests, and nothing that runs once per process. The two local instances behind Envoy prove that every day.
+
+Every branch has been visited. Here is the shared understanding I'd write into PLAN as Phase 1 (v13):
+
+**Before Phase 1's image step: ACR, pulled forward from Phase 3**
+- **A new `shared` Pulumi stack** for everything persistent (D45): ACR now, later telemetry storage, static IPs and DNS labels. Environment stacks read its outputs.
+- **Stack order** is written in one file. `up` runs `access` → `shared` → environments, and teardown runs in reverse. Environments are destroyed only down to their own stack. A full teardown is a separate approved workflow that stops before `access`/`bootstrap` and is tested in the portability milestone (D49).
+- **ACR on Basic, Entra-only:** no admin password, no anonymous pulls.
+- **Only todo's CI pushes,** only from `main`, with its own OIDC identity holding **AcrPush** and nothing else. PR builds never push, and nobody pushes from a laptop.
+- **Tags are the commit SHA only, locked**, never `latest`.
+- **Images are signed with cosign keyless,** and the SBOM is attached as a signed attestation. In Phase 4 the cluster refuses anything not signed by todo's CI on `main`.
+
+**Phase 1: the walking skeleton**
+- **Layout:** `backend/` (with `src/Todo.Api` and `tests/`), later `frontend/`, and `platform.yaml` at the root.
+- **The backend:** F# Oxpecker on .NET 10.
+  - `/health/live`;
+  - `/health/ready`, which also checks the database as the app role;
+  - `/version`, which returns the SHA, build time and image tag.
+- **Telemetry:** OpenTelemetry traces, metrics and logs; JSON logs with `trace_id`; error responses that include the `trace_id`.
+- **Database:** Postgres **18** everywhere, with the three roles from day one and no tables yet.
+- **Local development with one command:** `make up` / `make down`, documented in both README and AGENTS.md.
+  - Docker runs Postgres, `otel-lgtm` (Grafana, Loki, Tempo, Prometheus) and **Envoy** as the load balancer.
+  - **Two** backend instances run with `dotnet watch` behind Envoy, and requests always go through Envoy.
+- **Multi-instance from day one:** the system must always be able to run as several instances, with no in-process shared state. No outbox, inbox or worker gets built now.
+- **Claude's local access:**
+  - `mcp-grafana` for app logs, traces and Postgres's own logs;
+  - a Postgres MCP server as the **read-only role** only.
+  - Both follow **one contract** (labels, role names, tools) defined in the platform repo, which Azure plugs into in Phase 3/5, with a test against drift.
+- **Container:** Microsoft's chiseled .NET image, non-root, read-only file system, invariant globalization, **arm64 only**.
+- **CI (on GitHub's ARM runners):**
+  - format → build (warnings as errors) → tests, including Testcontainers;
+  - `platform.yaml` schema check → image → **Trivy** (fails on critical/high with a fix, with a committed exception file whose entries carry reasons and expiry dates) → SBOM.
+  - Both new jobs become required checks.
+- **Deferred:** the mock sign-in server waits until Phase 6.
+- **Done when:** CI is green, and one request through Envoy shows up locally as a trace, a log and a metric, including the database hop, readable by Claude through `mcp-grafana`.
+
+**Changes to existing plans**
+- **ARM everywhere:** AKS nodes become an ARM size such as `Standard_D2ps_v6`, and the cost table gets updated.
+- **Platform policy (D48)** rejects any service with fewer than 2 replicas, and the cluster requires replicas on different nodes.
+
+Is that our shared understanding? If so, I'll write it into PLAN as v13 (a PR for you to approve) and start with the `shared` stack and ACR.

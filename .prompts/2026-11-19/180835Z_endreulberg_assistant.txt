@@ -1,0 +1,45 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T18:08:35Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Settled: **Q5**, **Q16** and **Q20** ARM everywhere, **Q19** one contract with a drift test.
+
+**Q18:** cosign keyless is a real cryptographic signature on the image, not a weaker substitute. In Phase 4 the cluster checks each image before it runs: "signed by `Ulberg-Org/todo`'s CI workflow on `main`". Anything else is refused, including an image someone pushed by hand. So you get exactly the guarantee you wanted, only without a key to manage. I'll take that as settled.
+
+Round 4. Your Q17 condition opens one branch, and a few smaller Phase 1 details are still unvisited:
+
+❓ **Q21** - **Order for setting up and tearing down the whole platform.** The stacks depend on each other, so the order is fixed:
+- **Up:** `bootstrap` (manual, once) → `access` → `shared` → environments (`dev`, `prod`).
+- **Down:** the reverse order.
+
+Proposal:
+- The order is written in **one** file in the platform repo, which the workflows read.
+- `up` and `destroy` workflows follow it. An environment's destroy (D45) stops at its own stack.
+- A full platform teardown is a separate workflow that needs your approval for each stack. It stops before `access` and `bootstrap`, because removing those removes CI's own rights; that last step belongs to the portability milestone (D49).
+
+➡️ Yes. The full teardown and rebuild gets tested once, as part of the portability milestone.
+
+---
+
+❓ **Q22** - **Repo layout in todo.**
+
+➡️ Top-level `backend/` (with `src/Todo.Api`, and `tests/`) and later `frontend/`, each with its own CI job. `platform.yaml` stays at the root.
+
+---
+
+❓ **Q23** - **One command to start local development?**
+
+➡️ `make up` starts Postgres, the telemetry stack and the MCP servers in Docker, then the backend with `dotnet watch`. `make down` stops everything. AGENTS.md documents it, so anyone, human or agent, starts the same way.
+
+---
+
+❓ **Q24** - **Postgres version.**
+
+➡️ **17**, both locally and on Azure. Azure's Flexible Server supports it, and the same major version everywhere avoids "works locally" surprises.
+
+---
+
+❓ **Q25** - **What does `/version` return?**
+
+➡️ The commit SHA, the build time and the image tag, which is the same SHA. It's public (the repos are public anyway) and lets you or an agent see at a glance exactly what's running.

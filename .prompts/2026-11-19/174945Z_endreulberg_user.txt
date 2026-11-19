@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T17:49:45Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Sure, go ahead, I thought i needed to do something in the portal. but also, can you check that everything works before we move to phase 1

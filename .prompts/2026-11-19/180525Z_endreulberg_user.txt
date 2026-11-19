@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T18:05:25Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q5, my point was to look at how complicated it is, and what commands it use to consider if using the chisld thing would be simple. Q9) I thikn i agree with b, but not 100% certain what the implications are, Q10) Basic, Q11) Agree Q12) Ideally with only SHA and locked. Q13) if b is simple do that from start, it seems more sensible. Q14) both, ideally as early as possible locally, with a as simple as possible extension path to work for the running environments. We should not have too much drift here, but it is unclear to me if setting it up locally and in environments can be done as one unit. Q15) A) Q16) I'd prefer ARM if it is feasible.

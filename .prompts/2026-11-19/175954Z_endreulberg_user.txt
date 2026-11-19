@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T17:59:54Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) B Q2) That sounds fair Q3) Maybe we should fix ACR now then Q4) We need that first, it is the only sensible order Q5) Does it easily work with F#, check what the reference app uses Q6) Yes, it has to be that way. Also for read-only db logs, and app logs, and traces. Q7) Defer Q8) Yes

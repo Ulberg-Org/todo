@@ -1,0 +1,47 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T18:11:18Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Azure offers **Postgres 18** in our region. That's the newest version, supported by the Postgres project until about November 2030, so I'll use **18** everywhere, both locally and on Azure. That settles Q24.
+
+Settled: **Q21**, **Q22**, **Q23** (also in README), **Q25**.
+
+**Your addition, always at least 2 instances behind a load balancer, locally too,** opens a new branch. That's a sound principle: problems that only show up with several instances (shared state, duplicate processing) should appear from day one, not in production.
+
+Round 5:
+
+❓ **Q26** - **What runs locally?**
+- Two backend instances: two `dotnet watch` processes, so you keep hot reload.
+- **Envoy** in Docker in front of them as the load balancer, the same software as the cluster's Envoy Gateway.
+- You and agents always go through Envoy on one port, never directly to an instance.
+- `/version` and the logs show which instance answered.
+
+➡️ Yes.
+
+---
+
+❓ **Q27** - **How do the instances share message processing (inbox/outbox)?** Two techniques, for two different jobs:
+- **Claiming rows** in the outbox or inbox: `SELECT … FOR UPDATE SKIP LOCKED`. Each instance takes a batch nobody else holds, without waiting and without double processing. This is the standard Postgres queue pattern, and it beats advisory locks for this job.
+- **Singleton jobs** (e.g. the 08:00 notification batch from D50): a Postgres **advisory lock**, so exactly one instance runs it, and another takes over if that one dies.
+
+➡️ Both, in the skeleton:
+- an outbox table and a worker loop that claims rows with `SKIP LOCKED`;
+- a singleton job guarded by an advisory lock;
+- each with a test that runs two instances against the same database and proves every message is processed exactly once, and the singleton runs once.
+
+---
+
+❓ **Q28** - **Where does the worker run?**
+- (a) Inside each API instance, as a background service.
+- (b) As a separate `workers:` deployment (D47) from the same image.
+
+➡️ (a) for now. The locking from Q27 makes it safe, and it keeps the skeleton simple. Splitting into (b) later is a `platform.yaml` change, not a rewrite, because the worker is already its own module.
+
+---
+
+❓ **Q29** - **Enforcing "at least 2" in the cloud.** PLAN already has 2 nodes, `replicas: { min: 2 }`, a disruption budget and spreading across nodes. To make it a rule instead of a convention:
+- the platform policy (D48) **rejects** any service with `min` below 2;
+- the cluster requires its replicas to sit on different nodes.
+
+➡️ Yes. A single-instance service can't be declared at all.

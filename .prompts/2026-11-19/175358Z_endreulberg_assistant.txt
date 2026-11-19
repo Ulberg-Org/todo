@@ -1,0 +1,63 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T17:53:58Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The todo repo has no backend code yet: today it holds just PLAN, AGENTS, docs, the prompt log and a CI with three checks. Phase 1 starts from scratch.
+
+**Phase 1 grilling, round 1.** Some terms first, then the questions. As before, each question has my recommendation; answer "yes" to accept it, or give your own.
+
+**Terms:**
+- **Walking skeleton:** the thinnest possible version of the app that still goes through every layer (code → container → CI → telemetry), so every later feature only adds flesh to bones that already work.
+- **Trivy:** an open-source scanner. It looks inside the built container image and lists every known security hole (a "CVE") in the operating-system packages and libraries in it, plus risky settings.
+- **SBOM (Software Bill of Materials):** a machine-readable ingredients list of the image: every package and version. When the next big vulnerability hits, you search the SBOMs to see in seconds whether you're affected, instead of guessing.
+- **OTLP / OpenTelemetry:** the open standard our backend uses to send traces, metrics and logs to Grafana.
+- **Testcontainers:** tests that start a real throwaway Postgres in Docker for each test run, so database code is tested against the real thing, not a fake.
+
+---
+
+❓ **Q1** - **Does the skeleton already talk to Postgres?** Option A: only `/health/live`, `/health/ready` and `/version`, with no database. Option B: `/health/ready` also checks the database connection. Then the first trace already shows backend → database, and the three database roles (§9.2: migrator, app, read-only) exist locally from day one. There are no tables yet.
+
+➡️ B. The plan's "done when" is one request visible end to end, and the database is the hop most likely to break later.
+
+---
+
+❓ **Q2** - **When does Trivy fail the build?** Failing on everything blocks you on vulnerabilities nobody can fix yet; failing on nothing makes the scan decoration.
+
+➡️ Fail on **critical and high** vulnerabilities **that have a fix available**. Unfixable ones are reported but don't block. Exceptions go in a committed file, each with a reason and an expiry date, so nothing is ignored forever.
+
+---
+
+❓ **Q3** - **What happens to the SBOM?** Today we have no container registry. Azure Container Registry comes in Phase 3.
+
+➡️ Generate it in CI (CycloneDX format, by Trivy) and keep it as a build artifact now. Once images are pushed and signed (Phase 4), the SBOM is attached to and signed with the image.
+
+---
+
+❓ **Q4** - **Does Phase 1 push the image anywhere?**
+
+➡️ No. CI builds, scans and throws it away. The first push is to ACR in Phase 3/4, so we don't set up GitHub's registry only to abandon it.
+
+---
+
+❓ **Q5** - **Which base image?** "Hardened" means as little inside the container as possible, so there's less to attack and less for Trivy to flag.
+
+➡️ Microsoft's **chiseled** .NET image: no shell, no package manager, non-root user by default, with a read-only file system at runtime. It's the smallest supported option and typically has close to zero vulnerability findings.
+
+---
+
+❓ **Q6** - **Can Claude read the local telemetry from day one?** The local stack's Grafana (the `otel-lgtm` container) can be queried through `mcp-grafana`, the same tool Claude will use against the real Grafana in Phase 5. That's "AI-first" in practice: I debug a local request from its trace and logs, not from your screenshots.
+
+➡️ Yes. `mcp-grafana` against the local Grafana is part of tier 1 from Phase 1, documented in AGENTS.md.
+
+---
+
+❓ **Q7** - **Does the mock sign-in server come now or with auth?** Tier 1 lists a mock OIDC server (fake External ID tokens). But nothing needs sign-in until Phase 6; all Phase 1 endpoints are public health and version endpoints.
+
+➡️ Defer it to Phase 6, when the first protected endpoint appears. No speculative parts (the same rule as D47).
+
+---
+
+❓ **Q8** - **Do the new CI jobs become required checks?** Today todo requires three checks. Phase 1 adds "backend (format, build, test)" and "image (build, scan, SBOM)".
+
+➡️ Yes, both become required in the ruleset (a platform PR, `requiredChecks` in `Desired.fs`), so a failing scan blocks a merge like any test.
