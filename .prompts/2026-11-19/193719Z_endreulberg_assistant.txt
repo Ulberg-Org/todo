@@ -1,0 +1,46 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T19:37:19Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The research is done. Findings:
+
+**Versions:**
+| Package | Latest stable | Note |
+|---|---|---|
+| .NET / F# | **.NET 11 / F# 11** (Nov 2026) | Same end of support as .NET 10 LTS: 2028-11-14 |
+| Oxpecker | 2.1.1 | Reference uses 1.2; 3.0 is beta only |
+| Npgsql (+ OpenTelemetry) | 10.0.3 | Reference uses 9 |
+| OpenTelemetry (all) | 1.21.0 | |
+| FsToolkit.ErrorHandling | 5.2.0 | 6.0 is beta only |
+| Expecto | 11.1.1 | Reference uses 10 |
+| Testcontainers.PostgreSql | 4.17.0 | |
+| FSharp.SystemTextJson | 1.4.36 | |
+| Runtime image | `aspnet:11.0-resolute-chiseled` (Ubuntu 26.04, arm64 available) | |
+
+**Changes that affect how we write the code:**
+- **Oxpecker 2.0:**
+  - **New routing:** endpoint lists with `route`, plus `routef` with typed parameters and ASP.NET constraints in the format string (`"/todos/{%O:guid}"`).
+  - **Built-in `Default.exceptionMiddleware` / `Default.notFoundHandler`:** we'll use them as the base, and adapt them to return ProblemDetails with `trace_id`.
+  - **Returning results:** `TypedResults` via the `%` operator.
+  - **Since 2.1:** model binding caps collections at 1024 elements, which is good against DoS.
+  - **The repo has a `TodoList` example and an `MCP` example,** both targeting .NET 11. Phase 8 will learn from the MCP one.
+- **Npgsql 10:**
+  - `date`/`time` map to `DateOnly`/`TimeOnly`, and TLS trusts only the given root certificate.
+  - Its tracing uses OpenTelemetry's standard names.
+  - **Synchronous database calls will throw by default from Npgsql 11**, so we use async only from day one.
+- **OpenTelemetry:** a single `UseOtlpExporter()` call, configured through environment variables. Nothing in 1.21 breaks us.
+- **F# 11:** mostly compiler speed. For our style, the useful newer features are `and!` in `task` for awaiting in parallel, and scoped `#nowarn`. "F# for fun and profit" isn't tied to a version; its railway-oriented style is what our FsToolkit `Result` pipelines already follow.
+
+**From the reference (patterns only):** one domain error type mapped centrally to HTTP responses, a validation module of small `parse…` functions, one JSON configuration module, a metrics module, JSON logs outside development, and configuration from `appsettings` plus environment. We won't copy its permissive CORS or its full-SDK runtime image.
+
+**One decision for you:** PLAN says **.NET 10**. I recommend **.NET 11** for the app: it's newest, supported exactly as long as .NET 10, and Oxpecker's own examples already use it. The platform repo can stay on .NET 10 for now and move with Dependabot. Shall I use .NET 11?
+
+Sources:
+- [.NET 11 release (InfoQ)](https://infoq.com/news/2026/11/dotnet-11-release)
+- [.NET 11 Preview 1 (devblogs)](https://devblogs.microsoft.com/dotnet/dotnet-11-preview-1/?commentid=22730)
+- [F# category, .NET blog](https://devblogs.microsoft.com/dotnet/category/fsharp/)
+- [Npgsql 10 release notes](https://www.npgsql.org/doc/release-notes/10.0.html)
+- [OpenTelemetry .NET releases](https://github.com/open-telemetry/opentelemetry-dotnet/releases)
+- [OpenTelemetry OTLP exporter on NuGet](https://feed.nuget.org/packages/OpenTelemetry.Exporter.OpenTelemetryProtocol)
+- Oxpecker README, releases and examples (read through the GitHub API)

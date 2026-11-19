@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T19:55:02Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+**Phase 1, PR 1 is ready**, and all CI is green (including the new ARM job with a real Postgres): https://github.com/Ulberg-Org/todo/pull/7
+
+**What it contains:**
+- **The API:** .NET 11 and Oxpecker 2, with three endpoints:
+  - `/health/live`: the process is up;
+  - `/health/ready`: the database answers as the app's own role;
+  - `/version`: commit, build time, and which instance answered.
+- **Errors:** every error comes back as ProblemDetails with the **trace ID**, so any failed request can be found in Grafana from the response alone.
+- **Telemetry:** OpenTelemetry for HTTP, the database and the runtime, plus JSON logs carrying the trace ID.
+- **Database roles:** a script creates the three roles (migrator, app, read-only).
+- **Tests:** 5, run against the real app and a real Postgres 18 via Testcontainers.
+- **Housekeeping:**
+  - Dependabot now also keeps NuGet packages and the .NET SDK current;
+  - todo's GitHub Actions are bumped to the same versions as platform;
+  - the fluent-builder rule is added to the style guide;
+  - PLAN has **D59** (.NET 11, Npgsql.FSharp, latest packages, SDK from Homebrew via your flake).
+
+**What you need to do:** approve todo #7. Once it's merged, I'll follow up with:
+- a **platform PR** that syncs the style guide (CI requires it to match todo's `main`, so it has to come after #7) and makes `backend (format, build, test)` a required check;
+- then **PR 2**: `make up` with Envoy, two instances, the telemetry stack, and the MCP access for me.

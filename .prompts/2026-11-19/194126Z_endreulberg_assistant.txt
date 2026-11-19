@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T19:41:26Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+That settles it: **.NET 11** for the app.
+
+**On the database library:** there are three serious candidates on top of the Npgsql driver.
+
+| | Npgsql.FSharp (the reference's) | SqlHydra | Dapper.FSharp |
+|---|---|---|---|
+| Style | Plain SQL in an F# pipeline: `Sql.query … \|> Sql.parameters … \|> Sql.executeAsync read` | Typed query expressions, with types **generated from the database schema** | Query expressions over Dapper, mapping to records |
+| Last release | Dec 2024 (8.0.0); repo still active (Feb 2026) | Oct 2026 | Apr 2026 |
+| Works with Npgsql 10 | Yes: it requires "Npgsql 8.0.6 or newer" | Brings its own layer | Yes |
+| Good for | Explicit SQL, including what we'll need later (`FOR UPDATE SKIP LOCKED`, advisory locks, grants) | Compile-time-checked queries, at the cost of a code-generation step | Simple CRUD |
+
+**My recommendation is Npgsql.FSharp,** the same as the reference:
+- the SQL is plain and visible;
+- it's elegant to read in our pipeline style;
+- it has no code-generation step;
+- it handles the Postgres-specific SQL we'll need.
+
+Underneath, we create the Npgsql 10 data source ourselves. That's where Entra token sign-in (Phase 3) and tracing are configured, so the library only formats queries and reads rows. The one risk is that it hasn't had a release since late 2024. It's small, so if it ever breaks on a new Npgsql, replacing it or keeping our own copy is cheap.
+
+Shall I use Npgsql.FSharp? In Phase 1 it only runs the readiness check (`select 1` as the app role), so the choice doesn't lock us in yet.

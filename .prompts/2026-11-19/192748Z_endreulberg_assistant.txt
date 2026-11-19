@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T19:27:48Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The apply succeeded, and everything matches what we decided:
+
+| Check | Result |
+|---|---|
+| Registry `crplatform21784576.azurecr.io` | ✅ Basic, admin user off, anonymous pull off |
+| Permission mode | ✅ repository permissions (ABAC), set by the script and read back |
+| Who has registry access | ✅ only todo's push identity: Repository Writer **with** the `todo/*` condition |
+| Push identity trusts | ✅ only `Ulberg-Org/todo` on `main` |
+| todo's repo variables | ✅ created by the apply (the bot can't list variables, which is fine) |
+
+**Phase 1 can start in the todo repo.** I'll build it in small PRs, so each one is easy for you to review:
+1. **Backend skeleton:** `backend/` with Oxpecker, `/health/live`, `/health/ready` and `/version`, OpenTelemetry, a test project, and a CI job (format, build, test).
+2. **Local stack:**
+   - `make up` with Postgres 18 (three roles), `otel-lgtm` and Envoy in front of two instances;
+   - `mcp-grafana` and read-only Postgres MCP for Claude;
+   - README and AGENTS.md.
+3. **Image:** chiseled arm64 Dockerfile, Trivy, SBOM; on `main` also push, lock, cosign and the attestation.
+4. **Platform:** the new required checks, and the "one contract" file with its drift test.
+
+I'm starting with PR 1.

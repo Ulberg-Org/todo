@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Core/Core.fsproj" />
+    <Project Path="src/TodoBackend/TodoBackend.fsproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/TodoBackend.Test/TodoBackend.Test.fsproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,12 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T19:46:39Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Platform #31 (one line, `global.json`) is open: https://github.com/Ulberg-Org/platform/pull/31
+
+**Waiting on you for:**
+1. The rebuild in your terminal: `sudo darwin-rebuild switch --flake $(readlink -f ~/.config/nix)#mbp`
+2. Approving #31.
+
+Once `dotnet --list-sdks` shows 11.0.100, I'll build and test the backend skeleton locally before opening its PR.

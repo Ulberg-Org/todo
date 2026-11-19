@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T18:51:37Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+It's fixed. The failure came from two mistakes of mine in setting up the new stack: an unquoted YAML description, and creating the stack without telling Pulumi to use Key Vault for secrets. Both are corrected, and all checks on #30 are green.
+
+**What #30 does:**
+- **New `shared` stack**, the persistent part that environment teardowns never touch. It holds the container registry: Basic tier, sign-in with Entra only, no passwords and no anonymous pulls.
+- **Push access for todo:** todo's CI can push and lock image tags only under `todo/`, and only from `main`. Nothing else can push.
+- **todo's repo variables** (registry address, push identity) are set by the stack itself, so you don't configure anything by hand.
+- **Stack order** lives in one file, `stacks/order.yaml` (access, then shared). CI fails if the workflow's order ever drifts from it.
+
+The preview plans 11 creations in the new stack and no changes to `access`.
+
+**What you need to do:**
+1. Approve platform #30: https://github.com/Ulberg-Org/platform/pull/30
+2. Approve todo #6, the PLAN v13 update from the grilling: https://github.com/Ulberg-Org/todo/pull/6
+3. Once I've merged #30, approve its apply. I'll send the link.
+
+Then the backend skeleton starts in the todo repo.
