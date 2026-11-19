@@ -65,7 +65,7 @@ The hook blocks `az` without the agent's profile, `gh` and `git push` without Cl
 One-time setup, after the apply has created the agent account (direct links are in the PR that adds you to `agents`):
 
 1. Assign the account an **Entra ID P2** licence (the `platform-agents` group does it).
-2. Create a **Temporary Access Pass** for it.
+2. Create a **Temporary Access Pass** for it. This needs **Authentication Administrator**, never Global Admin: activate it in PIM (<https://portal.azure.com/#view/Microsoft_Azure_PIMCommon/ActivationMenuBlade/~/aadmigratedroles>, 1 h, your passkey), then open the agent account in Entra (*Users* → the agent → *Authentication methods* → *Add authentication method* → *Temporary Access Pass*). The same applies when the agent's passkey is lost.
 3. In a private browser window, sign in as the agent at <https://aka.ms/mysecurityinfo> with the pass and **add a passkey**.
 4. In your own terminal (not through Claude): `AZURE_CONFIG_DIR=~/.azure-agent az login --tenant <tenant-id>`, and sign in as the agent with its passkey.
 5. Add this to `~/.claude/settings.json`, with `<home>` replaced by your home directory written out (e.g. `/Users/you`; neither `~` nor `$HOME` is expanded there), and restart Claude Code:
@@ -83,6 +83,6 @@ One-time setup, after the apply has created the agent account (direct links are 
    }
    ```
 
-When Claude reports that the agent's session expired, repeat step 4. The GitHub token renews itself through Claude.
+When Claude reports that the agent's session expired, repeat step 4 with the passkey (never the pass: a session started with a pass ends when the pass expires). That needs no admin role. The GitHub token renews itself through Claude.
 
 Tests: `.claude/hooks/test_agent_identity.py` (CI, both repos); `.github/scripts/check_agent_access.sh` (platform) compares each agent's real rights with the above on every PR, on main and nightly; `scripts/agent-smoke-test.sh` (platform) is the manual test Claude runs as the agent (reads work, writes are refused).

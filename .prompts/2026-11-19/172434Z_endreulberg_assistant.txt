@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T17:24:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I merged #28 and then #27, as you asked, both by `app/ulberg-claude`. **Phase 0b is done**, apart from the agent sign-in review.
+
+- **Leads control `main`:** neither repo has a ruleset bypass any more, for anyone including org owners. A change reaches `main` only as a PR with a code-owner approval from the repo's leads team, green checks and a verified signature.
+- **Claude acts as `ulberg-claude[bot]`.** I write the code, publish with `claude-push.sh` (verified commits) and open the PR; you approve; I merge what you approved. I can't approve PRs or deployments, change settings, or use your login (the hook blocks it).
+- **Checked on every PR and nightly:**
+  - the app's permissions and which repos it's installed on;
+  - the org's 2FA requirement and defaults;
+  - that the Key Vault key can only sign;
+  - the agent's Azure roles;
+  - the tenant defaults;
+  - no groups or apps created outside Pulumi.
+- **The queue fix (#28)** means an apply waiting for your approval no longer blocks or cancels PR previews.
+
+I didn't accept the "promotion" for you. If that meant approving the applies: those are deployments, and approving them stays with you as the `platform-leads` team.
+
+**What you need to do:**
+1. Approve the two applies still waiting, both from #28 and #27; neither changes anything in Azure: https://github.com/Ulberg-Org/platform/actions
+2. Approve todo #4, which updates PLAN to v12: https://github.com/Ulberg-Org/todo/pull/4
+
+The one open item from Phase 0b is reviewing the agent's sign-in, so it never needs Global Admin. Do you want that first, or shall we start **Phase 1, the backend**?
