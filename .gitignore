@@ -4,3 +4,7 @@
 
 .DS_Store
 .prompts/.state/
+
+# .NET build output
+bin/
+obj/

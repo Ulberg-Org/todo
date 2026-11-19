@@ -16,7 +16,7 @@ jobs:
     name: secret scan (gitleaks)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Install gitleaks (checksum verified)
@@ -33,7 +33,7 @@ jobs:
     name: prompt log
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check .prompts/ format
         run: python3 .github/scripts/check_prompt_log.py
       - name: Test the prompt-log hook
@@ -45,6 +45,23 @@ jobs:
     name: fsharp style
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: No mutation, discarded results or null (docs/fsharp-style.md)
+      - uses: actions/checkout@v7
+      - name: No mutation or null (docs/fsharp-style.md)
         run: .github/scripts/check_fsharp_style.sh
+
+  backend:
+    name: backend (format, build, test)
+    # arm64 everywhere (D56): the same architecture as developer Macs and the cluster.
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - run: dotnet tool restore
+      - name: Format (Fantomas)
+        run: dotnet fantomas --check backend/src backend/tests
+      - name: Build (warnings are errors)
+        run: dotnet build backend/Todo.slnx -c Release
+      - name: Test (real Postgres 18 via Testcontainers)
+        run: dotnet run --project backend/tests/Todo.Api.Tests -c Release --no-build

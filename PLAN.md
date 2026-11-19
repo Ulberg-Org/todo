@@ -166,6 +166,7 @@ Pulumi (F#) turns this into:
 | D56 | **arm64 everywhere**: GitHub's ARM runners build, Microsoft's chiseled .NET image (non-root, read-only file system, invariant globalization) runs it, and AKS nodes are an ARM size (e.g. `Standard_D2ps_v6`). Postgres **18** locally and on Azure | msg 2026-11-19 |
 | D57 | **Always at least two instances behind a load balancer**, locally too: two `dotnet watch` instances behind Envoy in tier 1, and in the cluster the platform policy (D48) rejects `replicas.min` below 2 and replicas must sit on different nodes. Nothing may rely on being the only instance (no in-process shared state, nothing run once per process). No inbox/outbox/worker is built now | msg 2026-11-19 |
 | D58 | **Claude reads local telemetry and data from day one, through one contract**: `mcp-grafana` (app logs, traces, Postgres's own logs) and a Postgres MCP server as the read-only role only. Labels, role names and tools are defined once in the platform repo; Azure plugs into the same contract in Phase 3/5, with a drift test | msg 2026-11-19 |
+| D59 | **The app runs the newest .NET: .NET 11 / F# 11** (supported as long as .NET 10 LTS, until 2028-11-14); the platform repo targets .NET 10 and builds with the same SDK (`rollForward: latestMajor`). SDKs come from Homebrew via the developer's nix-darwin flake. Latest stable packages: Oxpecker 2, Npgsql 10 with **Npgsql.FSharp** on top (as in `reference/`), OpenTelemetry 1.21, Expecto 11, Testcontainers 4; Dependabot keeps NuGet, the SDK and Actions current | msg 2026-11-19 |
 
 ## 4. Sign-off and bootstrap
 
@@ -365,7 +366,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 ### Phase 1: Walking skeleton backend + local tier 1 + CI
 - **First, the `shared` stack and ACR** (D53, D54): stack order file, `up`/teardown workflows, ACR, todo's push identity.
 - **Layout:** `backend/` (`src/Todo.Api`, `tests/`), later `frontend/`; `platform.yaml` at the root.
-- **Backend:** F# Oxpecker (.NET 10): `/health/live`, `/health/ready` (also checks the database as the app role), `/version` (commit SHA, build time, image tag).
+- **Backend:** F# Oxpecker (.NET 11, D59): `/health/live`, `/health/ready` (also checks the database as the app role), `/version` (commit SHA, build time, image tag).
 - **Telemetry:** OpenTelemetry traces/metrics/logs over OTLP; JSON logs carrying `trace_id`; `ProblemDetails` errors that include `trace_id`; no PII.
 - **Database:** Postgres 18 with the three roles (§9.2) from day one, no tables yet.
 - **Local tier 1** (§11): `make up` / `make down`, documented in README and AGENTS.md. Two instances behind Envoy (D57). `mcp-grafana` and a read-only Postgres MCP server for Claude (D58).

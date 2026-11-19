@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T19:45:32Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+It was NPSQL that i wanted to use. I am happy with that, just had to check

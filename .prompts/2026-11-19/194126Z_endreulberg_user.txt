@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T19:41:26Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, use the latest .NET version possible. Also, NPSQL is not the most elegant one, there is another one used in the repo correct?

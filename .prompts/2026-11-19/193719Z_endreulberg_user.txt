@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T19:37:19Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, that is fine. But just remember to use the reference for looking up if there is anything we should have in the app itself. it is the base template, but a quite different application. Also use the latest version of all packages, and check each and every package if there are signifcant syntax changes that should be used. F.ex F-sharp for fun and profit, anything in the Oxpecker repo etc etc
