@@ -1,0 +1,13 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:49:43Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+GitHub doesn't expose the exact reason through the API. Your PR page shows it in one line at the bottom. My leading hypothesis, with evidence:
+- **Both commits are unsigned**, and the ruleset requires verified signatures.
+- Every earlier PR only merged because you used the bypass, so we've never seen a normal merge pass this ruleset.
+- My unsigned commits are a gap in the D52 setup either way. The app can't sign for git, but commits it creates **through the GitHub API** are signed by GitHub and show as verified `ulberg-claude[bot]` commits. That's the fix I'd build into the workflow.
+
+**To confirm before I build it:** open https://github.com/Ulberg-Org/todo/pull/2 and tell me what the grey box at the bottom says under "Merging is blocked". Likely "Commits must have verified signatures", but it could be something else.
+
+**On "release":** there's nothing to release yet. Releases (D37: a release PR copies dev's image tags to prod) start with Phase 4 and 6b, once the app has images and an environment. If you meant **approving the apply** for platform #24: that's yours by design. Claude never approves deployments, and the app has no permission to. Once #24 merges, its apply changes nothing, and you approve it at its run page as usual.

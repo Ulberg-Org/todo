@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:46:27Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Both refused: the bot can't approve its own PR, and it can't merge without your code-owner review. Claude's GitHub identity works end to end:
+
+| Test | Result |
+|---|---|
+| Token minted through Key Vault (sign-only key) | ✅ 1 h, sees `platform` and `todo` only |
+| Change repo settings / read secrets / disable a ruleset | ✅ 403, all three |
+| Commit attribution | ✅ author `Ulberg`, committer `ulberg-claude[bot]` |
+| PR author | ✅ `app/ulberg-claude` |
+| Approve own PR / merge without review | ✅ refused |
+| Your login from my session (`gh` without my profile) | ✅ blocked by the hook |
+
+**What you need to do: approve and merge the two test PRs.** These are the first ones you can approve normally, because they're not yours. On each: **Files changed** → **Review changes** → **Approve** → **Submit review**, then **Squash and merge**.
+- https://github.com/Ulberg-Org/platform/pull/24
+- https://github.com/Ulberg-Org/todo/pull/2
+
+The platform one triggers an apply that changes nothing. Approve it as usual, through the `platform-leads` team.
+
+**Next is step 6, leads control platform and app.**
+- Remove the D34 bypass in code, so `main` changes only through PRs approved by `<repo>-leads`. Afterwards even you push only via PRs. With the bot as author, you can always approve.
+- Optionally add the "merge only by humans" check. Should I include it?
+- Narrow the app's installation from "all repos" to `platform` and `todo`.

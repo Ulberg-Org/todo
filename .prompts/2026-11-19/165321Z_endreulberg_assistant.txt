@@ -1,0 +1,29 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:53:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, close. Phase 0b's "done when" is: *Claude reads Azure and opens GitHub PRs only with its own, attributed, read-only/PR-only identity, and every agent permission is defined in code and checked nightly.*
+
+**Done:**
+- Azure agent: read-only, its own passkey, checked nightly.
+- Tenant lockdown: members can't create groups, apps or tenants, with detection of anything made outside Pulumi.
+- The `Ulberg-Org` org:
+  - teams from `people.yaml`;
+  - team `CODEOWNERS`;
+  - org defaults;
+  - CI trusts only the org's OIDC subject.
+- The Claude app:
+  - its key exists only in Key Vault, sign-only;
+  - the hook blocks your logins;
+  - the flow works: the bot opens a PR, you approve, the bot merges.
+
+**Left, all small:**
+1. **Leads control platform and app (step 6):** remove the D34 bypass, so `main` changes only through PRs approved by `<repo>-leads`, you included. Narrow the app's installation to `platform` and `todo`. You just had me merge after your approval, so I'll drop the "humans-only merge" check idea: your approval is the gate.
+2. **Verified commits as standard:** `scripts/claude-commit.sh` turns my local commits into signed API commits. Without it, every PR of mine would hit today's signature block.
+3. **"Checked nightly" for the app:** the nightly check also verifies the app's permissions (contents and PRs only, no workflows) and that the Key Vault key is still sign-only.
+4. **Two loose ends from earlier:**
+   - the agent sign-in review (never needs Global Admin);
+   - the org's "require 2FA" and token policies, which GitHub only offers in its UI: two clicks for you, then checked where the API allows.
+
+Items 1–3 are one PR each, and opened by the bot from now on. After that, Phase 0b is done and **Phase 1 (the backend) starts**. That's the point where we "just code with agents": I write, open PRs and read Azure as myself, and you approve. Shall I go ahead with items 1–3?
