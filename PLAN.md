@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v13 (2026-11-19, Phase 1 grilled: D53–D58).** Phase 0 and Phase 0b done. Next: Phase 1, starting with the `shared` stack and ACR (pulled forward from Phase 3).
+> **Status: v14 (2026-11-19).** Phase 0, 0b and **1** done. Phase 1: backend skeleton (.NET 11, Oxpecker, OpenTelemetry), `make up` with two instances behind Envoy, the signed image in ACR. Next: Phase 2 (local platform with kind, and the D60 renderer).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -165,7 +165,7 @@ Pulumi (F#) turns this into:
 | D55 | **Images are signed with cosign keyless** (bound to todo's CI workflow on `main`, recorded in Sigstore's public log), and the SBOM (CycloneDX, by Trivy) is attached as a signed attestation. From Phase 4 the cluster refuses any image not signed that way. **Trivy** fails CI on critical/high vulnerabilities that have a fix; exceptions in a committed file, each with a reason and an expiry | msg 2026-11-19 |
 | D56 | **arm64 everywhere**: GitHub's ARM runners build, Microsoft's chiseled .NET image (non-root, read-only file system, invariant globalization) runs it, and AKS nodes are an ARM size (e.g. `Standard_D2ps_v6`). Postgres **18** locally and on Azure | msg 2026-11-19 |
 | D57 | **Always at least two instances behind a load balancer**, locally too: two `dotnet watch` instances behind Envoy in tier 1, and in the cluster the platform policy (D48) rejects `replicas.min` below 2 and replicas must sit on different nodes. Nothing may rely on being the only instance (no in-process shared state, nothing run once per process). No inbox/outbox/worker is built now | msg 2026-11-19 |
-| D58 | **Claude reads local telemetry and data from day one, through one contract**: `mcp-grafana` (app logs, traces, Postgres's own logs) and a Postgres MCP server as the read-only role only. Labels, role names and tools are defined once in the platform repo; Azure plugs into the same contract in Phase 3/5, with a drift test | msg 2026-11-19 |
+| D58 | **Claude reads local telemetry and data from day one, through one contract**: `mcp-grafana` (app logs, traces, Postgres's own logs) and a Postgres MCP server as the read-only role only. Labels, role names and tools are defined once in the platform repo; Azure plugs into the same contract in Phase 3/5, with a drift test. *Amended:* no separate contract file or drift test; the D60 model generates local and cloud from one source, and until the cloud side exists there's only one copy (the local files) | msg 2026-11-19 |
 | D59 | **The app runs the newest .NET: .NET 11 / F# 11** (supported as long as .NET 10 LTS, until 2028-11-14); the platform repo targets .NET 10 and builds with the same SDK (`rollForward: latestMajor`). SDKs come from Homebrew via the developer's nix-darwin flake. Latest stable packages: Oxpecker 2, Npgsql 10 with **Npgsql.FSharp** on top (as in `reference/`), OpenTelemetry 1.21, Expecto 11, Testcontainers 4; Dependabot keeps NuGet, the SDK and Actions current | msg 2026-11-19 |
 | D60 | **One model, every environment derived from it.** `platform.yaml` (what the app needs) plus small overlays (`environments/{local,dev,prod}`) that hold only what must differ: sizes, addresses and how you sign in (password locally, Entra in Azure). The platform's F# renderer generates everything from them: tier 1 (`compose.yaml`, Envoy's config, the number of instances in `make up`, the collector config), tier 2 (kind) and dev/prod (Kubernetes manifests incl. Envoy Gateway routes, Pulumi inputs). Nothing per environment is written by hand; a test fails if an overlay changes something that belongs in the model. Today's hand-written local files are the starting point and are replaced by the renderer in Phase 2 | msg 2026-11-19 |
 
@@ -365,12 +365,13 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - **Done when** Claude reads Azure and opens GitHub PRs only with its own, attributed, read-only/PR-only identity, and every agent permission is defined in code and checked nightly.
 
 ### Phase 1: Walking skeleton backend + local tier 1 + CI
+- ✅ **Done 2026-11-19** (todo #7, #9, #11; platform #30–#33). The first image `todo/backend:55fb0bd` is in ACR, locked, signed and with its SBOM attestation.
 - **First, the `shared` stack and ACR** (D53, D54): stack order file, `up`/teardown workflows, ACR, todo's push identity.
 - **Layout:** the reference app's structure inside `backend/`: `Todo.slnx`, `src/Core/domain/` (pure domain), `src/Database/` (roles now, migrations later), `src/TodoBackend/` (`Program.fs`, `Telemetry.fs`, `api/`, `storage/`, later `service/` and `mcp/`), `test/TodoBackend.Test/`. Later `frontend/`; `platform.yaml` at the root.
 - **Backend:** F# Oxpecker (.NET 11, D59): `/health/live`, `/health/ready` (also checks the database as the app role), `/version` (commit SHA, build time, image tag).
 - **Telemetry:** OpenTelemetry traces/metrics/logs over OTLP; JSON logs carrying `trace_id`; `ProblemDetails` errors that include `trace_id`; no PII.
 - **Database:** Postgres 18 with the three roles (§9.2) from day one, no tables yet.
-- **Local tier 1** (§11): `make up` / `make down`, documented in README and AGENTS.md. Two instances behind Envoy (D57). `mcp-grafana` and a read-only Postgres MCP server for Claude (D58).
+- **Local tier 1** (§11): `make up` / `make down`, documented in README and AGENTS.md. Two instances behind Envoy (D57). `mcp-grafana` and a read-only Postgres MCP server for Claude.
 - **Container:** chiseled, non-root, read-only file system, arm64 (D56).
 - **App CI** on ARM runners: format → build (warnings as errors) → tests (incl. Testcontainers) → `platform.yaml` schema check → image → Trivy → SBOM; on `main` also push, sign and attest (D54, D55). Both new jobs are required checks.
 - **Deferred:** the mock OIDC server (to Phase 6, when the first protected endpoint appears).

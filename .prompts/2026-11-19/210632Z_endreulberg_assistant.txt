@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:06:32Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+You're right to question it. Here's how it stands:
+
+**Today the same values live in several places:**
+- the **contract** (`contracts/local-cloud.yaml` in platform);
+- the **local files** that actually use them: the role script, `compose.yaml`, the Makefile, `Telemetry.fs`, the collector config, `.mcp.json`;
+- and later the **Azure** side (Phase 3/5), which would be written to match the same contract.
+
+The contract is meant to be the source of truth, but nothing is *generated* from it. The other places are hand-written copies, and the check only **detects** when a copy differs. That makes drift visible, but it doesn't remove the duplication. You'd still change two places and let CI tell you if you forgot one.
+
+**The real fix is already decided:** D60. There, `platform.yaml` plus small overlays is the only place these values are written, and the renderer *generates* the local files and the Azure manifests from it. Then there are no copies left to drift.
+
+So the contract is an interim step, and by adding a third place it makes your concern worse in the short term. My recommendation:
+
+- **Drop the contract file and its check.** Keep only the useful part of #33: the image job becomes a required check.
+- **Skip straight to the D60 model in Phase 2:** the values go into `platform.yaml` and the overlays once, and the renderer generates `compose.yaml`, Envoy, the collector config, `.mcp.json` and the role script from them. Today's hand-written local files are then deleted, not checked.
+- **Until then** there's exactly one copy of each value, in the local files, because Azure doesn't exist yet. There's nothing to drift *from* until the cloud side is built, and by then the renderer generates both.
+
+Shall I do that: strip the contract from #33, discard the todo check PR, and note in PLAN that D58's "contract" is fulfilled by D60's model rather than a separate file?
