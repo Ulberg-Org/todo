@@ -1,0 +1,22 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T17:38:52Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Everything has gone through:
+- **todo #4 (PLAN v12)** is merged, by `app/ulberg-claude`. My first, interrupted attempt had already merged it.
+- **All three platform applies on `main`** succeeded, for #26, #27 and #28.
+
+Phase 0b is complete apart from one open item: the agent sign-in review, so that signing the agent in never needs Global Admin.
+
+What next? Two options:
+1. **The agent sign-in review first.** It's short, and it closes Phase 0b completely.
+2. **Phase 1, the backend skeleton:**
+   - F# Oxpecker with `/health` and `/version`;
+   - OpenTelemetry traces, metrics and logs;
+   - a local stack (Postgres, Grafana LGTM, a mock sign-in server);
+   - app CI with image, Trivy and SBOM.
+
+   This is the first phase built the new way: I code and open PRs as the bot, and you approve.
+
+My recommendation is (1) first, because it's the last loose end in Phase 0b and short. Which do you want?

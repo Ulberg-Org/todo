@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T17:44:04Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Let us use the new AWS emulator instead of local stack! But yes 1 then 2
