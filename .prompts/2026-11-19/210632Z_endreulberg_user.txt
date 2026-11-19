@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T21:06:32Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Explain to me the local contract, is that the source of truth, or what is it. Because it seems like you have defined the same thing 3 places which risk drift

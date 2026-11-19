@@ -1,0 +1,14 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T20:58:56Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The todo half is committed locally. I'll publish it once platform #33 is merged, because before that the contract file doesn't exist on platform's `main` and the check would fail.
+
+**What you need to do:**
+1. Approve platform #33 (the contract file plus the required image check): https://github.com/Ulberg-Org/platform/pull/33
+2. After I've merged it, approve its apply (it updates todo's ruleset).
+
+Then I'll publish the todo PR with the contract check, and **Phase 1 is complete.** The image's first real run on `main` succeeded:
+- `todo/backend:55fb0bd` is in ACR with a locked tag;
+- Sigstore's public log has its signature and SBOM attestation, both signed by `Ulberg-Org/todo/.github/workflows/ci.yml@refs/heads/main`.
