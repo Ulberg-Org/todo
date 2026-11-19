@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T12:51:16Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q15) same URL Q20) I think that should be a TODO for the end, instead of something we focus too much on. IT is basically a portability milestone. Q21) Yes, a todo for later down the line. Q22) I do not care about env seperation in this demo. I just want to have a system that handles multiple environments. I do not care for the details. Q23 b) sounds sensible. Q24 Nope, nothing else

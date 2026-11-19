@@ -1,0 +1,46 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T12:47:41Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Settled: Q14 is (a), fork and edit config files (I read your "Q15 a)" as Q14). Q16 yes, with a hard 4 h limit. Q17: same subscription, separated in the infrastructure. Q18 as suggested. Q19: anything infrastructure must be declarable in `platform.yaml`, because the app team owns its architecture.
+
+**Q15 is still open:** does each environment keep a fixed URL across destroy and recreate (a persistent IP plus an Azure DNS label, about USD 4 per month each)? My recommendation is still yes. Without it, every start gets a new URL, and the External ID redirect URIs have to be changed each time.
+
+Round 4:
+
+❓ **Q20** - **What should bootstrapping from nothing look like?** You named the real problem: today it takes manual steps, scripts and many rounds of iteration. Some steps can never be automated (buying the P2 licence, passkeys for the break-glass accounts, creating the External ID tenant, the first Global Admin sign-in). Proposal: one interactive bootstrap wizard (`bootstrap/setup.sh`) that:
+- does everything that can be automated;
+- stops at each manual step with the account to use and the exact URL, then checks the step was really done before going on;
+- removes its own standing roles at the end, so the D35/D36 cleanup isn't separate work;
+- can be rerun from any point.
+
+➡️ Yes. It replaces today's checklist, `bootstrap.sh` and `grant-graph-permission.sh`, with every Graph permission listed in one place.
+
+---
+
+❓ **Q21** - **Should "runs from nothing" be proven by a real run in a second, empty tenant?** Until someone does it, reusability is a claim. A free Azure trial tenant with a P2 trial (30 days) costs nothing. Each run would surface the steps that only work because your tenant already has them.
+
+➡️ Yes, once at the end of Phase 3 (when the infrastructure exists) and again before calling the project done, with the run log published as part of the showcase.
+
+---
+
+❓ **Q22** - **Should each environment get its own apply identity, limited to its own resource groups?** With a shared subscription (Q17), the separation has to come from RBAC. Today `id-platform-apply` has Contributor and RBAC Administrator on the **whole subscription**, so a `dev` apply could change `prod`. Proposal:
+- `id-apply-dev` and `id-apply-prod`, each with rights on its own resource groups only, and each usable only from its own GitHub environment;
+- a separate identity for the `access` stack and the persistent "shared" part, which needs Entra and subscription-level rights.
+
+➡️ Yes. The nightly check verifies that neither environment identity has rights outside its resource groups.
+
+---
+
+❓ **Q23** - **Who approves which `platform.yaml` changes?** If app teams design their own architecture, every new database, worker or schedule changes cost and security. Today *any* `platform.yaml` change needs a platform lead (§2.1). Options:
+- (a) keep that: every change needs a platform lead;
+- (b) the policy check decides: changes within limits (instance sizes, counts, allowed building blocks) merge with only the app lead's approval, and anything outside them needs a platform lead.
+
+➡️ (b). Platform leads write the rules once, as policy in code, instead of reviewing every change. That is the point of a platform, and the limits themselves go through platform-lead review.
+
+---
+
+❓ **Q24** - **Which building blocks does the first version of `platform.yaml` offer?** Q19 says "declare everything", but each building block is real platform work: schema, renderer, policy and tests.
+
+➡️ Exactly what the todo app needs: services, workers, schedules, Postgres and email. Anything else gets added when an app asks for it, through a PR to the platform schema. No speculative building blocks.

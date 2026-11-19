@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-15T13:28:59Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Slow propagation should only be the final suspect, making that assumption can hide real problems.

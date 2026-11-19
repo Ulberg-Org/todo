@@ -1,0 +1,29 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-15T13:32:08Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The apply is green. Microsoft 365 group creation is now **refused**, and the setting reads back as `EnableGroupCreation=false`.
+
+**Security groups and app registrations are still allowed.** What's ruled out so far:
+
+| Hypothesis | Evidence | Result |
+|---|---|---|
+| The policy didn't apply | Audit log at 13:20:50: groups, apps and tenants went from `true` to `false`, by `id-platform-apply` | Ruled out |
+| The agent has a role that allows it | Its only role is Security Reader, tenant-wide; no scoped roles | Ruled out |
+| The agent's token predates the change | A token issued after the change still created a group (201) | Ruled out |
+| Someone else created the probes | Audit log: `endre-agent` itself | Ruled out |
+| Entra enforces tenant settings slowly in general | The Microsoft 365 setting was enforced within minutes | Counter-evidence |
+
+**The remaining lead** is that the policy change rebuilt Entra's hidden default member role ("User") at 13:20:49 with an explicit list of task sets. Whether that list still includes "create groups / create apps" can't be read through Graph. I'd like to see what Entra's own UI thinks the setting is. Signed in as `endre@adminazurestubble162simplel.onmicrosoft.com`, no Global Admin needed:
+
+1. **"Users can register applications"** and **"Restrict non-admin users from creating tenants"**: https://portal.azure.com/#view/Microsoft_AAD_UsersAndTenants/UserManagementMenuBlade/~/UserSettings
+2. **"Users can create security groups in Azure portals, API or PowerShell"**: https://portal.azure.com/#view/Microsoft_AAD_IAM/GroupsManagementMenuBlade/~/General
+
+Tell me what each one shows (Yes/No).
+- **If the portal shows Yes,** the portal and Graph disagree. Then the fix is to set it in the portal once, and I'll investigate why our PATCH didn't stick.
+- **If the portal shows No,** the setting is right but not enforced. Only then is propagation the last remaining suspect, and I'd retest at about 14:20 UTC, an hour after the change.
+
+**New finding:** the beta API shows `allowedToCreateAgentIdentityBlueprints: true`, a new Entra creation right our policy doesn't set yet. It goes into the next PR, together with the Microsoft 365 nightly check.
+
+GitHub org: still waiting for the name. Create it at https://github.com/account/organizations/new?plan=free, signed in as `Ulberg`.

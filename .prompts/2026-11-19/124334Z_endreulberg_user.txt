@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T12:43:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q8) background job, just use a simple working db table and a worker node, or a queue that is read from another thread. Q9 Sharer email.  But we are not going deeper into exclusion filters, or in-app security to sheild the users. Q10) I guess that it seems sensible to batch all into a single one and have them sent out at 8:00 local time for that user. in the DB set all users to the same time zone to avoid complexity for now. Q11) We are getting into app specifics that are not platform stuff, I am here for the platform. Q12) b because it should also to a certain extent make it so that a third party could use my code to run their own platform from this Q13) Seperate prod does make sense if we are on-demand, then we can have full seperation of environments

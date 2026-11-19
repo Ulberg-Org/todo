@@ -1,0 +1,18 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-15T15:04:08Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The portal agrees with what we set:
+- Security groups: **No**.
+- App registrations: **No**.
+- Tenant creation: restricted.
+- Microsoft 365 groups: **No**, and that one is now enforced.
+
+So Graph and the portal agree, and the settings are right. They just weren't enforced against the agent as of 13:33. The smoke test is running again now; Graph is answering slowly, so it may take a few minutes.
+
+**Your screenshots show two more settings that don't match "nothing self-service":**
+- **"Users can register agent identity blueprints": Yes.** This is a new Entra creation right (agent identities), the one I found in the beta API. It goes into the next PR as `false`.
+- **"Show keep user signed in": Yes.** This is the "Stay signed in?" prompt you asked about earlier. Conditional Access CA08 already means the browser session is never persistent, so the prompt has no effect. I'll still turn it off in code so nobody sees a misleading prompt.
+
+I'll report the smoke test result as soon as it finishes.

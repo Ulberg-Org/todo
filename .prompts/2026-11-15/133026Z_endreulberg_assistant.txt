@@ -1,0 +1,28 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-15T13:30:26Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've merged #17 (`56a7f6f`). Its apply needs two Graph permission grants first, and neither one has a portal page. These identities are managed identities, and the portal can't grant Graph permissions to those. Its "Grant admin consent" button doesn't apply to them, so a terminal command is the only way. Here is the whole sequence:
+
+**1. Activate Global Admin.** Sign in as `endre@adminazurestubble162simplel.onmicrosoft.com`:
+https://portal.azure.com/#@adminazurestubble162simplel.onmicrosoft.com/view/Microsoft_Azure_PIMCommon/ActivationMenuBlade/~/aadmigratedroles
+
+**2. In your own terminal:**
+```
+az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+cd ~/Github/Private/platform
+bootstrap/grant-graph-permission.sh id-platform-apply Directory.ReadWrite.All
+bootstrap/grant-graph-permission.sh id-platform-preview Directory.Read.All
+```
+The first grant lets the apply turn off Microsoft 365 group creation. The second lets the nightly check read that setting.
+
+**3. Approve the apply.** Signed in to GitHub as `Ulberg`, use **Review deployments** on this page:
+https://github.com/Ulberg/platform/actions/runs/43719307816
+
+**The security-group and app-registration hole is a real problem, not propagation.**
+- The audit log shows the policy changed at 13:20:50.
+- I then requested a fresh token issued after that change, and it could still create a security group (HTTP 201). The probe is already deleted.
+- So the old-token explanation is ruled out. The default member role is somehow still allowing it.
+
+I'm continuing the investigation and will report what I find.

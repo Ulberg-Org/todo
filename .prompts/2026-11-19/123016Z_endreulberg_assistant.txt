@@ -1,0 +1,22 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T12:30:16Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The smoke test proved nothing about the lockdown, but it did surface two useful facts:
+
+1. **The agent's session expired, as Conditional Access intends.** The token was issued on 2026-11-15 and Entra refused it after the 12 h limit (`AADSTS70043 … sign-in frequency`). That's the CA07 rule working.
+2. **The smoke test has a bug.** Without a valid session, every write probe failed, and the test counted those failures as "refused". A write probe should only pass when Azure answers with an authorization error (403 / `AuthorizationFailed` / `Authorization_RequestDenied`). Any other failure should fail the test, and the test should stop if the reads already failed. As written, an expired session reports a lockdown that may not exist.
+
+That adds one question to Round 1:
+
+❓ **Q8** - **Should the smoke test only count a write as "refused" when the error is an authorization denial, and stop as soon as any read fails?**
+
+➡️ Yes. It goes into the lockdown PR (Q7) with a unit test of its own: the test runs against an expired session and must fail.
+
+To get the actual lockdown result, sign the agent in again in your own terminal. Use `endre-agent@adminazurestubble162simplel.onmicrosoft.com` with its passkey; no admin role is needed:
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+```
+
+Round 1 (Q1–Q8) is still open. Answer by number, or "yes" to accept everything.

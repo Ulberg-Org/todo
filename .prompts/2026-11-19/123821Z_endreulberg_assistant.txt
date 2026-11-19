@@ -1,0 +1,64 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T12:38:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+On Q5: I searched the prompt log, and app-user account deletion has never come up. The only hits are about deleting a workflow. So it's new, and your answer settles it. Here's how I read your answers, then Round 2:
+
+- **Q1:** For fun and learning. A live demo doesn't need to be always on.
+- **Q2:** Solo. The platform should make sense for a team, but it's designed and tested for one person plus agents.
+- **Q3:** (a). Your reading is right with one correction. Claude Code works: it supports a pre-registered client ID for remote MCP servers. **Claude Desktop does not**, because its remote connectors are the same connector system as Claude on the web and on mobile, and those need Dynamic Client Registration. So v1 means Claude Code, plus anything else that accepts a fixed client ID.
+- **Q4:** Notify only recipients who already have an account.
+- **Q5:** Delete what they own that isn't shared; grants they made survive without being linked to them.
+- **Q6:** Ownership and grants resolve email → userId, so an email change affects only new invites.
+- **Q7:** (c), started on demand.
+
+Each answer opens follow-ups:
+
+❓ **Q8** - **Can notification emails stay invisible to the sharer?** Sending only to existing users protects third parties. But if the API returns even slightly faster for unknown emails (no email to queue), the sharer learns who has an account, which breaks D22. To stay safe:
+- the share request only writes the grant;
+- a background job sends the email later, out of band, so the API response and its timing are identical either way.
+
+➡️ Yes: an async outbox table plus a worker, and the existing no-enumeration timing tests cover it.
+
+---
+
+❓ **Q9** - **What does the notification email contain?** Options:
+- (a) "Someone shared a todo with you. Sign in to see it", with no names and no content;
+- (b) also the sharer's email;
+- (c) also the todo title.
+
+(b) and (c) turn the app into a way to send messages to registered users.
+
+➡️ (a). It can't be used to deliver spam or phishing content, and the sharer's email and the todo are shown in the app after sign-in.
+
+---
+
+❓ **Q10** - **Does sharing with a registered user count toward a per-recipient limit too?** Without one, an attacker can make many free accounts and flood one registered user with share emails, even with per-sharer rate limits.
+
+➡️ Yes:
+- at most one notification per recipient per day, grouping everything shared that day into one "you have new shared todos" email;
+- users can turn notifications off in settings.
+
+---
+
+❓ **Q11** - **Who owns a shared todo after its owner deletes their account?** You said shared todos survive. The plan says only the owner can delete a todo, and only `admin:share_creator` holders can change grants, so after deletion nobody could clean it up. Options:
+- (a) it becomes orphaned: grantees keep their bits, nobody can delete it or change grants, and it disappears when the last grant is gone;
+- (b) ownership passes to the grantee who has held `share` longest;
+- (c) each grantee who had `read` gets their own copy, and the original is deleted.
+
+➡️ (a). It's the Unix behavior (files stay after the user is deleted, owned by a bare UID), and nobody gains rights they weren't given. Grantees also get to drop their own access ("leave", D27, moved from future work into v1), so the orphan can be fully removed.
+
+---
+
+❓ **Q12** - **What does "on demand" start and stop?**
+- (a) Stop and start: AKS and Postgres stop, everything else stays (about USD 30–40 per month idle: load balancer, storage, ACR, licence).
+- (b) Destroy and recreate: a CI workflow you approve runs `pulumi up` for the whole environment and later `pulumi destroy`, keeping only state, ACR, Key Vault, DNS and identities (about USD 15 per month idle). Each start also proves the environment can be rebuilt from code.
+
+➡️ (b). It's a stronger infrastructure-first showcase, and a database that is rebuilt each time is fine for a demo with seed data.
+
+---
+
+❓ **Q13** - **Is a separate `prod` (D38: its own cluster, Postgres, VNet) still worth building now that you're solo and on demand?** The release flow (dev → release PR → prod) can be shown either with a second full environment or with a `prod` namespace in the same cluster.
+
+➡️ Keep D38's separate environment, but build it from the same code and start it on demand like `dev` (Q12). The extra cost then only applies while a demo is running, and environment isolation is the point of the showcase.

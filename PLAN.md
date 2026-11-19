@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v10. Phase 0 done (2026-11-09).** Before Phase 1, "Phase 0b: agent identities": Claude's Azure identity is done (D41); tenant lockdown (D42) in review; next the GitHub organization and the Claude app (D43). Then Phase 1.
+> **Status: v11 (design grilled 2026-11-19, D44–D51).** Phase 0 done (2026-11-09). Before Phase 1, "Phase 0b: agent identities": Claude's Azure identity is done (D41); tenant lockdown (D42) applied, one bug open; next the GitHub organization `Ulberg-Org` and the Claude app (D43). Then Phase 1.
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -12,6 +12,8 @@ A showcase todo application built entirely with AI that is **infrastructure-firs
 - Features: create, list, get, edit and delete todos, then share a todo with other people by email using permission policies.
 - The app is **semi-public**: anyone can sign up, no organization membership needed.
 - **Cost: as cheap as is feasible and normal, but security comes first** (see §9).
+- **Purpose (D44):** for fun and learning; it has to show that it works, not be always on. One human plus agents is the normal case. The platform must still make sense for a team, but isn't built to serve one now.
+- **Portable (D49):** someone else can fork both repos, edit `people.yaml` and a few config files, and run their own platform in their own tenant.
 
 ## 2. Repositories and governance
 
@@ -55,7 +57,7 @@ Flow, from change to prod (D37):
 2. **Build.** App CI validates `platform.yaml` against the schema, builds and signs the images, and pushes them to ACR.
 3. **Deploy to dev.** A GitHub App with **only** "open PR" rights on the platform repo (`ulberg-platform-pr-bot`) opens a PR that sets the new image tags in `apps/todo/dev/` together with the current `platform.yaml`. Platform CI checks it against policy.
    - **Image-tag-only change that passes policy → auto-merge**, and ArgoCD syncs it into dev. Tags are GitOps manifests, not Pulumi, so no environment approval is involved.
-   - **Any `platform.yaml` change → approval from a platform lead.** If it needs Azure resources, the Pulumi apply also waits for a platform lead (step 5).
+   - **A `platform.yaml` change within the policy limits → the app lead's approval; outside them → a platform lead's (D48).** If it needs Azure resources, the Pulumi apply also waits for a platform lead (step 5).
 4. **Release to prod.** When the dev deploy is healthy and the post-deploy smoke tests pass, the pr-bot opens (or updates) one **release PR** per app that copies exactly those tags to `apps/todo/prod/`.
    - Policy check: the tags must be the ones running healthy in dev, and the images must be signed.
    - **The app's repo leads approve it** (they are the code owners of `apps/todo/prod/` tags). The merge is the release: ArgoCD syncs prod.
@@ -145,12 +147,20 @@ So **both repos are public** (D26). gitleaks secret scanning runs in CI as a req
 | D35 | The owner Microsoft account keeps only its billing role: no Global Admin and no subscription Owner, not even eligible | msg 2026-11-09 |
 | D36 | Subscription **Owner only via the break-glass accounts**. `platform-admin` (PIM, 1 h) gets no Owner | msg 2026-11-09 |
 | D37 | **Release flow** (§2.1). A PR approved by the app lead merges to app `main`; tag-only changes auto-deploy to `dev`; a release PR copies the dev tags to `prod`, and **the app lead approves it** | msg 2026-11-09 |
-| D38 | **`prod` gets its own AKS cluster, Postgres, VNet and Key Vault** (own resource groups, same subscription). It is built after Phase 6, once the solo-dev exception (D34) is gone | msg 2026-11-09 |
+| D38 | **`prod` gets its own AKS cluster, Postgres, VNet and Key Vault** (own resource groups, same subscription). It is built after Phase 6, once the solo-dev exception (D34) is gone. *Amended by D45:* started on demand like `dev`. The goal is a platform that handles several environments; strict isolation between them (own subscription, per-environment apply identities) is not a goal | msg 2026-11-09, 2026-11-19 |
 | D39 | **Short sessions** (Conditional Access, workforce tenant only): a fresh phishing-resistant sign-in for **every** PIM activation (authentication context); infra developers sign in to Azure portal/CLI/ARM again every **4 h**, with no persistent browser session; all developers and guests sign in to everything else again every **12 h**. App users (External ID tenant) are not affected | msg 2026-11-09 |
 | D40 | **Privilege alerts**: PIM emails every activation and every new assignment of Global Admin, `platform-write` and `platform-admin` to the platform alert list (GitHub secret `PLATFORM_ALERT_EMAILS`, kept out of the public repos). Log-based alerts (break-glass sign-ins, role changes not made by the apply identity, PIM/CA policy changes) come with Phase 5 | msg 2026-11-09 |
 | D41 | **Claude gets its own read-only identity**, not the developer's: a separate Entra user per developer (`agents` in `people.yaml`, infra developers only for now), linked to its person (manager = the person, employee type `Agent`, "Claude agent of <name> (<handle>)"). In `platform-agents`: Reader, Monitoring Reader, Log Analytics Reader, Cost Management Reader on the subscription, Entra Security Reader; AKS RBAC Reader comes with Phase 3. Never PIM-eligible; standing-access check covers it. Entra ID P2 licence, the same Conditional Access as humans (passkey, 4 h Azure tools, 12 h otherwise). The developer signs it in (own passkey, separate `az` profile), so no secrets on disk and audit logs separate human from agent. A Claude Code hook blocks `az` without the agent profile. Done before Phase 1 (moved up from Phase 3 at your request) | msg 2026-11-09 |
 | D42 | **Members can't create anything on their own** in Entra (security groups, apps, tenants, app consent, guest invites, sign-ups), humans and agents alike: tenant authorization policy in the `access` stack. Found by the agent smoke test | msg 2026-11-09 |
-| D43 | **Move both repos into a GitHub organization (Free plan)**, so access scales: teams from `people.yaml`, org policies (2FA, token rules, no self-created repos), central audit log, and **one org-owned "Claude" GitHub App** that every developer's Claude uses *on that developer's behalf* (user-to-server token via device flow, 8 h, permissions = app ∩ developer: contents + pull requests only; never workflows, settings, approvals or merges). Commits and PRs show as "<developer> via Claude". Owner bypass (D34) stays. GitHub accounts provisioned from Entra (Enterprise Managed Users) are the documented upgrade path, not built (§13) | msg 2026-11-09 |
+| D43 | **Move both repos into a GitHub organization (Free plan)**, so access scales: teams from `people.yaml`, org policies (2FA, token rules, no self-created repos), central audit log, and **one org-owned "Claude" GitHub App** that every developer's Claude uses *on that developer's behalf* (user-to-server token via device flow, 8 h, permissions = app ∩ developer: contents + pull requests only; never workflows, settings, approvals or merges). Commits and PRs show as "<developer> via Claude". Owner bypass (D34) stays. GitHub accounts provisioned from Entra (Enterprise Managed Users) are the documented upgrade path, not built (§13). The organization is **`Ulberg-Org`** | msg 2026-11-09, 2026-11-19 |
+| D44 | **Purpose:** fun and learning; show that it works. Solo plus agents is the normal case; team features cost nothing extra or wait | msg 2026-11-19 |
+| D45 | **Environments run on demand.** A start workflow (platform-lead approval) creates `dev` or `prod` from code with `pulumi up`; it is **always destroyed after 4 h** by a scheduled workflow (no approval needed to destroy). Persistent, never destroyed: Pulumi state, ACR, Key Vault, identities, telemetry storage (7–14 days retention), and **one static IP + Azure DNS label per environment**, so its URL and redirect URIs never change. Each start proves the environment rebuilds from code; data is seed data | msg 2026-11-19 |
+| D46 | **MCP clients in v1: pre-registered ones only** (Claude Code). Claude.ai, Claude Desktop connectors and ChatGPT need Dynamic Client Registration, which Entra External ID lacks; that is the Keycloak trigger (§8) and stays future work | msg 2026-11-19 |
+| D47 | **Anything infrastructure is declarable in `platform.yaml`**; app teams own their architecture. v1 building blocks are exactly what todo needs: `services`, `workers` (no routes), `schedules` (CronJobs), `databases` (Postgres), `email` (Azure Communication Services via workload identity, no keys or SMTP credentials). Nothing else until an app asks, by a PR to the platform schema | msg 2026-11-19 |
+| D48 | **Policy decides who approves a `platform.yaml` change.** Within the limits (sizes, counts, allowed building blocks) the app lead's approval is enough; outside them a platform lead must approve. The limits are policy code owned by the platform leads. Replaces "any `platform.yaml` change needs a platform lead" (§2.1) | msg 2026-11-19 |
+| D49 | **Portability:** everything tenant-specific lives in `people.yaml` and a few config files; nothing in code names your tenant. Bootstrap wizard and a proven run in an empty trial tenant are a late milestone (§13) | msg 2026-11-19 |
+| D50 | **Share notifications (app, Phase 10):** only to recipients who already have an account, so third parties can't be spammed. Sent from an outbox table by a worker, never in the request, so the API response and timing don't reveal whether an account exists (D22). One batched email per user per day at 08:00, one time zone for everyone; it contains the sharer's email. No further spam filtering | msg 2026-11-19 |
+| D51 | **App users (Phase 6/10):** deleting an account deletes what they own and haven't shared; grants they made survive, no longer linked to them. Grants resolve email → user ID, so a changed email only affects new invites. *Open for Phase 10:* who controls a shared todo after its owner is deleted | msg 2026-11-19 |
 
 ## 4. Sign-off and bootstrap
 
@@ -316,7 +326,9 @@ Each grant is a set of independent bits on one todo for one email, just like `rw
 | Entra ID P2 | 1 license (you); +1 per extra infra developer | ~9 |
 | **Total** | | **~175–190** |
 
-**With `prod` (D38)**, the cluster, Postgres, ingress, storage and network costs repeat, so the total is about **USD 350/month**. ACR, Entra and P2 licences are shared.
+**With `prod` (D38)**, the cluster, Postgres, ingress, storage and network costs repeat, so the total is about **USD 350/month** if both ran all the time. ACR, Entra and P2 licences are shared.
+
+**On demand (D45)**, they don't: idle cost is the persistent part (state, ACR, Key Vault, telemetry storage, two static IPs, P2) at roughly **USD 30/month**, plus about USD 6 per environment-day actually running.
 
 Savings levers: stop AKS + Postgres between demos (both environments). Trade-off kept: no managed WAF (Application Gateway WAF costs more than the rest combined). Instead we use rate limiting, strict routing, security headers and app-level parsing.
 
@@ -351,7 +363,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - **Done when** CI is green and one request shows locally as trace + log + metric.
 
 ### Phase 2: Local platform (tier 2, kind)
-- Platform repo: `platform.yaml` schema + F# renderer → K8s manifests, with tests.
+- Platform repo: `platform.yaml` schema + F# renderer → K8s manifests, with tests. Building blocks per D47: services, workers, schedules, databases, email; the D48 policy limits as code.
 - kind + Cilium + Envoy Gateway + ArgoCD + LGTM, the same Helm values as Azure, synced from the local checkout.
 - Automated policy tests, e.g. "frontend pod can't reach Postgres", "pod without a label has no egress".
 - **Done when** `make up` brings the full stack up locally and the Phase 1 app deploys via ArgoCD.
@@ -361,6 +373,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - Workforce groups, External ID app registrations, workload identities.
 - VNet + subnets + NSGs, private DNS, ACR, Key Vault, AKS (Entra RBAC, no local accounts, workload identity, Azure CNI overlay + Cilium), Postgres Flexible (private access, Entra-only auth with migrator/app/read-only identities).
 - Pulumi unit tests (mocks); `preview` on every PR, `up` after approval.
+- On demand (D45): a persistent stack (state, ACR, Key Vault, identities, telemetry storage, static IP + DNS label per environment) and an environment stack that a `start` workflow creates and a scheduled workflow destroys after 4 h.
 - **Done when** everything exists, and the access tests show: app devs can change nothing; infra devs' Claude can read but not write; the DB isn't resolvable or reachable from outside the VNet.
 
 ### Phase 4: GitOps + cluster baseline on Azure
@@ -442,6 +455,9 @@ Tests: unit + property (domain), Testcontainers (storage), in-process API tests,
 | Jenkins, Fluent Bit → Splunk, Skogul, SOC logger | **Not adopted**: GitHub Actions + the OTel/Loki stack cover these. |
 
 ## 13. Future work
+
+- **Portability milestone (D49), near the end.** One interactive bootstrap wizard replaces today's checklist, `bootstrap.sh` and `grant-graph-permission.sh`: it does everything that can be automated, stops at each manual step with the account and the exact URL and checks it was done, removes its own standing roles at the end, and can be rerun from any point. Then prove it: a from-scratch run in an empty trial tenant (Azure + P2 trials), with the run log published.
+- **MCP connectors for Claude.ai, Claude Desktop and ChatGPT** (D46): needs Dynamic Client Registration, so Keycloak in front of External ID (§8).
 
 - **GitHub Enterprise Managed Users** (upgrade path for D43): GitHub accounts created and removed from Entra (SSO + SCIM), so people and their agents get GitHub access from `people.yaml` with no separate sign-up, and Conditional Access covers GitHub too. About USD 21/user/month; worth it once there is a real team.
 - Postgres row-level security as defense in depth (D16).

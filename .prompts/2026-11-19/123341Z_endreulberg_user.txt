@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T12:33:41Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+No, you answered all of them with the arrow already? So there is nothing for me to reply to. Also the Github Org is this : https://github.com/Ulberg-Org  What i wanted was the /mattpocock-skills:grilling  to be used to ask me questions about the design doc for the project, to ensure that I have thought through all of it

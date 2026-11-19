@@ -1,0 +1,69 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T12:33:41Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've read PLAN.md v10 in full. Grilling the design itself now. I still give a recommendation after each question (the skill asks for one), but most of these are product or intent questions only you can answer. My recommendations are guesses, so correct them freely. Reply by number: "yes" accepts my answer, or give your own.
+
+Round 1 covers the root decisions that other parts of the plan hang off.
+
+❓ **Q1** - **Who is the showcase for, and what does "done" mean?** The plan never says who looks at it. That decides how much polish the frontend needs, whether `prod` has to be up when someone visits, and whether the write-up (blog post or talk) is a deliverable. For example:
+- (a) future employers or clients reviewing the repos;
+- (b) a talk or blog series about infrastructure-first agentic development;
+- (c) your own learning, with public repos as a side effect.
+
+➡️ (b), with (a) as a bonus. The repos plus `.prompts/` are the artifact, and a live demo only needs to run during demos.
+
+---
+
+❓ **Q2** - **Do you realistically expect a second human (developer or lead), and roughly when?** Several designs assume a team that doesn't exist yet:
+- PIM approval by another lead;
+- removing D34 ("second lead");
+- GitHub teams;
+- Claude for app developers;
+- EMU (Enterprise Managed Users) as the upgrade path.
+
+If it stays solo, some of those should be designed for one person plus agents rather than "until someone joins".
+
+➡️ Solo for the foreseeable future. Design for "one human plus N agents" as the normal case, and keep the multi-person machinery only where it costs nothing.
+
+---
+
+❓ **Q3** - **Which MCP clients must work for app users at launch?** Claude.ai and ChatGPT connectors expect OAuth Dynamic Client Registration (or client metadata documents), which Entra External ID doesn't support. That's the Keycloak trigger in §8. Claude Code and Desktop with a pre-registered client work without it.
+- (a) Pre-registered clients only (Claude Code, Desktop);
+- (b) also Claude.ai and ChatGPT connectors, which brings Keycloak in by Phase 8.
+
+➡️ (a) for v1, with (b) written into PLAN as the first post-v1 step. Keycloak is a lot of surface area for a showcase.
+
+---
+
+❓ **Q4** - **When a todo is shared with an email, how does that person find out?** The plan stores grants by email and activates them on first sign-in, but never notifies anyone. If we send email, that's egress, an email provider, an abuse vector (spam through shares), and it undermines the no-enumeration rule (§6.3).
+
+➡️ No notifications in v1. The sharer tells the person out-of-band, and the grantee sees the todo after signing in. Notifications go to §13 as future work.
+
+---
+
+❓ **Q5** - **What happens when an app user deletes their account?** The plan doesn't cover it, but a public sign-up app with EU users needs an answer under GDPR. Open sub-points: their owned todos, the grants they made to others, and the grants others made to them.
+
+➡️ Self-service "delete my account" in v1:
+- their owned todos are deleted, along with every grant on them;
+- grants they made on other people's todos stay, because there's no cascade (§6.2);
+- grants to their email are removed;
+- their telemetry already holds only hashed IDs.
+
+This would be a new decision.
+
+---
+
+❓ **Q6** - **What happens when an app user changes the email on their account?** Ownership is by user ID, but grants are by email. After a change, the user loses every share made to the old address, and whoever signs up with the old address later gets them. That's the "pending shares" risk from §5.2 again, in a new form.
+
+➡️ Grants bind to the user ID at the first verified sign-in, and are matched by email only while still pending. After that, an email change doesn't move them, and a new owner of the old address gets nothing.
+
+---
+
+❓ **Q7** - **Does the environment run all the time?** The plan estimates about USD 175–190 per month for `dev`, and about USD 350 with `prod` running 24/7. The plan lists stopping it between demos as a "savings lever", but never actually decides it.
+- (a) both run 24/7;
+- (b) `dev` is stopped outside working sessions and `prod` runs 24/7;
+- (c) both are started on demand, by a CI workflow with your approval.
+
+➡️ (b). `prod` is what visitors see. If the answer to Q1 is "demos only", then (c).

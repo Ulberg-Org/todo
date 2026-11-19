@@ -1,0 +1,37 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T12:51:16Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Every branch has now been visited. Here is the shared understanding I'd write into PLAN as v11. Nothing is changed yet; confirm or correct first.
+
+**Purpose and scope**
+- It's for fun and learning: it should show that it works, and it doesn't need to be always on.
+- Solo, with agents. The platform should make sense for a team, but it doesn't have to serve one now.
+- MCP for app users in v1: Claude Code with a pre-registered client. Claude.ai, Desktop and ChatGPT connectors need Dynamic Client Registration, which means Keycloak (§8); that stays future work.
+
+**Environments**
+- `dev` and `prod` are started on demand, by destroying and recreating the environment through a workflow a platform lead approves. Every start proves the environment rebuilds from code.
+- Each environment is destroyed automatically **after 4 h, always**. Destroying needs no approval.
+- What persists: state, ACR, Key Vault, identities, telemetry storage (7–14 days), and **a fixed IP and DNS label per environment**, so the URL and redirect URIs stay the same.
+- `prod` stays fully separate in infrastructure and app (D38), in the **same subscription**. The goal is a system that handles several environments, not strict isolation between them.
+
+**`platform.yaml`**
+- Anything infrastructure must be declarable there, because app teams own their architecture.
+- The v1 building blocks are exactly what todo needs: services, workers, schedules, Postgres and email (Azure Communication Services through workload identity, no keys). Nothing else until an app asks.
+- Who approves: the policy check decides. Changes within limits need only the app lead; anything outside them needs a platform lead, and the limits themselves are platform-owned code.
+
+**Portability**
+- The goal: someone forks the repo, edits `people.yaml` and a few config files, and it runs in their tenant.
+- **TODO (portability milestone, near the end):** one bootstrap wizard that replaces today's checklist and scripts, plus a proven from-scratch run in an empty trial tenant.
+
+**App decisions from this session** (recorded for later phases, not platform work)
+- **Notifications:** shared todos trigger a notification only to users who already have an account.
+  - It goes through an outbox table and a worker, so the API response is the same either way and nobody can learn who has an account (D22).
+  - Users get one batched email per day at 08:00, with every user in the same time zone.
+  - The email contains the sharer's email address. No further spam filtering.
+- **Account deletion:** what the user owns and hasn't shared is deleted. Grants they made survive, no longer linked to them.
+- **Email changes:** grants resolve email → userId, so a changed email affects only new invites.
+- **Open for Phase 10:** who controls a shared todo once its owner's account is gone.
+
+Does that match your understanding? If so, I'll write it into PLAN v11 as new decisions and amend D38 (same subscription, on demand). Then we go back to the open lockdown bug and the move into `Ulberg-Org`.

@@ -1,0 +1,63 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T12:25:24Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The previous smoke test was killed before it printed anything, so the lockdown result is still unknown. I'll rerun it once we've settled the plan.
+
+Here's what I'll grill: **the rest of Phase 0b**, meaning closing out the tenant lockdown, the agent sign-in review, and the GitHub organization with the Claude app. Round 1:
+
+❓ **Q1** - **What if Entra keeps letting the agent create groups and apps?** The settings are set and read back correctly, but at the last test they weren't enforced against the agent. If the next smoke test still fails, we can:
+- (a) keep investigating until it's enforced;
+- (b) keep the setting and add **detection**: the nightly check fails if any group or app was created by anyone other than `id-platform-apply`, using the audit log, which the preview identity can read;
+- (c) both.
+
+➡️ (c). Detection is worth having even when enforcement works, because it catches the next setting Microsoft adds that we don't know about yet.
+
+---
+
+❓ **Q2** - **Is a fully passing smoke test required before Phase 0b counts as done?** In other words, every write probe refused, with no "known gap" exceptions.
+
+➡️ Yes. Detection (Q1) is the safety net while we work on it, not a substitute.
+
+---
+
+❓ **Q3** - **Do the four leftover tenant settings go into code in the next PR?**
+- Agent identity blueprints: off.
+- "Show keep user signed in": off.
+- "Restrict access to Microsoft Entra admin center": on (non-admins can't browse the admin center; cosmetic, since Graph still works).
+- LinkedIn account connections: off.
+
+All four would also be verified nightly.
+
+➡️ Yes, all four, plus the Microsoft 365 nightly check that's already queued for that PR.
+
+---
+
+❓ **Q4** - **Who may create the agent's Temporary Access Pass, and with which role?** This is the "never Global Admin to sign the agent in" TODO. Routine renewals (every 4 h or 12 h) use the agent's own passkey and need no admin. Only onboarding and a lost passkey need a new pass.
+
+➡️ Platform leads become PIM-eligible for **Authentication Administrator**, with at most 1 h, a passkey and an alert email, the same rules as Global Admin. It can issue passes for non-admin users, and the agent is one. Global Admin is never needed for it.
+
+---
+
+❓ **Q5** - **What is the GitHub organization called?** Free plan, owned by `Ulberg`. It appears in every repo URL and team name. Some alternatives: `ulberg-platform` or `ulberg-labs`.
+
+➡️ `ulberg-dev`. It's short, isn't tied to the todo app, and leaves room for more repos.
+
+---
+
+❓ **Q6** - **What can Claude's GitHub app do?**
+- Contents read/write: branches and commits.
+- Pull requests read/write.
+- Metadata read.
+- Explicitly **no `workflows` permission**, so Claude can't change CI.
+- No admin, no environments, no secrets.
+- Branch rulesets still require your review to merge.
+
+➡️ Yes, exactly that. A change to `.github/workflows/` then has to come from you, which also stops an agent from weakening the checks that watch it.
+
+---
+
+❓ **Q7** - **In what order: lockdown follow-up first, or the GitHub org first?**
+
+➡️ The lockdown PR first. It's small (Q1 and Q3), and you can create the org while it's in review. The org migration PR follows straight after.

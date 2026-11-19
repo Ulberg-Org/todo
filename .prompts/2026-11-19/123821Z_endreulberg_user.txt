@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T12:38:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1 c), for fun and learning Q2 No, i do not, I just need it to make a platform that makes sense. Q3 a) that would give claud applications but not claude web correct? Q4 I think we should maybe send an email IF the user already has made an account in our app, so you cannot use it to hurt innocent third parties. Q5 I taught we talked about it. But I want to delete the stuff that they own and have not shared, and all permissions they shared are not connected to them being the original sharer. Q6 In the backend we connect via email -> userId, so if you change email only new invites need to target the new email. Q7 C) I just want to showcase that it works.

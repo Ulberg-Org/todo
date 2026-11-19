@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T12:52:12Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+yes. and after that we should look into how to minimise the work we do at the start in the azure portal. to just get ot actually building something that resembles a platform, instead of clicking buttons in azure

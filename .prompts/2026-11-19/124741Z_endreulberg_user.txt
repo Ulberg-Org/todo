@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T12:47:41Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q15) a) I think if they could change people.yaml and maybe a few other configs to point ot their azure tenancy, then it should pretty much run from nothing. Even though that is one of the current issues that the bootstrapping of the platform and then removal of roles has required both manual intervention AND scriptiing and many iterations. Q16) Yes, kill it after 4 hours always. Q17) no, same subscription, full seperation in the infra and app, not in the azure platform. Q18) You suggesting is correct here. Q19) I think if it is infra it needs to be declareable in platform.yaml, it is the application devs that decide how to build their own arch.

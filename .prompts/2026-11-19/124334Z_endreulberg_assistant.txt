@@ -1,0 +1,59 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T12:43:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Got it. I'll keep to the platform from here. Settled:
+- **Q8:** A database outbox table plus a worker. A Postgres table that a worker polls is enough, with no message broker.
+- **Q9:** The email includes the sharer's email address. No further spam filtering or in-app shielding.
+- **Q10:** One batched email per user per day, sent at 08:00 in a single time zone for everyone.
+- **Q11:** That's app design, so I'll note it as an open question for Phase 10 and leave it out of this grilling.
+- **Q12:** (b) destroy and recreate. **New goal: a third party can run their own platform from this code.**
+- **Q13:** A separate `prod`, also started on demand, fully isolated.
+
+Round 3, platform consequences of those answers:
+
+❓ **Q14** - **How reusable should "run your own platform" be?**
+- (a) Fork and edit: everything tenant-specific lives in a few config files (`people.yaml`, a stack config with tenant, subscription, region and names). The bootstrap checklist becomes a public guide, and nothing in code is hard-coded to your tenant.
+- (b) A published package or template that others consume without forking.
+
+➡️ (a). A CI check fails if a tenant ID, domain or object ID appears outside those config files. (b) is a product of its own.
+
+---
+
+❓ **Q15** - **Should the app keep a stable URL across destroy and recreate?** Without a custom domain (D20), a recreated environment gets a new public IP. The External ID redirect URIs and TLS certificates would then change on every start. A static public IP plus an Azure DNS label (`todo-dev.<region>.cloudapp.azure.com`) in a resource group that is never destroyed costs about USD 4 per month per environment and keeps the URL fixed.
+
+➡️ Yes, one persistent IP and DNS label per environment, outside the part that gets destroyed.
+
+---
+
+❓ **Q16** - **Should a running environment destroy itself automatically?** "On demand" is easy to forget, and a forgotten environment costs about USD 6 per day.
+
+➡️ Yes:
+- the start workflow takes a lifetime, 4 h by default;
+- a scheduled workflow destroys anything past its lifetime;
+- destroying needs no approval, because it only removes things;
+- starting needs a platform lead's approval, like any apply.
+
+---
+
+❓ **Q17** - **Should each environment get its own Azure subscription?** D38 put `prod` in the same subscription as `dev`, with separate resource groups. "Full separation" in Azure usually means one subscription per environment: separate RBAC boundaries, budgets, policies and quotas, and a `dev` mistake can't touch `prod`. Subscriptions are free, but each one adds a bootstrap step, and the third-party guide (Q14) would have to cover it.
+
+➡️ Yes, one subscription per environment, and a third, small "shared" one for persistent things: state, ACR, IPs and DNS. Unlike D38, this would be a change to an earlier decision, so I'd record it in PLAN.
+
+---
+
+❓ **Q18** - **Does telemetry survive a destroy?** If Loki, Tempo and Prometheus storage is destroyed with the environment, every demo starts with no history, and you can't look back at what went wrong in the last one.
+
+➡️ Yes. The telemetry storage accounts live in the persistent part with 7–14 days of retention, and only the compute is destroyed.
+
+---
+
+❓ **Q19** - **Does `platform.yaml` gain the building blocks the email feature needs?** The app now needs:
+- a **worker** (a service without routes);
+- a **schedule** (the 08:00 batch, a Kubernetes CronJob);
+- outbound **email** (egress to Azure Communication Services, signed in with workload identity, no keys).
+
+Each one is something an app declares and the platform provides and polices.
+
+➡️ Yes: `workers:`, `schedules:` and `email: { from: … }` in the schema. The platform then creates the Azure Communication Services resource, the identity and the egress rule. Apps never get SMTP credentials.
