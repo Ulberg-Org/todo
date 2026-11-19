@@ -1,0 +1,12 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:51:53Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Both PRs now carry one verified commit each. Because the content changed, "dismiss stale reviews" removed your approvals, as designed.
+
+**What you need to do:** approve both PRs again (**Files changed** → **Review changes** → **Approve** → **Submit review**):
+- https://github.com/Ulberg-Org/todo/pull/2
+- https://github.com/Ulberg-Org/platform/pull/24
+
+Tell me when that's done and I'll merge both. If the merge then goes through, signatures were the cause. I'll then make this the standard way I commit: a small `scripts/claude-commit.sh` that pushes my local commits as verified API commits, which also fixes the "author" story honestly (the bot as author, you as co-author). If it's still blocked, we know signatures weren't the cause and I'll keep looking.
