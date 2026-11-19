@@ -1,0 +1,29 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:37:32Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Mostly yes, with one nuance.
+
+**What Claude can do with the app:**
+- push branches (not `main`: the ruleset requires a PR, and the app isn't on the bypass list);
+- open, update and comment on PRs.
+
+**What it can't do:**
+- approve a PR, because it isn't a code owner, and GitHub never lets an author approve their own PR anyway;
+- change workflows, settings, rulesets, environments or secrets;
+- approve a deployment (the `dev` reviewers are the `platform-leads` team);
+- touch Azure beyond reading.
+
+**The nuance: merging.** GitHub has no separate "merge" permission; merging a PR falls under contents write. So once a PR has **your** code-owner approval and green checks, the app technically *could* press merge. It can't merge anything you haven't approved, because:
+- the ruleset requires the code-owner review;
+- "dismiss stale reviews" is on, so if Claude pushes after your approval, the approval is removed;
+- what gets merged is exactly what you approved.
+
+If you want merging to stay with humans as well, the clean way is a small required check that fails when the merge actor is a bot. I'd add that with step 6, when the bypass goes. Should I include it?
+
+**Until the hook is in place,** I still use your `gh` login, which means I technically have all your rights, including org owner. That's exactly what the next step ends: after it, my `gh` and `git push` only work with the app's token.
+
+**Still waiting on you:**
+1. Approve the apply: https://github.com/Ulberg-Org/platform/actions/runs/44567801321
+2. Install `ulberg-claude` on `Ulberg-Org` for `platform` and `todo`: https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-claude/installations

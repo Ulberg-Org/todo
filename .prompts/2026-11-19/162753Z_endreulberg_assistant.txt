@@ -1,0 +1,17 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:27:53Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+A page has opened in your browser, titled **"Create the Claude GitHub App"**.
+
+**What you need to do,** signed in to GitHub as `Ulberg`:
+1. Click **Continue to GitHub**.
+2. GitHub shows the app `ulberg-claude` with everything pre-filled. Click **Create GitHub App for Ulberg-Org**.
+3. You land on a page saying "Done". Close it.
+
+I'll take it from there: catch the key, put it in the `dev` environment secret, and delete my local copy.
+
+If the page didn't open, it's at `/private/tmp/claude-501/-Users-endreulberg-Github-Private-todo/65ce0d37-90f3-444e-87a8-31d5665c9866/scratchpad/claude-app/create.html`.
+
+#21's apply is also still waiting for you: https://github.com/Ulberg-Org/platform/actions/runs/44565379836

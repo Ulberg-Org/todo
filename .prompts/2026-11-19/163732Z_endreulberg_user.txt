@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T16:37:32Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+This allows Claude to make PRs, but since we have CodeOwners it is still only me that is allowed to merge or anything like that in the Github Account?

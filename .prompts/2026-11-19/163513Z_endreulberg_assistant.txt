@@ -1,0 +1,16 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:35:13Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The token script is written; I'll test it once the key is in Key Vault and the app is installed. The apply's preview is still running, so the **Review deployments** button will appear in about a minute.
+
+Waiting on you for the same two things:
+1. Approve the apply: https://github.com/Ulberg-Org/platform/actions/runs/44567801321
+2. Install `ulberg-claude` on `Ulberg-Org` for `platform` and `todo`: https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-claude/installations
+
+Tell me when both are done. I'll then:
+- delete the temporary key secret;
+- mint Claude's first token;
+- set up the hook's GitHub part;
+- open a test PR as `ulberg-claude[bot]`.

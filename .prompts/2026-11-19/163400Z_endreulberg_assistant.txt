@@ -1,0 +1,24 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:34:00Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The org permission is still missing, so the steps above haven't taken effect yet. Here's everything in order. Everything is signed in to GitHub as `Ulberg`.
+
+**1. Give the admin app the missing permission** (this is why #21 failed):
+- Open https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-platform-admin/permissions
+- Scroll to **Organization permissions**, the second block, not "Repository permissions".
+- Set **Administration** → **Read and write**.
+- At the bottom, **Save changes**.
+
+**2. Accept the new permission for the installation:**
+- Open https://github.com/organizations/Ulberg-Org/settings/installations
+- Next to `ulberg-platform-admin`, click **Review request** (or **Configure**, where a banner shows the request) → **Accept new permissions**.
+
+**3. Then #22.** Say "merge", and approve its apply. That apply also completes what #21 didn't get to:
+- #22's preview is green and covers both: the rest of #21 (team access, memberships, org settings, removing collaborators) plus the Claude app key (import command and two role assignments).
+- The agent check passes with the new scope-aware query.
+
+You don't need to re-run #21.
+
+Tell me when steps 1 and 2 are done. I'll check the permission through the API before merging.
