@@ -1,0 +1,17 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T17:10:46Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#25 and #26 are merged by `app/ulberg-claude`. **What you need to do:**
+
+1. **Approve the two applies, in order.** The second one removes the bypass (D34 ends):
+   - https://github.com/Ulberg-Org/platform/actions/runs/44575572723 (#25, changes nothing)
+   - https://github.com/Ulberg-Org/platform/actions/runs/44575593238 (#26, the rulesets lose their bypass)
+2. **Narrow Claude's installation.** The check shows it's still on all repos. Under `ulberg-claude`, click **Configure**, choose **Only select repositories** → `platform` and `todo`, then **Save**:
+   https://github.com/organizations/Ulberg-Org/settings/installations
+3. **Approve two PRs:**
+   - https://github.com/Ulberg-Org/platform/pull/28 (the queue fix, preview green)
+   - https://github.com/Ulberg-Org/platform/pull/27 (the nightly GitHub check; it goes green after step 2)
+
+Then I merge #28 first, restart #27's preview, and merge it once it's green. After that, Phase 0b is complete apart from the agent sign-in review TODO, and I'll update PLAN.

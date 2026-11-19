@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v11 (design grilled 2026-11-19, D44–D51).** Phase 0 done (2026-11-09). Before Phase 1, "Phase 0b: agent identities": Claude's Azure identity is done (D41); tenant lockdown (D42) done; next the GitHub organization `Ulberg-Org` and the Claude app (D43). Then Phase 1.
+> **Status: v12 (2026-11-19).** Phase 0 done (2026-11-09). Phase 0b done (2026-11-19) except the agent sign-in review: Claude acts as itself in Azure (D41) and GitHub (D52), the tenant is locked down (D42), the repos live in `Ulberg-Org` (D43) and `main` changes only through PRs the leads approved (D34 ended). Next: Phase 1.
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -141,7 +141,7 @@ Pulumi (F#) turns this into:
 | D31 | Adopted reference-infra patterns (§12): nested read ⊂ write ⊂ admin groups, generated RBAC, environment-scoped OIDC, External Secrets Operator, cert-manager | msg 5 |
 | D32 | **No service mesh in v1**; add one when a trigger in §8 happens | msg 6 |
 | D33 | Infra devs reach the DB through a `db-access` proxy pod, not Teleport (§4.1) | msg 6 |
-| D34 | **Bootstrap exception:** while you are the only person (infra dev, admin, app dev and lead of both repos), commits go straight to `main` without required review. GitHub doesn't allow approving your own PR. This is temporary; see the TODO in §13 | msg 7 |
+| D34 | **Bootstrap exception:** while you are the only person (infra dev, admin, app dev and lead of both repos), commits go straight to `main` without required review. GitHub doesn't allow approving your own PR. *Ended 2026-11-19* (platform PR #26): no ruleset bypass for anyone; Claude's app authors PRs (D52), so a solo lead can approve them | msg 7, 2026-11-19 |
 | D35 | The owner Microsoft account keeps only its billing role: no Global Admin and no subscription Owner, not even eligible | msg 2026-11-09 |
 | D36 | Subscription **Owner only via the break-glass accounts**. `platform-admin` (PIM, 1 h) gets no Owner | msg 2026-11-09 |
 | D37 | **Release flow** (§2.1). A PR approved by the app lead merges to app `main`; tag-only changes auto-deploy to `dev`; a release PR copies the dev tags to `prod`, and **the app lead approves it** | msg 2026-11-09 |
@@ -159,7 +159,7 @@ Pulumi (F#) turns this into:
 | D49 | **Portability:** everything tenant-specific lives in `people.yaml` and a few config files; nothing in code names your tenant. Bootstrap wizard and a proven run in an empty trial tenant are a late milestone (§13) | msg 2026-11-19 |
 | D50 | **Share notifications (app, Phase 10):** only to recipients who already have an account, so third parties can't be spammed. Sent from an outbox table by a worker, never in the request, so the API response and timing don't reveal whether an account exists (D22). One batched email per user per day at 08:00, one time zone for everyone; it contains the sharer's email. No further spam filtering | msg 2026-11-19 |
 | D51 | **App users (Phase 6/10):** deleting an account deletes what they own and haven't shared; grants they made survive, no longer linked to them. Grants resolve email → user ID, so a changed email only affects new invites. *Open for Phase 10:* who controls a shared todo after its owner is deleted | msg 2026-11-19 |
-| D52 | **Claude's GitHub identity is the app itself, not "on behalf of" a developer** (amends D43). PRs are authored by `ulberg-claude[bot]`, so a human lead can approve them and the D34 bypass can be removed. The app has contents + pull requests only (never workflows, settings, approvals or merges). Its private key is a **non-exportable key in Key Vault**: the agent identity (`platform-agents`) may only *sign* with that one key, so Claude mints 1 h installation tokens without the key ever leaving Key Vault, and every signing is logged under the agent's name. Attribution to the developer is in the PR body and commit trailer | msg 2026-11-19 |
+| D52 | **Claude's GitHub identity is the app itself, not "on behalf of" a developer** (amends D43). PRs are authored by `ulberg-claude[bot]`, so a human lead can approve them and the D34 bypass can be removed. The app has contents, pull requests and workflows (workflows added the same day, so CI can still change once the bypass is gone; every change needs a lead's approval). Never settings, approvals or deployments; it may merge a PR a lead approved. Its commits are made through GitHub's API so they are verified (`scripts/claude-push.sh`). Its private key is a **non-exportable key in Key Vault**: the agent identity (`platform-agents`) may only *sign* with that one key, so Claude mints 1 h installation tokens without the key ever leaving Key Vault, and every signing is logged under the agent's name. Attribution to the developer is in the PR body and commit trailer | msg 2026-11-19 |
 
 ## 4. Sign-off and bootstrap
 
@@ -352,7 +352,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
   3. You transfer `platform` and `todo` to the org (rulesets, environments and secrets move with them; old URLs redirect), then right after the three GitHub Apps (`ulberg-platform-admin`, `-reader`, `-pr-bot`): they are private, so they can only be installed on their owner, and you install them on the org. CI's GitHub-token steps fail for those few minutes. An apply verifies everything; then the old federated credentials are removed.
   4. ✅ Org, teams, memberships, org defaults, team `CODEOWNERS` (platform PRs #19–#21).
   5. ✅ The org-owned **Claude app** (D52, platform PRs #22–#23): created from a manifest, private key imported into Key Vault as a non-exportable key that only `platform-agents` may sign with; `scripts/claude-github-token.sh` (Key Vault signs the JWT → 1 h installation token → a separate `gh` profile) and the hook's GitHub part (`gh` and `git push` only with Claude's profile). Test: Claude opens a PR as `ulberg-claude[bot]`; you approve and merge.
-  6. **Leads control platform and app:** remove the D34 bypass, so `main` changes only through PRs approved by the repo's `<repo>-leads` team.
+  6. ✅ **Leads control platform and app** (platform PRs #25–#28): remove the D34 bypass, so `main` changes only through PRs approved by the repo's `<repo>-leads` team.
 - **TODO: review the agent sign-in process.** Signing the agent in must never require activating Global Admin. On 2026-11-15 the agent's `az` session ended with "Temporary Access Pass has expired": it had been signed in with the pass instead of its passkey. Review the whole flow (onboarding, passkey registration, renewing the 4 h / 12 h sessions, a lost passkey) so that routine sign-ins need only the agent's own passkey, and onboarding or recovery needs at most a narrow PIM role (e.g. Authentication Administrator for a new pass), never Global Admin. Update AGENTS.md §4 to match.
 - **Done when** Claude reads Azure and opens GitHub PRs only with its own, attributed, read-only/PR-only identity, and every agent permission is defined in code and checked nightly.
 
@@ -397,7 +397,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - **Done when** the security suite (authz matrix, CORS, headers, anonymous/wrong-scope rejection) passes locally and against dev.
 
 ### Phase 6b: `prod` environment + releases (D37, D38)
-- First: remove the solo-dev exception (D34, §13), so every change to `main` gets a review.
+- ~~First: remove the solo-dev exception (D34)~~: done in Phase 0b.
 - A `prod` Pulumi stack from the same code: its own AKS cluster, Postgres, VNet and Key Vault. A `prod` GitHub environment whose reviewers are the platform leads, and an apply identity federated to it.
 - ArgoCD syncs `apps/<app>/prod/` into the prod cluster. Post-deploy smoke + access tests run against both environments.
 - **Done when** an app change goes PR → app-lead approval → dev (automatic) → release PR → app-lead approval → prod, with no human touching either cluster, and an app developer who isn't a lead can't release.
@@ -467,8 +467,4 @@ Tests: unit + property (domain), Testcontainers (storage), in-process API tests,
 - Custom domain.
 - Managed WAF, or Coraza in Envoy.
 - A2A Agent Card, if the app ever contains its own agent.
-- **TODO, solo-developer exception (D34).** Remove the bootstrap exception so every change to `main` gets a review, even with one person. Proposed approach:
-  - Claude gets its own GitHub identity (a `ulberg-claude` GitHub App with only contents + pull-request access) and opens every PR as that app.
-  - The human lead reviews and approves as code owner. Required reviews are switched on in the rulesets, with no bypass for anyone.
-  - Human-authored changes go through Claude-opened PRs as well, or wait for a second lead.
-  - This must be done before a `prod` environment exists (first step of Phase 6b), and before anyone else joins.
+- ~~Solo-developer exception (D34)~~: done 2026-11-19, see D34 and D52.

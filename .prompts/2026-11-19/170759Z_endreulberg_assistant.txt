@@ -1,0 +1,11 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T17:07:59Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+**What you need to do:** approve the apply that has been waiting since #24 (it changes nothing):
+https://github.com/Ulberg-Org/platform/actions/runs/44571373018 → **Review deployments** → `dev` → **Approve and deploy**
+
+After that I can't press "Re-run" myself (the app has no Actions permission), but closing and reopening a PR starts its checks again. I'll do that for #25 and #26 as soon as the apply is through.
+
+**One design flaw I'll fix in its own PR:** an apply waiting for approval blocks *every* PR preview, because they share one queue, and older queued previews are cancelled. Previews only read, and Pulumi's state lock already prevents two runs from colliding. So previews should get their own queue, and only applies should wait for one another.

@@ -1,0 +1,27 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:58:37Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Still 403 with a fresh token, so the Workflows permission isn't active on the installation yet. Item 3 waits for that.
+
+**Status:**
+- **#25** (`claude-push.sh`) and **todo #3** (the matching AGENTS.md line): open, verified, waiting for your approval.
+- **#26** (no bypass for anyone, D34 ends): open, waiting for your approval.
+- **Item 3** (nightly GitHub check): committed locally. Publishing it needs the Workflows permission, because it changes `pulumi.yml`.
+
+**Everything I need from you,** signed in to GitHub as `Ulberg`. For apps there's no API; these are org-owner settings.
+1. **Claude app, Workflows permission.** Under *Repository permissions*, set **Workflows** → **Read and write**, then **Save changes**:
+   https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-claude/permissions
+2. **Reader app, org admin read.** Under *Organization permissions* (the second block), set **Administration** → **Read-only**, then **Save changes**:
+   https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-platform-reader/permissions
+3. **Accept both permission requests.** For each app, click **Review request** → **Accept new permissions**. While you're there, open **Configure** on `ulberg-claude`, switch to **Only select repositories** (`platform`, `todo`), and **Save**:
+   https://github.com/organizations/Ulberg-Org/settings/installations
+4. **Require 2FA for the org.** Tick **Require two-factor authentication for everyone in the Ulberg-Org organization**, then **Save**. You already use 2FA, so nobody gets removed:
+   https://github.com/organizations/Ulberg-Org/settings/authentication_security
+5. **Approve the three open PRs:**
+   - https://github.com/Ulberg-Org/platform/pull/25
+   - https://github.com/Ulberg-Org/todo/pull/3
+   - https://github.com/Ulberg-Org/platform/pull/26
+
+Tell me when you're done. I'll publish item 3, check it's green, and merge everything in the right order: #25 first, so the script is on `main`, and #26 last, because it removes the bypass.
