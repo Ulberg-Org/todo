@@ -1,0 +1,37 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:47:07Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've checked the reference infrastructure and its docs (patterns only). The short answer: **the platform follows the same ideas with different tools; local development is where we differ most.**
+
+**The platform:**
+
+| Area | Reference | Ours | Same idea? |
+|---|---|---|---|
+| Cloud and IaC | AWS, Terraform modules (plus some Ansible) | Azure, Pulumi in F# | Same: everything as code, applied by CI |
+| Cluster | EKS (managed Kubernetes) | AKS (managed Kubernetes) | Same |
+| Access | Groups per team and environment, nested read ⊂ write ⊂ admin | Same nesting, generated from `people.yaml`, plus PIM for write/admin | Same, stricter |
+| CI → cloud | OIDC trust scoped to repo and branch | OIDC trust scoped to an approved GitHub *environment* | Same, tighter |
+| App deployment description | App repos hold raw **Kustomize** base and overlays per environment | App repos hold only `platform.yaml`; the **renderer** generates the manifests | Different: ours keeps pod specs out of app teams' hands |
+| One identity per service | Yes (`service_profile`) | Yes (workload identity per service) | Same |
+| Secrets | External Secrets Operator | Same, with Key Vault | Same |
+| Ingress | nginx | Envoy Gateway (Gateway API) | Different tool, same role |
+| Service mesh | Linkerd | None yet (D32) | Deferred |
+| Database access for people | Teleport | A `db-access` proxy pod plus Entra (D33) | Different (Teleport needs the paid edition for Entra) |
+| Environments | prod, qa, dev, lab (always running) | dev and prod, **on demand** (D45) | Fewer, and cheaper |
+| Logs and telemetry | Fluent Bit → Splunk | OpenTelemetry → Loki, Tempo, Prometheus, Grafana | Different stack, same role, with traces in addition |
+| CI system | Jenkins | GitHub Actions | Different |
+
+**Local development:**
+
+| | Reference | Ours |
+|---|---|---|
+| How you run the app | Plain Docker on your machine; **no local Kubernetes** | A local Kubernetes cluster (kind) with the same components as the cloud (D61) |
+| Relation to the cloud | Separate: local is "just containers", the cloud is Kubernetes with Kustomize overlays | **Rendered from the same model** as dev and prod (D60) |
+| Network rules, routing, GitOps | Only testable in a cloud environment | Testable locally (`make test-platform`, ArgoCD in kind) |
+| Agents | Not part of the setup | Read-only Grafana and Postgres access for Claude, locally and later in the cloud |
+
+**In one sentence:** we've adopted the reference's sound platform patterns (access as code, scoped CI trust, one identity per service, GitOps, external secrets). We deliberately go further in two places it doesn't cover: one model that generates every environment, and a local setup that's the cloud in miniature.
+
+**Back to building:** step 1, the renderer (platform #34), is green and waiting for your approval: https://github.com/Ulberg-Org/platform/pull/34. Next is step 2, the platform CLI.

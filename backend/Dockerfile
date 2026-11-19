@@ -21,3 +21,22 @@ ARG IMAGE_TAG=local
 ENV BUILD_COMMIT=$BUILD_COMMIT BUILD_TIME=$BUILD_TIME IMAGE_TAG=$IMAGE_TAG
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "TodoBackend.dll"]
+
+# `dev`: what the local cluster runs (D61). The SDK with hot reload: the source is mounted read-only at /src, so
+# packages are restored here, at build time, and `dotnet watch` runs offline (the network rules deny the
+# internet). A change to the package list means rebuilding this image, which `make up` does.
+FROM mcr.microsoft.com/dotnet/sdk:11.0.100-resolute AS dev
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 NUGET_PACKAGES=/nuget HOME=/tmp \
+    DOTNET_USE_POLLING_FILE_WATCHER=1 DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1 ASPNETCORE_HTTP_PORTS=8080 \
+    # NuGet's vulnerability audit needs the internet; CI audits every build (and Trivy scans every image).
+    NuGetAudit=false
+WORKDIR /restore
+COPY Directory.Build.props Todo.slnx ./
+COPY src/Core/Core.fsproj src/Core/
+COPY src/TodoBackend/TodoBackend.fsproj src/TodoBackend/
+RUN HOME=/root dotnet restore src/TodoBackend/TodoBackend.fsproj && chmod -R a+rX /nuget
+WORKDIR /src/backend
+# Numeric, so Kubernetes can check runAsNonRoot.
+USER 1654
+ENTRYPOINT ["dotnet", "watch", "--non-interactive", "--project", "src/TodoBackend", "run", "--artifacts-path", "/tmp/artifacts"]
+

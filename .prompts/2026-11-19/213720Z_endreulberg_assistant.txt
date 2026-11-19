@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:37:20Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've written Phase 2 into PLAN as v15: https://github.com/Ulberg-Org/todo/pull/13
+
+| | Decision |
+|---|---|
+| **D61** | One local tier on Kubernetes (kind) with hot reload; Kubernetes 1.37 pinned for local and AKS; Postgres outside the cluster; no signature check locally; ports 9875 (app) and 9876 (Grafana) |
+| **D62** | The renderer outputs plain Kubernetes YAML for every environment; Helm only for third-party; no Kustomize; generated files never committed |
+| **D63** | The platform CLI: one public, signed image (`platform up / down / test`) |
+| **D64** | Full resource metrics for every service (pods, nodes, Kubernetes state, Postgres via a stats-only `todo_monitor` role, Envoy) |
+| **D65** | Dependabot cooldown (7/14/30 days, security fixes immediately), and everything pinned by hash |
+| **D66** | `make test-platform` checks the network rules by hand |
+
+Phase 2 itself is rewritten: **a thin end-to-end slice first**, then the network test, the dependency hardening, and deleting the compose setup.
+
+**Before I start building:**
+1. Approve todo #13.
+2. Raise Docker's memory to **12 GiB** (Docker Desktop → Settings → Resources → Memory → Apply & restart). The local cluster won't fit in today's 7.7 GiB.
+
+Then I'll start the thin slice, beginning with the renderer and the platform CLI in the platform repo.

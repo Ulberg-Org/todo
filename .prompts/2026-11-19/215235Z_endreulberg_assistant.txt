@@ -1,0 +1,34 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:52:35Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've published the refactor to #34. The `service` parser now reads as a flat list:
+
+```fsharp
+validation {
+    let! name = Name.parse "name" d.name
+    and! build = Parse.notEmpty "build" d.build
+    and! image = Parse.notEmpty "image" d.image
+    and! port = Field.port d.port
+    and! minReplicas = Field.minReplicas d.replicas
+    and! maxReplicas = Field.maxReplicas d.replicas
+    and! live = Field.path "health.live" d.health.live
+    and! ready = Field.path "health.ready" d.health.ready
+    and! routes = Field.routes d.routes
+    and! database = Field.database databases d.database
+    return { … }
+}
+```
+
+The rules now sit in small named parsers (a `Field` module), with the generic ones (`between`, `atLeast`, `startsWith`, `equals`) in the shared `Parse` module. Tests and error messages are unchanged. I've also saved this as a style rule for myself.
+
+**About `and!`:** almost, with one important difference.
+
+- **"All must pass to continue":** yes. The code after the block (`return { … }`) only runs if *every* `let!`/`and!` succeeded.
+- **But it doesn't stop at the first failure,** unlike a boolean AND, which short-circuits. The parts joined by `and!` are *independent*: none can use another's result. So all of them run, and **every error is collected**. That's why a broken `platform.yaml` reports "min replicas below 2", "unknown database" *and* "route must start with /" in one go, instead of one error per attempt.
+- **Compare `let!` on its own line:** that's sequential. The next line can use its value, and a failure stops there. We use it where a step genuinely depends on the previous one. In `parse`, for example, the services are checked against the database list that was just parsed.
+
+In other block types the same keyword means "independent" too. In `task { }`, for example, `and!` starts both awaits at once and waits for both. The common idea: `and!` = these don't depend on each other, so combine them all.
+
+Step 1 (the renderer, platform #34) is green and waiting for your approval: https://github.com/Ulberg-Org/platform/pull/34
