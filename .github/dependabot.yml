@@ -13,3 +13,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+  # The base images in backend/Dockerfile.
+  - package-ecosystem: docker
+    directory: /backend
+    schedule:
+      interval: weekly
