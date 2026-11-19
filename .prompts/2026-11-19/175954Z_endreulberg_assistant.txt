@@ -1,0 +1,68 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T17:59:54Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Settled: **Q1** B (the database from day one), **Q2** as proposed, **Q6** yes and broader (round 2 asks what that means exactly), **Q7** deferred, **Q8** yes.
+
+**Q5, the fact you asked for:** the reference app ships on the **full .NET SDK image**: the whole build toolchain, a shell, and as root. That works, but it's the opposite of hardened, so it's not a pattern to copy here. Chiseled images work with F# without problems; F# compiles to ordinary .NET. There's one detail, which is Q15.
+
+**Q3/Q4 change the order:** ACR comes *before* Phase 1's image step, pulled forward from Phase 3. That opens a new branch of questions.
+
+Round 2:
+
+❓ **Q9** - **Where does ACR live in code?** It belongs to the persistent part, which is never destroyed (D45). Options:
+- (a) inside the existing `access` stack;
+- (b) a new `shared` stack for everything persistent: ACR now, and later telemetry storage, the static IPs and DNS labels.
+
+➡️ (b). `access` stays about who may do what. `shared` is "things that outlive environments", which is exactly D45's persistent part.
+
+---
+
+❓ **Q10** - **Which ACR tier, and how open?**
+- **Basic**, about USD 5 per month: reachable over the internet, but only with an Entra identity. The admin password is disabled and there are no anonymous pulls.
+- **Premium**, about USD 50 per month, adds private network access.
+
+➡️ Basic, Entra-only. Nothing anonymous, no passwords, and every push and pull is attributable. Private access can come later if the cluster needs it.
+
+---
+
+❓ **Q11** - **Who may push images?**
+
+➡️ Only todo's CI, only from `main` after a merge, through its own OIDC identity (like the platform's CI identities), with **AcrPush** on that registry and nothing else. PR builds build and scan but never push. Nobody pushes from a laptop, me included.
+
+---
+
+❓ **Q12** - **How are images tagged?**
+
+➡️ With the git commit SHA, never `latest`, and tags are **locked** in ACR (a tag can't be overwritten). What's running is then always traceable to exactly one commit. This is also what the release flow (D37) copies from dev to prod.
+
+---
+
+❓ **Q13** - **Do we sign images now, and how?** A signature proves "this image was built by our CI from this commit". The cluster can then refuse anything else (Phase 4). Options:
+- (a) **cosign keyless:** the signature is bound to the GitHub workflow's OIDC identity, with no key to manage, recorded in Sigstore's public transparency log (fine, the repos are public);
+- (b) **Notation** with a Key Vault key, which is more Azure-native but means a key to manage.
+
+➡️ (a), from the first push, with the SBOM attached to the image as a signed attestation in the same step. That answers your Q3: SBOMs live with their images from day one.
+
+---
+
+❓ **Q14** - **What exactly can Claude read locally (your Q6 extension)?**
+- (a) Postgres's own **logs** (connections, errors, slow queries) shipped into the local Loki, next to the app logs and traces;
+- (b) Claude may **query** the local database through the **read-only role** (a Postgres MCP server), never as the app or migrator role.
+
+➡️ Both. On Azure later, (b) maps to the D33 `db-access` path, again read-only.
+
+---
+
+❓ **Q15** - **Culture data in the chiseled image:** chiseled images leave out ICU, .NET's library for language-specific formatting (dates, sorting by locale). Options:
+- (a) `InvariantGlobalization`: culture-independent formatting everywhere (ISO dates, ordinal sorting), the smallest image;
+- (b) the `-extra` chiseled variant with ICU, which is somewhat larger.
+
+➡️ (a). An API should speak ISO formats anyway. Human-friendly formatting belongs in the frontend.
+
+---
+
+❓ **Q16** - **Which CPU architecture?** Your Mac is ARM, and the planned AKS nodes (`Standard_B2ms`) are x86.
+
+➡️ CI builds **x86 (amd64) only**. Local development runs the backend directly with `dotnet watch`, not in a container, so your Mac never needs the image.

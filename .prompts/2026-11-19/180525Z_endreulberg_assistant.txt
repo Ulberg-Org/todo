@@ -1,0 +1,60 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T18:05:25Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+**Q5, how complicated it would be:** the reference Dockerfile is a standard two-stage build of about 25 lines.
+1. **Build stage:** copy the project files, `dotnet restore`, copy the code, `dotnet publish -c release -o /app`.
+2. **Run stage:** copy `/app` and start it with `["dotnet", "X.dll"]`. Its run stage happens to use the full SDK image again.
+
+Switching to chiseled changes **one line**, the run stage's `FROM`. Everything else already fits. The start command is written in the form that needs no shell. There are no `RUN` commands in the final stage (chiseled has no shell to run them), and no `curl`-based health check. The only side effects are good ones: the app runs as a non-root user and listens on port 8080 by default. So it's simple. The reference also builds for **ARM**, which supports your Q16.
+
+**Q16, ARM is feasible:**
+- GitHub has free native ARM runners for public repos, so builds are native and quick.
+- Chiseled images exist for arm64.
+- AKS has ARM nodes (Azure's Cobalt/Ampere sizes) at a similar price to the planned x86 ones. With on-demand environments (D45), the difference only applies while a demo runs.
+- Your Mac, CI and the cluster would all be ARM: one architecture everywhere.
+
+Settled: **Q10** Basic, **Q11** as proposed, **Q12** SHA tags only and locked, **Q15** (a).
+
+Round 3:
+
+❓ **Q17** - **The `shared` stack (Q9), now with its implications.** What a separate stack means in practice:
+- It has its own Pulumi state, and its own preview and apply in the same workflow, with the same approval and the same apply identity.
+- An environment's destroy (D45) can never touch it.
+- Environment stacks read its outputs (the ACR address) through a "stack reference" instead of hard-coding them.
+- Downside: one more stack in CI. Each apply shows two plans, and an `access` change and a `shared` change are approved separately.
+
+➡️ Yes, `shared` as a second stack. The cost is small, and "destroy can't reach it" is exactly what D45 needs.
+
+---
+
+❓ **Q18** - **Signing (Q13): Notation isn't the simple one.** Notation with Key Vault needs:
+- a signing **certificate** in Key Vault that has to be renewed before it expires;
+- the Notation CLI plus its Azure plugin in CI;
+- a Key Vault sign permission for the CI identity;
+- the certificate in the cluster's trust policy.
+
+cosign keyless needs one CI step and no key or certificate at all. Verification checks "signed by the workflow `Ulberg-Org/todo/.github/workflows/ci.yml` on `main`".
+
+➡️ cosign keyless. It's simpler on every axis. The trade-off: signatures are recorded in Sigstore's public log, which is harmless for public repos.
+
+---
+
+❓ **Q19** - **Database logs and access, locally and in the cloud as one unit (Q14).** They can't be literally one piece of infrastructure. Locally, Postgres writes log files; Azure's Postgres sends logs through Azure Monitor. They can be **one contract**, though, defined once in the platform repo:
+- the same log labels (`service.name=postgres`, the environment name), so the same Grafana queries and dashboards work everywhere;
+- the same role names (`todo_readonly` and so on), so Claude's read-only access looks identical;
+- the same tools for Claude: `mcp-grafana` and a read-only Postgres MCP server, where only the address and the sign-in differ (local password vs Entra token).
+
+Phase 1 builds the local side on that contract; Phase 3/5 plugs Azure into the same contract. A test checks that local and cloud use the same labels and role names.
+
+➡️ Yes: one contract, two adapters, and a drift test.
+
+---
+
+❓ **Q20** - **ARM everywhere (Q16)?**
+- CI builds arm64 on GitHub's ARM runners.
+- The planned AKS nodes become an ARM size (e.g. Cobalt `Standard_D2ps_v6`) instead of `Standard_B2ms`.
+- PLAN's cost table gets updated.
+
+➡️ Yes: arm64 only, one architecture everywhere.

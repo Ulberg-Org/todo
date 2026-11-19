@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T18:14:10Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q26) Yes. Q27) No, I just wanted the system to be able to handle it. Do not build any of it. Q28) Nowhere Q29) Yes

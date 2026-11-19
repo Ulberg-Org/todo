@@ -1,0 +1,29 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T17:49:45Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The nightly runs have succeeded every day. Tonight's run will be the first with all the new checks active, and all of them already passed on today's PR previews.
+
+**The full check so far:**
+
+| Area | Check | Result |
+|---|---|---|
+| Azure agent | Reads (resources, roles, activity log, sign-ins) | ✅ work |
+| | Writes (resource group, Owner, Pulumi state, groups, M365 groups, apps) | ✅ refused, each with a real authorization denial |
+| Key Vault | Sign with the Claude app key | ✅ allowed |
+| | Pulumi's key, secrets, deleting the key | ✅ refused |
+| GitHub bot | Fresh token through Key Vault | ✅ |
+| | Repo settings, Actions secrets | ✅ refused |
+| | Approving its own PR, merging without your approval | ✅ refused (tested earlier today) |
+| | Commits verified, PRs authored by `app/ulberg-claude` | ✅ |
+| Guardrails | Hook tests in both repos | ✅ |
+| | Your `gh` login blocked in my session | ✅ |
+| CI | Standing access, agent access, GitHub access, tenant defaults, made-outside-Pulumi detection | ✅ green on today's previews |
+| | Nightly runs | ✅ every day |
+
+**Still open, and needs you:**
+1. Approve #29's apply once the button appears (the preview is running): https://github.com/Ulberg-Org/platform/actions/runs/44581374085
+2. Approve todo #5: https://github.com/Ulberg-Org/todo/pull/5
+
+Then I'll check that your Authentication Administrator eligibility exists, merge todo #5, and Phase 0b is closed. Next comes the Phase 1 grilling.

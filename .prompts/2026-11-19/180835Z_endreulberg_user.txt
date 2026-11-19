@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T18:08:35Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q5, then i am happy. Q16 then do ARM. Q17) That sounds fine to me, but remember ordering so it is possible to do a setup and teardown of our whole platform. Q18) Ok, i wanted to have an actual signed image to be certain that we only run our images but if cosign is soo much simpler and reasonably much safer than nothing we can use that. Q19) Fair, do that. Q20) Yes arm everywhere

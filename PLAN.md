@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v12 (2026-11-19).** Phase 0 done (2026-11-09). Phase 0b done (2026-11-19) except the agent sign-in review: Claude acts as itself in Azure (D41) and GitHub (D52), the tenant is locked down (D42), the repos live in `Ulberg-Org` (D43) and `main` changes only through PRs the leads approved (D34 ended). Next: Phase 1.
+> **Status: v13 (2026-11-19, Phase 1 grilled: D53–D58).** Phase 0 and Phase 0b done. Next: Phase 1, starting with the `shared` stack and ACR (pulled forward from Phase 3).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -160,6 +160,12 @@ Pulumi (F#) turns this into:
 | D50 | **Share notifications (app, Phase 10):** only to recipients who already have an account, so third parties can't be spammed. Sent from an outbox table by a worker, never in the request, so the API response and timing don't reveal whether an account exists (D22). One batched email per user per day at 08:00, one time zone for everyone; it contains the sharer's email. No further spam filtering | msg 2026-11-19 |
 | D51 | **App users (Phase 6/10):** deleting an account deletes what they own and haven't shared; grants they made survive, no longer linked to them. Grants resolve email → user ID, so a changed email only affects new invites. *Open for Phase 10:* who controls a shared todo after its owner is deleted | msg 2026-11-19 |
 | D52 | **Claude's GitHub identity is the app itself, not "on behalf of" a developer** (amends D43). PRs are authored by `ulberg-claude[bot]`, so a human lead can approve them and the D34 bypass can be removed. The app has contents, pull requests and workflows (workflows added the same day, so CI can still change once the bypass is gone; every change needs a lead's approval). Never settings, approvals or deployments; it may merge a PR a lead approved. Its commits are made through GitHub's API so they are verified (`scripts/claude-push.sh`). Its private key is a **non-exportable key in Key Vault**: the agent identity (`platform-agents`) may only *sign* with that one key, so Claude mints 1 h installation tokens without the key ever leaving Key Vault, and every signing is logged under the agent's name. Attribution to the developer is in the PR body and commit trailer | msg 2026-11-19 |
+| D53 | **A `shared` Pulumi stack for everything persistent** (D45): ACR now; later telemetry storage, static IPs and DNS labels. Environment stacks read its outputs by stack reference. **Stack order lives in one file**: up = `access` → `shared` → environments, teardown in reverse; an environment's destroy stops at its own stack; a full teardown is a separate approved workflow that stops before `access`/`bootstrap` (tested in the portability milestone, D49) | msg 2026-11-19 |
+| D54 | **ACR before Phase 1's image step** (pulled forward from Phase 3): Basic SKU, Entra-only (no admin user, no anonymous pull). Only todo's CI pushes, only from `main`, with its own OIDC identity holding AcrPush and nothing else; PR builds never push; nobody pushes from a laptop. Tags are the commit SHA only and **locked**, never `latest` | msg 2026-11-19 |
+| D55 | **Images are signed with cosign keyless** (bound to todo's CI workflow on `main`, recorded in Sigstore's public log), and the SBOM (CycloneDX, by Trivy) is attached as a signed attestation. From Phase 4 the cluster refuses any image not signed that way. **Trivy** fails CI on critical/high vulnerabilities that have a fix; exceptions in a committed file, each with a reason and an expiry | msg 2026-11-19 |
+| D56 | **arm64 everywhere**: GitHub's ARM runners build, Microsoft's chiseled .NET image (non-root, read-only file system, invariant globalization) runs it, and AKS nodes are an ARM size (e.g. `Standard_D2ps_v6`). Postgres **18** locally and on Azure | msg 2026-11-19 |
+| D57 | **Always at least two instances behind a load balancer**, locally too: two `dotnet watch` instances behind Envoy in tier 1, and in the cluster the platform policy (D48) rejects `replicas.min` below 2 and replicas must sit on different nodes. Nothing may rely on being the only instance (no in-process shared state, nothing run once per process). No inbox/outbox/worker is built now | msg 2026-11-19 |
+| D58 | **Claude reads local telemetry and data from day one, through one contract**: `mcp-grafana` (app logs, traces, Postgres's own logs) and a Postgres MCP server as the read-only role only. Labels, role names and tools are defined once in the platform repo; Azure plugs into the same contract in Phase 3/5, with a drift test | msg 2026-11-19 |
 
 ## 4. Sign-off and bootstrap
 
@@ -316,7 +322,7 @@ Each grant is a set of independent bits on one todo for one email, just like `rw
 | Item | Choice | ~USD/month |
 |---|---|---|
 | AKS control plane | Free tier | 0 |
-| Nodes | 2 × `Standard_B2ms` (2 vCPU / 8 GB) | ~120 |
+| Nodes | 2 × ARM `Standard_D2ps_v6` (2 vCPU / 8 GB, D56; price to verify in Phase 3) | ~120 |
 | PostgreSQL Flexible | Burstable `B1ms`, 32 GB, private access | ~15–20 |
 | Ingress | Standard LB (comes with AKS) + Envoy Gateway in-cluster + cert-manager/Let's Encrypt | ~20 |
 | Logs/traces storage | Loki + Tempo on Azure Blob, short retention | ~5–10 |
@@ -357,11 +363,16 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - **Done when** Claude reads Azure and opens GitHub PRs only with its own, attributed, read-only/PR-only identity, and every agent permission is defined in code and checked nightly.
 
 ### Phase 1: Walking skeleton backend + local tier 1 + CI
-- F# Oxpecker (.NET 10): `/health/live`, `/health/ready`, `/version`.
-- OpenTelemetry traces/metrics/logs over OTLP; JSON logs carrying `trace_id`; `ProblemDetails` errors that include `trace_id`; no PII (hashed user id).
-- Local tier 1 (§11). Testcontainers integration tests.
-- Hardened Dockerfile; app CI: format → build (warnings as errors) → tests → `platform.yaml` schema check → image → Trivy → SBOM.
-- **Done when** CI is green and one request shows locally as trace + log + metric.
+- **First, the `shared` stack and ACR** (D53, D54): stack order file, `up`/teardown workflows, ACR, todo's push identity.
+- **Layout:** `backend/` (`src/Todo.Api`, `tests/`), later `frontend/`; `platform.yaml` at the root.
+- **Backend:** F# Oxpecker (.NET 10): `/health/live`, `/health/ready` (also checks the database as the app role), `/version` (commit SHA, build time, image tag).
+- **Telemetry:** OpenTelemetry traces/metrics/logs over OTLP; JSON logs carrying `trace_id`; `ProblemDetails` errors that include `trace_id`; no PII.
+- **Database:** Postgres 18 with the three roles (§9.2) from day one, no tables yet.
+- **Local tier 1** (§11): `make up` / `make down`, documented in README and AGENTS.md. Two instances behind Envoy (D57). `mcp-grafana` and a read-only Postgres MCP server for Claude (D58).
+- **Container:** chiseled, non-root, read-only file system, arm64 (D56).
+- **App CI** on ARM runners: format → build (warnings as errors) → tests (incl. Testcontainers) → `platform.yaml` schema check → image → Trivy → SBOM; on `main` also push, sign and attest (D54, D55). Both new jobs are required checks.
+- **Deferred:** the mock OIDC server (to Phase 6, when the first protected endpoint appears).
+- **Done when** CI is green, and one request through Envoy shows locally as trace + log + metric including the database hop, readable by Claude through `mcp-grafana`.
 
 ### Phase 2: Local platform (tier 2, kind)
 - Platform repo: `platform.yaml` schema + F# renderer → K8s manifests, with tests. Building blocks per D47: services, workers, schedules, databases, email; the D48 policy limits as code.
@@ -372,7 +383,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 ### Phase 3: Azure foundation (Pulumi F#, applied only by CI after approval)
 - Agents (D41) get AKS RBAC Reader and the DB read-only role as those resources appear.
 - Workforce groups, External ID app registrations, workload identities.
-- VNet + subnets + NSGs, private DNS, ACR, Key Vault, AKS (Entra RBAC, no local accounts, workload identity, Azure CNI overlay + Cilium), Postgres Flexible (private access, Entra-only auth with migrator/app/read-only identities).
+- VNet + subnets + NSGs, private DNS, Key Vault (ACR already exists from Phase 1, D54), AKS (Entra RBAC, no local accounts, workload identity, Azure CNI overlay + Cilium), Postgres Flexible (private access, Entra-only auth with migrator/app/read-only identities).
 - Pulumi unit tests (mocks); `preview` on every PR, `up` after approval.
 - On demand (D45): a persistent stack (state, ACR, Key Vault, identities, telemetry storage, static IP + DNS label per environment) and an environment stack that a `start` workflow creates and a scheduled workflow destroys after 4 h.
 - **Done when** everything exists, and the access tests show: app devs can change nothing; infra devs' Claude can read but not write; the DB isn't resolvable or reachable from outside the VNet.
@@ -425,7 +436,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 
 | Tier | For | What runs | Reliable for |
 |---|---|---|---|
-| **1: inner loop** | App devs, daily | `docker compose`: Postgres (with the same 3 roles as §9.2), `grafana/otel-lgtm`, **mock OIDC server** issuing External-ID-shaped tokens (incl. `email_verified`). Backend `dotnet watch`, frontend Vite | All app code, auth/permissions/sharing, telemetry, MCP (Claude Code connects to local `/mcp`) |
+| **1: inner loop** | App devs, daily | `docker compose`: Postgres (with the same 3 roles as §9.2), `grafana/otel-lgtm`, Envoy as load balancer in front of **two** backend instances (`dotnet watch`, D57), `mcp-grafana` + read-only Postgres MCP for Claude (D58); from Phase 6 a **mock OIDC server** issuing External-ID-shaped tokens (incl. `email_verified`). Frontend Vite | All app code, auth/permissions/sharing, telemetry, MCP (Claude Code connects to local `/mcp`) |
 | **2: local platform** | Infra devs, plus app devs checking a `platform.yaml` change | `kind` + Cilium + Envoy Gateway + ArgoCD + LGTM, the same charts/values as Azure | Rendered manifests, network policies, Pod Security, HPA/PDB, ArgoCD sync, ingress/CORS/headers, Grafana org/tenant split |
 | **3: cloud-only** | CI | Pulumi unit tests with mocks; `pulumi preview` against real dev | Azure resources, Entra, NSGs, private DNS/endpoints, workload identity |
 
