@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T21:18:54Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) That is fine Q2/3) Ah, yes. I want that. I do not remember the questions but now i understand. And we should build that now, a small version sooner rather than later. A thin-end-to-end setup is the best place to start. Q6) Ok we are doing Kubernetes. Q8) Yes Q9) b) Q10) I want local to be as representative of the cloud as fesaible. Q11) Is that not overdoing it. Basically running the paplication locally you can just call the frontend to check, you do not need a local CI?

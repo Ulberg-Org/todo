@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T21:33:16Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q19, sure, is it possible to make it so that a renewale of a package is not accepted as the same, so if someone overwrites 4.7.1 we do not get the compromised one? Also I want you to explain each technology for me ones before i accept the plan for phase 2

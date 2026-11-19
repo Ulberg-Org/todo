@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T21:22:00Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q12) Yes, all of those are atleast the next steps of the first thin slice. and then extend that into the cloud. Q13) I want it to output whatever we use for the Azure platform as well. So if we use Kustomize in the platform (also explain Helm and Kustomize to me) then we output that from the renderer, also for the output to local. Q14) local must live partially in the app, but dev and prod I am a bit uncertain about Q15) Yes that

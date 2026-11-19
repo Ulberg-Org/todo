@@ -1,0 +1,15 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:07:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've dropped the interim contract, and PLAN now says so:
+- **D58** is amended: no separate contract file or drift test. D60's model generates local and cloud from one source. Until the cloud side exists, each value has exactly one copy, in the local files.
+- **Phase 1** is marked done. The status line points to Phase 2: the local platform with kind, plus the D60 renderer.
+
+**What you need to do:**
+1. Approve platform #33, which now only makes the image check required for todo: https://github.com/Ulberg-Org/platform/pull/33
+2. After I've merged it, approve its apply (it updates todo's ruleset).
+3. Approve todo #12 (PLAN v14): https://github.com/Ulberg-Org/todo/pull/12
+
+After that, **Phase 1 is complete**, and Phase 2 is next in the plan: the local Kubernetes platform (kind with Cilium, Envoy Gateway and ArgoCD), and the renderer that generates both local and cloud from `platform.yaml`.

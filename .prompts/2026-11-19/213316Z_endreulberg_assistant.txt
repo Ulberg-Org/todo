@@ -1,0 +1,64 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:33:16Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, that's possible. The principle is to **pin by content, not by name**: a version number can be re-published, but a cryptographic hash can't be faked. Per ecosystem:
+
+| Ecosystem | Can a version be overwritten? | Protection |
+|---|---|---|
+| **NuGet** (.NET packages) | No: nuget.org never lets a version be replaced | Plus **lock files** with each package's hash; CI refuses to restore if a hash changes |
+| **Docker images** | **Yes**, tags can be moved | Pin by **digest** (`postgres:18.7@sha256:…`) |
+| **GitHub Actions** | **Yes**, tags can be moved | Pin by **commit SHA** (`actions/checkout@<sha> # v7`) |
+| **Helm charts** | Yes, in classic chart repos | Pull charts from OCI registries **by digest** where offered, otherwise verify a checksum |
+| **Downloaded tools** (gitleaks, Trivy) | Possible | Already checksum-verified (gitleaks), the same for the rest |
+
+Dependabot keeps updating these pins, with the cooldown applied. So you get new versions, but always a specific, verified build, never "whatever 4.7.1 means today".
+
+❓ **Q20** - **Pin everything by hash, as in the table above, in both repos, with Dependabot updating the pins?**
+
+➡️ Yes.
+
+---
+
+## The Phase 2 technologies, one by one
+
+**Kubernetes:** runs your containers on a set of machines and keeps them in the state you describe. You declare "two instances of the backend, reachable as one service" in YAML, and Kubernetes makes it so, restarting what dies. The key terms:
+- **Pod:** one running instance of your container.
+- **Deployment:** "keep N pods of this running".
+- **Service:** one stable address in front of the pods.
+- **Namespace:** a folder for grouping things.
+
+In Azure that's **AKS**, Microsoft-run Kubernetes.
+
+**kind** ("Kubernetes in Docker"): a real Kubernetes cluster where each "machine" is a Docker container on your Mac. It's the same Kubernetes as AKS, just small and local.
+
+**Cilium:** the cluster's network. It connects pods and **enforces network rules** ("only backend pods may reach the database"). Kubernetes defines those rules, but it needs a network layer like Cilium to actually block traffic. AKS can use Cilium too.
+
+**Envoy Gateway:** the cluster's front door. The same Envoy you have locally today, but configured through Kubernetes' standard **Gateway API** ("requests for `/api` go to the backend service") instead of a hand-written config file.
+
+**ArgoCD:** **GitOps**. It watches a git repository and makes the cluster match what's in it. You never run `kubectl apply` by hand: change git, and ArgoCD applies it, and it shows (and undoes) anything someone changed manually. Locally it reads your checkout through a small git server that `make up` starts.
+
+**Helm:** Kubernetes' package manager, as you said. We use it only to install third-party software (Cilium, Envoy Gateway, ArgoCD, the telemetry stack) with our own settings.
+
+**OpenTelemetry Collector:** the post office for telemetry. Apps and Postgres send traces, metrics and logs to it, and it labels them and forwards them to storage. You already run it today.
+
+**Telemetry storage, then display:**
+- **Loki** stores logs;
+- **Tempo** stores traces (the request timelines);
+- **Prometheus** stores metrics (counts, durations);
+- **Grafana** is the screen where you search and chart all three.
+
+Today the four run in one all-in-one container. In Phase 2 they run as separate components, as in the cloud.
+
+**Network policies:** Kubernetes rules saying which pods may talk to what. With Cilium they're enforced. `make test-platform` checks the important ones.
+
+**The renderer (ours):** a small F# program. From `platform.yaml` (what the app needs) and an environment file (local, dev or prod), it writes all the Kubernetes YAML and Helm settings. It's the one place everything is defined (D60).
+
+**The platform CLI (ours):** the renderer plus setup, packaged as one container image. `platform up` creates the local cluster, installs everything above, renders the app's files, and lets ArgoCD deploy them. todo's `make up` just calls it.
+
+**Dependabot with cooldown and hash pins:** keeps every dependency current, waits days before adopting a new release (Q19), and always pins exact, verified content (Q20).
+
+---
+
+With Q19 accepted, only **Q20** is open. If you answer yes, and the explanations made sense, I'll write the Phase 2 summary from my previous message into PLAN, together with Q19/Q20.

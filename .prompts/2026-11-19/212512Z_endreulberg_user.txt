@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T21:25:12Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+So Helm is the package manager for K8, and Kustomize is just multi-environment / override support. Q13) Yes that is fine. Q14) Ah, I think we can simplify, if the renderer makes the files for the local, dev and prod we can basically skip having local overrides untill we need it. Q16) Can we pin it, so the cloud and local has the same? Q17) I do not care where, just make it a non-conflicting iwth other common port. select something like 1235, 9875 or anything that most others do not use.

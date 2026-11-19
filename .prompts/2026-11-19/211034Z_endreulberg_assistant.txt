@@ -1,0 +1,61 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:10:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Docker currently gets **7.7 GiB** of your Mac's 36 GiB. That matters for Q6.
+
+**Phase 2 grilling, round 1.** One sentence per term:
+- **kind:** a real Kubernetes cluster running inside Docker on your Mac.
+- **Cilium:** the cluster's network layer; it enforces which pod may talk to which.
+- **Envoy Gateway:** the cluster's entrance, the same Envoy as locally today, configured by Kubernetes resources.
+- **ArgoCD:** keeps the cluster in sync with what's in git (GitOps).
+- **Renderer:** the D60 program that turns `platform.yaml` into everything else.
+
+---
+
+❓ **Q1** - **Keep both local tiers?** Tier 1 (`make up`, today) is fast, with hot reload. Tier 2 (kind) is the real cluster setup, slower to start, without hot reload.
+
+➡️ Yes, both, generated from the same model. Tier 1 for daily coding, tier 2 (`make cluster`) when you test platform behavior: network rules, routing, ArgoCD.
+
+---
+
+❓ **Q2** - **How does the todo repo get the renderer?** The renderer lives in the platform repo, but todo needs it to generate its local files.
+- (a) A public container image on GitHub's registry (the repos are public anyway): `docker run …/renderer`.
+- (b) A .NET tool package.
+- (c) A checkout of the platform repo next to todo.
+
+➡️ (a). There's nothing to install, the version is pinned in todo, and it's built and signed by platform's CI like our app image.
+
+---
+
+❓ **Q3** - **Generated files: committed or not?**
+
+➡️ Not committed. `make up` / `make cluster` render them into `.local/` on every run. Only `platform.yaml` and the overlays are in git, so the generated files can't drift.
+
+---
+
+❓ **Q4** - **Where does Postgres run in the local cluster?** In Azure the database sits *outside* the cluster (Flexible Server, reached over the private network).
+
+➡️ Outside the cluster locally too, as today's container, with only the backend pods allowed to reach it. That mirrors the Azure topology, so the network rule "only the backend may reach the DB" (§9.1) gets tested locally for real.
+
+---
+
+❓ **Q5** - **How does ArgoCD in kind get the manifests?** In Azure it reads from GitHub. Locally you'd want it to use your *uncommitted* work.
+- (a) A tiny git server inside the cluster serving your local checkout (read-only).
+- (b) Point it at GitHub, which means pushing before every test.
+- (c) Skip ArgoCD locally and apply manifests directly. Simple, but the GitOps path stays untested until Azure.
+
+➡️ (a). It's the same ArgoCD setup as in Azure; only the git address differs, which is an overlay value.
+
+---
+
+❓ **Q6** - **Memory:** kind with Cilium, Envoy Gateway, ArgoCD, the LGTM stack and two backend pods needs roughly 8–10 GiB. Docker has 7.7 GiB.
+
+➡️ Raise Docker's memory to **12 GiB** (Docker Desktop → Settings → Resources), leaving you 24 GiB. Tier 1 alone stays light.
+
+---
+
+❓ **Q7** - **Signed images locally?** From Phase 4, the cluster refuses unsigned images. Images built on your Mac aren't signed by CI.
+
+➡️ Locally the signature policy runs in **audit mode**: it logs, but doesn't block. That's an overlay value. Everywhere else it's enforced. This is the one deliberate security difference between local and cloud, and it's written in the overlay, where it's visible.

@@ -1,0 +1,41 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:30:49Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Settled: **Q17** (ports 9875 and 9876) and **Q18** (the platform CLI image).
+
+**On the lag:** yes, it's a real concern and simple to handle. Brand-new releases are where supply-chain attacks happen (a hijacked maintainer account publishes a bad version, and it's usually caught within days). Dependabot supports this directly with a **cooldown**: it waits N days after a release before proposing it. **Security fixes skip the cooldown,** so urgent patches still arrive immediately.
+
+The Kubernetes version itself is different: Dependabot doesn't track AKS versions, so a Kubernetes upgrade stays a deliberate change in one file (Q16), done when AKS has had the version for a while.
+
+❓ **Q19** - **Dependabot cooldown in both repos, for every ecosystem** (NuGet, Docker images, GitHub Actions, the .NET SDK):
+
+| Update | Waits |
+|---|---|
+| patch | 7 days |
+| minor | 14 days |
+| major | 30 days |
+| security fix | none, immediate |
+
+➡️ Yes.
+
+---
+
+If that's a yes, here's the shared understanding for **Phase 2**, which I'll write into PLAN:
+
+- **One local tier: Kubernetes (kind)** replaces today's compose setup. The backend pods run with hot reload, and `make up` always starts from a fresh cluster.
+- **Same as the cloud:**
+  - Kubernetes **1.37**, pinned in one place;
+  - Postgres **outside** the cluster, as in Azure;
+  - the same Helm charts for telemetry (Loki, Tempo, Prometheus, Grafana);
+  - Cilium, Envoy Gateway, and ArgoCD reading from your local checkout through a git server built into `make up`.
+  - The one difference: **no signature check locally**.
+- **The renderer (D60):** `platform.yaml` plus the platform's `environments/{local,dev,prod}.yaml` → **plain Kubernetes YAML** for every environment. Helm only for third-party components, no Kustomize, and no app-side overrides until they're needed. Generated files are never committed.
+- **The platform CLI:** one public, signed image from the platform repo (`platform up / down / test`). todo's `make up` runs it at a pinned version.
+- **Addresses:** the app at http://localhost:9875, Grafana at http://localhost:9876. Docker gets 12 GiB.
+- **Network rules:** `make test-platform` checks them by hand (backend → database allowed, everything else blocked). No CI job.
+- **First, a thin end-to-end slice:** the backend through the gateway, with its trace (including the database step) visible in Grafana. Then extend it into the cloud.
+- **Dependabot cooldown** as in Q19.
+
+Is that our shared understanding?
