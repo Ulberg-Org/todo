@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "grafana": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i", "--add-host", "host.docker.internal:host-gateway",
+        "-e", "GRAFANA_URL=http://host.docker.internal:3000",
+        "--entrypoint", "/app/mcp-grafana", "grafana/mcp-grafana:2.3.0",
+        "-t", "stdio", "-disable-write", "-disable-admin"
+      ]
+    },
+    "postgres": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i", "--add-host", "host.docker.internal:host-gateway",
+        "crystaldba/postgres-mcp:0.3.0", "--access-mode=restricted",
+        "postgresql://todo_readonly:local-only-readonly@host.docker.internal:5432/todo"
+      ]
+    }
+  }
+}

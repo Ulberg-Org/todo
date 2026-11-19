@@ -1,0 +1,16 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T20:13:40Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Done. `RollForward` is left out; nothing was changed.
+
+I added the one tracing rule that matters to AGENTS.md §2, as one sentence:
+
+> The trace context (W3C `traceparent`) travels with every hop, including messages and queued work: whoever picks the work up continues the same trace as a real span, never just copies an ID into the logs.
+
+**What you need to do: approve two PRs.**
+- https://github.com/Ulberg-Org/todo/pull/8 (the tracing rule)
+- https://github.com/Ulberg-Org/platform/pull/32 (style guide sync, plus the backend check becomes required for todo; CI is green)
+
+Merge #32 first and approve its apply: it updates todo's ruleset. Then PR 2 (`make up`) is next.

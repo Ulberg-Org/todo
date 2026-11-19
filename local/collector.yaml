@@ -1,0 +1,36 @@
+# The local half of the telemetry contract (D58): the same service names and labels the cloud collector uses
+# later, so Grafana queries and Claude's tools work the same everywhere.
+receivers:
+  otlp:
+    protocols:
+      grpc: { endpoint: 0.0.0.0:4317 }
+      http: { endpoint: 0.0.0.0:4318 }
+  # Postgres's own log (connections, errors, slow statements), written as JSON lines.
+  filelog/postgres:
+    include: [/var/log/postgresql/postgresql.json]
+    start_at: beginning
+    operators:
+      - type: json_parser
+        timestamp: { parse_from: attributes.timestamp, layout: "%Y-%m-%d %H:%M:%S.%L %Z" }
+        severity: { parse_from: attributes.error_severity }
+      - type: move
+        from: attributes.message
+        to: body
+    resource:
+      service.name: postgres
+
+processors:
+  resource:
+    attributes:
+      - { key: deployment.environment.name, value: local, action: upsert }
+  batch: {}
+
+exporters:
+  otlphttp:
+    endpoint: http://lgtm:4318
+
+service:
+  pipelines:
+    traces: { receivers: [otlp], processors: [resource, batch], exporters: [otlphttp] }
+    metrics: { receivers: [otlp], processors: [resource, batch], exporters: [otlphttp] }
+    logs: { receivers: [otlp, filelog/postgres], processors: [resource, batch], exporters: [otlphttp] }
