@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T20:45:53Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+No. Nothing of the app runs in Azure yet, and nothing deploys there today.
+
+**What exists in Azure now:**
+- identity and access: Entra groups, PIM, Conditional Access, the agent account;
+- the Pulumi state storage and Key Vault;
+- the **container registry**, which is still empty.
+
+There's no cluster, no database and no Grafana in Azure.
+
+**Where the app is today:** it runs locally (`make up`) and in CI's tests. That's it.
+
+**How it gets to Azure, by the plan's order:**
+1. **Phase 1, PR 3 (next):** CI builds the image, scans it, signs it and pushes it to the registry on every merge to `main`. After that, an image is ready to run, but nothing runs it yet.
+2. **Phase 3:** the Azure environment itself: AKS, Postgres, network. Per D45, it's started on demand and torn down after 4 h.
+3. **Phase 4:** GitOps with ArgoCD, so a merge to `main` lands in the cluster automatically.
+4. **Phase 5:** Grafana, Loki, Tempo and Prometheus in Azure. That's when the per-endpoint counts and traces are visible for the cloud too, through the same collector setup as locally (D58).
+
+So "deploy and see it in Azure" arrives with Phases 3–5. Phase 2 (a local Kubernetes cluster with kind) comes before them in the plan. If you'd rather see it in Azure sooner, Phase 2 could move after 3–5, but I'd keep the order: tier 2 lets us test the cluster setup locally for free before paying for Azure.
+
+Meanwhile, PR 2 (the local stack) is waiting for your approval: https://github.com/Ulberg-Org/todo/pull/9

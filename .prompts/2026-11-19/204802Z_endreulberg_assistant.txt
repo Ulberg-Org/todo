@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T20:48:02Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, and that's one of the clearest wins. Everything in today's hand-written `local/envoy.yaml` comes from facts `platform.yaml` already declares:
+
+| In `local/envoy.yaml` today | Comes from in `platform.yaml` |
+|---|---|
+| a cluster per service | `services:` |
+| two endpoints (5001, 5002) | `replicas.min: 2` (the local overlay only says "start at port 5001") |
+| routing `/` to the backend | `routes: [ /api, /mcp ]` per service (and `/` for the frontend later) |
+| health check on `/health/ready` | `health.ready` |
+
+So in the end:
+- **locally**, the renderer writes Envoy's config, the instance count in `make up` and the compose services;
+- **in the cluster**, the same renderer writes Envoy Gateway's routes (`HTTPRoute`) from the *same* `routes` and `health` fields.
+
+Locally and in Azure it's then the same Envoy, with the same routes and the same health rule, from one source. Add a service, a route or a third replica in `platform.yaml`, and both places follow. Nobody edits Envoy by hand.
+
+Until the renderer exists (Phase 2), today's `envoy.yaml` stays as it is. PR 2 is fine to merge as the working starting point, and the renderer replaces those files later.
+
+Shall I write this into PLAN as the decision from your previous question, with the Envoy config as an explicit output of the renderer?
