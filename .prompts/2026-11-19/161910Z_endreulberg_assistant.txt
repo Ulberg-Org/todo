@@ -1,0 +1,6 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:19:10Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Both bypass lists are still empty according to GitHub. Tell me once you've saved both, and I'll read the values back.

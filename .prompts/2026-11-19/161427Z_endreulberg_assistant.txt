@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:14:27Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The direct link for platform's ruleset is https://github.com/Ulberg-Org/platform/settings/rules/26821256 (todo's is https://github.com/Ulberg-Org/todo/settings/rules/26821257).
+
+Tell me when both are saved.

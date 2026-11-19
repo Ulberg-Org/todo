@@ -1,6 +1,6 @@
 # F# style
 
-These rules apply to **every F# file** in `Ulberg/todo` and `Ulberg/platform`: application code, Pulumi stacks, scripts and tests. There are no per-file exceptions. This file is identical in both repos (platform CI checks that), so change it in both at once.
+These rules apply to **every F# file** in `Ulberg-Org/todo` and `Ulberg-Org/platform`: application code, Pulumi stacks, scripts and tests. There are no per-file exceptions. This file is identical in both repos (platform CI checks that), so change it in both at once.
 
 Most of this is standard F#, explained well by Scott Wlaschin's *F# for Fun and Profit*. The reading list at the end links the articles each rule comes from. `reference/` shows the same patterns in a real codebase.
 

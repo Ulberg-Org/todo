@@ -19,8 +19,8 @@ A showcase todo application built entirely with AI that is **infrastructure-firs
 
 | Repo | Contains | Who can merge |
 |---|---|---|
-| `Ulberg/todo` (this repo) | F# backend, React frontend, tests, app CI, **`platform.yaml`** | `todo` lead developers |
-| `Ulberg/platform` (new) | Pulumi in **F#** (Azure + Entra + GitHub), ArgoCD apps, Helm values, cluster policies, observability stack, the `platform.yaml` schema + renderer, **all access definitions** | `platform` lead developers (a subset of infra developers) |
+| `Ulberg-Org/todo` (this repo) | F# backend, React frontend, tests, app CI, **`platform.yaml`** | `todo` lead developers |
+| `Ulberg-Org/platform` (new) | Pulumi in **F#** (Azure + Entra + GitHub), ArgoCD apps, Helm values, cluster policies, observability stack, the `platform.yaml` schema + renderer, **all access definitions** | `platform` lead developers (a subset of infra developers) |
 
 ### 2.1 `platform.yaml`: the contract between app and platform
 
@@ -88,8 +88,8 @@ groups:
   infra-developers: [ endre ]   # Azure/K8s/DB read, infra logs, infra-dev Claude
   app-developers:   [ endre ]   # app logs + metrics + traces only
 repo-leads:
-  platform: [ endre ]           # may approve/merge in Ulberg/platform
-  todo:     [ endre ]           # may approve/merge in Ulberg/todo
+  platform: [ endre ]           # may approve/merge in Ulberg-Org/platform
+  todo:     [ endre ]           # may approve/merge in Ulberg-Org/todo
 ```
 
 Pulumi (F#) turns this into:
@@ -97,14 +97,12 @@ Pulumi (F#) turns this into:
 - GitHub (Pulumi GitHub provider):
   - repository settings and branch rulesets: PR required, code-owner review required, signed commits, no force push, status checks required;
   - a `CODEOWNERS` file in each repo (`* @<leads>`). It is committed by hand and Pulumi fails the run if it doesn't match `people.yaml`, because a bot pushing it to `main` would need a ruleset bypass;
-  - collaborator permissions (leads get `maintain`, other developers get `write`, no one gets `admin` except the bootstrap owner).
+  - teams in the `Ulberg-Org` organization (D43): `<repo>-leads` (maintain on their repo, and the code owners), `infra-developers` (push everywhere), `app-developers` (push to app repos); everyone in `people.yaml` is an org member, and only the bootstrap owner is an org admin.
 - Changing who is a lead or an infra developer is a PR to `platform/access/` that needs a platform lead's approval.
 
-**GitHub constraint**: `Ulberg` is a personal account, not an organization. That means:
-- no GitHub Teams, so `CODEOWNERS` lists users directly;
-- branch rulesets / required reviews on *private* repos need GitHub Pro.
+**GitHub organization** (D43): both repos live in `Ulberg-Org` (Team plan since 2026-11-19), so `CODEOWNERS` names teams (`* @Ulberg-Org/<repo>-leads`) and environment reviewers are teams. The ruleset bypass (D34) is "Organization admin": GitHub drops repository-role bypasses when a repo is transferred.
 
-So **both repos are public** (D26). gitleaks secret scanning runs in CI as a required check, GitHub push protection and secret scanning are on, and Dependabot handles updates and alerts. **No git pre-commit hooks** (D29).
+**Both repos are public** (D26). gitleaks secret scanning runs in CI as a required check, GitHub push protection and secret scanning are on, and Dependabot handles updates and alerts. **No git pre-commit hooks** (D29).
 
 ## 3. Decisions made
 
@@ -130,7 +128,7 @@ So **both repos are public** (D26). gitleaks secret scanning runs in CI as a req
 | D18 | Infra is applied **only by platform CI after approval** | msg 3 |
 | D19 | **Pulumi in F#** (Pulumi has no official Rust SDK) | msg 3 |
 | D20 | No custom domain for now | msg 3 |
-| D21 | GitHub owner: **`Ulberg`** (personal account) | msg 3 |
+| D21 | GitHub owner: **`Ulberg`** (personal account). *Superseded by D43:* the organization `Ulberg-Org` since 2026-11-19 | msg 3 |
 | D22 | Sharing never reveals whether a user exists (§6.3) | msg 3 |
 | D23 | **Entra ID P2 + PIM is implemented** for infra developers (§7) | msg 4 |
 | D24 | **DB auth option B**: Entra-only, split migrator / app / read-only identities, no passwords (§9.2) | msg 4 |
@@ -336,7 +334,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 
 ### Phase 0: Ways of working + bootstrap
 - Done: `AGENTS.md`, `CLAUDE.md`, `.prompts/`, `PLAN.md`.
-- `git init` both repos (`reference/` in `.gitignore`), push to `Ulberg/todo` and `Ulberg/platform`.
+- `git init` both repos (`reference/` in `.gitignore`), push to `Ulberg-Org/todo` and `Ulberg-Org/platform`.
 - `.editorconfig`, Fantomas, Prettier/ESLint (all enforced in CI only, no git hooks), Claude Code prompt-capture hooks, gitleaks + Dependabot.
 - Azure bootstrap checklist + script (§4). Pulumi "bootstrap" stack (F#): state storage, CI identity, `access/people.yaml` → Entra groups, PIM eligibility + policies, Conditional Access, GitHub rulesets, CODEOWNERS.
 - **Done when** both repos are protected by rules defined in code, and the CI identity can run `pulumi preview`.
