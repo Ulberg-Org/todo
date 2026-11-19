@@ -1,0 +1,27 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:06:33Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The transfer is done, and CI's Azure access is ready for the org. Until the apps are moved, CI's GitHub-token steps will fail: the apps are private, so they can only be installed on their owner. Everything below is in your GitHub account `Ulberg`, three apps × three steps. Do them in this order.
+
+**1. Transfer each app to the org.** On each page, scroll to **Transfer ownership of this GitHub App**, type the app's name, and choose **Ulberg-Org** as the new owner:
+- https://github.com/settings/apps/ulberg-platform-admin/advanced
+- https://github.com/settings/apps/ulberg-platform-reader/advanced
+- https://github.com/settings/apps/ulberg-platform-pr-bot/advanced
+
+**2. Give two of them organization permissions.** Step 3 manages teams and org settings, so these need it. Scroll to **Organization permissions**, set the values below, and **Save changes**:
+- `ulberg-platform-admin`: **Administration** → Read and write; **Members** → Read and write.
+  https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-platform-admin/permissions
+- `ulberg-platform-reader`: **Administration** → Read-only; **Members** → Read-only.
+  https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-platform-reader/permissions
+
+**3. Install each app on the org.** Click **Install** next to `Ulberg-Org`, choose **Only select repositories**, and pick:
+- `ulberg-platform-admin`: `platform` and `todo`.
+  https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-platform-admin/installations
+- `ulberg-platform-reader`: `platform` and `todo`.
+  https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-platform-reader/installations
+- `ulberg-platform-pr-bot`: `platform` only.
+  https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-platform-pr-bot/installations
+
+Tell me when it's done. I'll check that CI gets its GitHub tokens again, then write step 3: teams from `people.yaml`, `CODEOWNERS` naming teams, environment reviewers as teams, the org settings, and removing the unused credentials.

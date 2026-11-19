@@ -1,0 +1,10 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:04:39Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I merged #19 (`bcbd6aa`). #18's apply has already gone through.
+
+Approve this apply, signed in to GitHub as `Ulberg`: https://github.com/Ulberg/platform/actions/runs/44562011541 → **Review deployments** → tick `dev` → **Approve and deploy**. The preview step runs first, so the button shows up after about a minute.
+
+When it's green, I'll check that the six new credentials exist in Azure. Then tell me **"transfer the repos"**.

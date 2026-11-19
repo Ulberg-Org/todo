@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T16:02:30Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+But should you not move the repo to the org as well, or is the PR first and then it gets moved via GH?

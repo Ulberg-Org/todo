@@ -1,0 +1,18 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:02:30Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+PR #19's preview is exactly as intended: the 3 bootstrap credentials are imported unchanged, and 6 new ones are created. https://github.com/Ulberg/platform/pull/19
+
+**On your question:** PR first, then the move. A PR can't move a repo. A transfer is a repository settings action on GitHub, not a code change. The order matters:
+
+1. **Merge #19 and approve its apply.** Azure then trusts CI tokens from `Ulberg-Org`.
+2. **Then transfer the repos.** If they moved first, CI could no longer get an Azure token, and the only way to fix that would be a manual `az` command with admin rights.
+
+**Who transfers:** I can do the two repo transfers myself with `gh api repos/Ulberg/<repo>/transfer`, which runs as your GitHub account. That's an outward-facing and hard-to-reverse action, so I'll only do it when you tell me to. The three GitHub Apps have no transfer API, so those clicks are yours (I'll send one URL per app).
+
+So, for now:
+- Say **"merge"** for #19.
+- Then approve its apply. I'll link the run.
+- After the apply is green, tell me **"transfer the repos"** and I'll move both.

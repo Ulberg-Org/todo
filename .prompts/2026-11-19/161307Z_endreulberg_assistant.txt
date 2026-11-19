@@ -1,0 +1,16 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:13:07Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#20 is ready, and all checks are green: https://github.com/Ulberg-Org/platform/pull/20
+
+**What you need to do:**
+1. Say **"merge"**.
+2. Approve its apply. That apply is the first real test of the admin app installed on the org, and of the apply identity signing in from `Ulberg-Org`.
+
+Meanwhile I'll start step 3b:
+- teams from `people.yaml`, replacing collaborators;
+- `CODEOWNERS` naming teams;
+- environment reviewers as teams;
+- the org settings: 2FA required, base permission none, members can't create repos, token rules.

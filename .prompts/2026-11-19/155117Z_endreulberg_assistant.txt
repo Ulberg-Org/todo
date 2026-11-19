@@ -1,0 +1,19 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T15:51:17Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The lockdown is solved, and it wasn't a bug in our code. Entra kept the rights the agent's sign-in session had when it started. The session I tested on 11-15 started 14 seconds before the policy change. With your fresh sign-in today, all six write probes were refused with real authorization denials.
+
+The smoke-test fix and the detection are in PR #18, and all checks are green: https://github.com/Ulberg/platform/pull/18
+- The smoke test now counts a write as refused only when Azure answers with an authorization denial. If any read fails, for example because the session expired, it stops instead of reporting success.
+- The nightly check now fails if any group or app is owned by anyone other than the Pulumi apply identity. Whoever creates one becomes its owner, so this catches anything made outside Pulumi. It needed no new permission.
+- The nightly check also now confirms Microsoft 365 group creation stays off.
+
+PLAN marks the lockdown done, including that lesson.
+
+**What you need to do:**
+1. Say **"merge"** for #18.
+2. Then approve the apply. It changes nothing in Azure, but `main` always waits for you. I'll send the run link after merging.
+
+Then item 2, the GitHub org migration (my proposal is to defer it), whenever you're ready.
