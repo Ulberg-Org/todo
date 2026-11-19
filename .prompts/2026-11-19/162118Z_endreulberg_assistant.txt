@@ -1,0 +1,13 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:21:18Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I merged #21 (`4b080cc`).
+
+**The only thing for you:** approve the apply, signed in to GitHub as `Ulberg`:
+https://github.com/Ulberg-Org/platform/actions/runs/44565379836 → **Review deployments** → `dev` → **Approve and deploy**.
+
+That's the last time it's you personally as reviewer. From this apply on, the `dev` environment is approved by the `platform-leads` team, which is you, but defined in code.
+
+Once it's green, I'll verify the teams, `CODEOWNERS`, org defaults and bypass in GitHub itself. Then I'll update PLAN. What's left in Phase 0b after that is the Claude GitHub app.

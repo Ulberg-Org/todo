@@ -1,0 +1,32 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:24:48Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#21's apply is still waiting for your approval: https://github.com/Ulberg-Org/platform/actions/runs/44565379836
+
+Agreed on the order: org (done after this apply) → Claude app → leads control platform and app. Before I build the Claude app, there's one decision that ties steps 2 and 3 together and changes D43.
+
+**Who is the author of Claude's PRs?** D43 chose user-to-server tokens, where Claude acts *on your behalf*. GitHub then records **you** as the PR's author, shown as "Ulberg via Claude". GitHub never lets an author approve their own PR. So with D43 as written, step 3 doesn't work while you're solo: you can't approve Claude's PRs, and the D34 bypass has to stay.
+
+| | A. On your behalf (D43 today) | B. As the app itself |
+|---|---|---|
+| PR author | `Ulberg` (via Claude) | `ulberg-claude[bot]` |
+| You can approve it | ✗ (own PR) | ✓ |
+| D34 bypass can be removed | Not while solo | ✓, so the leads (via code-owner review) are the only way into `main` |
+| What Claude can touch | App ∩ your rights | Only what the app is granted (contents and PRs, never workflows) |
+| Credential | Device-flow token in a `gh` profile, 8 h, nothing stored | The app's **private key** has to be somewhere Claude can use it |
+
+For B, the key question is where the key lives. My proposal:
+- The key goes in Key Vault, where only a dedicated identity may read it (the agent identity gets no Key Vault access, D41).
+- A small CI workflow mints short-lived installation tokens: you trigger it, and it hands back a 1 h token for Claude's `gh` profile. That's one command per session.
+
+The alternative is the key in your macOS keychain, which is simpler but means a long-lived key on a laptop.
+
+❓ **Q1 - Should Claude's PRs be authored by the app (B), so you can approve them and the D34 bypass can go?**
+
+➡️ Yes, B. It's the only way your step 3 holds while you're solo. Attribution stays via the PR body, the commit trailer and the agent account named in the PR. D43 gets amended.
+
+❓ **Q2 - Where does the app's private key live?**
+
+➡️ Key Vault, with tokens minted by CI on demand. No key on any laptop, consistent with "no secrets on disk".

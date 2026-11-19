@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T16:24:48Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, then the next thing is integrating with the Claude app then, so we have an org and a way to let claude interact, and then lastly a permission control that makes the leads control the platform and app

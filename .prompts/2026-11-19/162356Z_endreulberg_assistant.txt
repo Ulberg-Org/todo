@@ -1,0 +1,22 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T16:23:56Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Almost. After this apply there's one step left, and then a few things that stay human by design.
+
+**Still missing: Claude's own GitHub identity.** Today I use your `gh` login, so every PR, push and merge I make looks like you, and I technically hold your org-owner rights. The last Phase 0b item fixes that:
+- **The org-owned Claude app,** with contents and pull-request rights only, and no workflows, settings, approvals or merges. You'd create it with one click from a manifest I prepare, and install it with a second.
+- **`scripts/claude-github-login.sh`:** a device-flow sign-in into a separate `gh` profile, so no key ends up on your laptop.
+- **The hook's GitHub part:** `gh` and `git push` only work with Claude's profile.
+
+After that, my PRs show as "Ulberg via Claude", and I can't approve or merge anything.
+
+**What stays with you on purpose:**
+- **Signing the agent in** with its passkey every 4 h for Azure tools, 12 h otherwise. That's the Conditional Access rules (D39). The open TODO from Phase 0b also stays: make sure that never needs Global Admin.
+- **Approving PRs and applies.** You're the code owner and the `platform-leads` team. Agents open PRs; humans approve.
+- **PIM activations and Graph grants,** when a change genuinely needs new privileges.
+
+So the honest answer: after the Claude app, yes. Agents write the code, open PRs and read Azure, and you approve. That's also when Phase 0b's "done when" is met, and Phase 1 (the backend) starts.
+
+I'll check the apply as soon as you've approved it.
