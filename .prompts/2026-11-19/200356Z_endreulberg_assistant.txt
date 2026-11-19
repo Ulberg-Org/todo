@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T20:03:56Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've changed the backend to use the reference app's folder structure, inside `backend/`. CI is green again and the PR is updated: https://github.com/Ulberg-Org/todo/pull/7
+
+```
+backend/
+├── Todo.slnx
+├── Directory.Build.props
+├── src/
+│   ├── Core/domain/BuildInfo.fs           ← pure domain (as src/Core/domain)
+│   ├── Database/init/001-roles.sql        ← database (as src/Database; migrations come later)
+│   └── TodoBackend/                       ← the web app (as src/SolBackend)
+│       ├── Program.fs, Telemetry.fs
+│       ├── api/Health.fs, api/Problem.fs
+│       └── storage/Database.fs
+└── test/TodoBackend.Test/                 ← tests (as test/Core.Test)
+```
+
+- **Why inside `backend/`:** the reference repo *is* a backend, while todo also gets `frontend/` and `platform.yaml`. `backend/` plays the role of the reference's repo root. If you'd rather have `src/` and `test/` directly at the todo root, that's a quick move.
+- **Folders still to come:** `service/` and `mcp/` will be added under `TodoBackend/` when there's code for them, as in the reference.
+- **PLAN:** its Phase 1 layout line now describes this structure.
+
+**What you need to do:** approve todo #7. After that come the platform sync PR and PR 2 (`make up`).

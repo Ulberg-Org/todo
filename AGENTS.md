@@ -34,7 +34,7 @@ In practice, a change is not done until:
 
 - It builds, is formatted, and all tests pass in CI.
 - It is authorized (deny by default) both in infrastructure and in the application.
-- It emits traces, metrics and structured logs that let an agent debug it end to end (frontend → backend → database → infrastructure).
+- It emits traces, metrics and structured logs that let an agent debug it end to end (frontend → backend → database → infrastructure). The trace context (W3C `traceparent`) travels with every hop, including messages and queued work: whoever picks the work up continues the same trace as a real span, never just copies an ID into the logs.
 - It is reachable by agents through the agent integration layer (see `PLAN.md`), with the security implications written down in the PR.
 - No known warnings, failing checks or TODO-hacks are left behind. If you find a broken window, fix it (or stop and raise it) before continuing.
 
