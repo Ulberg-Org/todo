@@ -86,11 +86,12 @@ jobs:
             --build-arg IMAGE_TAG="$GITHUB_SHA" backend
       - name: Smoke test (read-only file system, no capabilities, as in the cluster)
         run: |
-          docker run -d --name smoke --read-only --cap-drop ALL --security-opt no-new-privileges -p 8080:8080 \
+          # Health and version are on the management port (D73); the public port has nothing to answer yet.
+          docker run -d --name smoke --read-only --cap-drop ALL --security-opt no-new-privileges -p 8081:8081 \
             -e "Database__ConnectionString=Host=127.0.0.1;Port=1;Database=todo;Username=todo_app;Password=x;Timeout=1" \
             "$IMAGE:$GITHUB_SHA"
-          for _ in $(seq 1 30); do curl -sf http://localhost:8080/health/live && break; sleep 1; done
-          curl -sf http://localhost:8080/version | jq -e --arg c "$GITHUB_SHA" '.commit == $c'
+          for _ in $(seq 1 30); do curl -sf http://localhost:8081/health/live && break; sleep 1; done
+          curl -sf http://localhost:8081/version | jq -e --arg c "$GITHUB_SHA" '.commit == $c'
           docker rm -f smoke
       - uses: aquasecurity/setup-trivy@v0.3.1
         with:

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T18:38:42Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+When it comes to security, should we euther hid version behind a internal or private api, or put health in the public one? I am thinking the application and infrastructure should both enforce the fact that we have multiple APIs based on who is supposed to access them. the Public should just have logging and telemetry and openAPI spec. The internal should have infra and app security, with all in public, and private should only be accessible from inside of the kubernetes and have all the same as internal, but more high security access control in both layers. We defer the private untill we have something for it. The internal is what the frontned and other apps in our own company uses. We might also have an external one for users accessin their own data.

@@ -17,7 +17,8 @@ make down     # remove everything
 
 | What | Where |
 |---|---|
-| API (always through the gateway) | http://localhost:9875 (`/health/live`, `/health/ready`, `/version`) |
+| Public API (always through the gateway) | http://localhost:9875 (no endpoints yet) |
+| Health and version (management port, not routed) | `kubectl --kubeconfig .local/kubeconfig -n todo port-forward deploy/backend 8081`, then http://localhost:8081/version |
 | Grafana (logs, traces, metrics) | http://localhost:9876, sign in as `admin` / `local-only-admin` |
 | kubectl | `kubectl --kubeconfig .local/kubeconfig` |
 

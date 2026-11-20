@@ -39,9 +39,9 @@ let tests =
         [
             testTask "/health/live answers without touching the database" {
                 do!
-                    withApi unreachable (fun client ->
+                    withApi unreachable (fun api ->
                         task {
-                            let! response = client.GetAsync "/health/live"
+                            let! response = api.management.GetAsync "/health/live"
                             Expect.equal response.StatusCode HttpStatusCode.OK "200"
                             let! body = json response
                             Expect.equal (text "status" body) "live" "live"
@@ -50,9 +50,9 @@ let tests =
 
             testTask "/version says what is running and which instance answered" {
                 do!
-                    withApi unreachable (fun client ->
+                    withApi unreachable (fun api ->
                         task {
-                            let! body = client.GetAsync "/version" |> Task.bind json
+                            let! body = api.management.GetAsync "/version" |> Task.bind json
                             Expect.equal (text "commit" body) "local" "no build locally"
                             Expect.isNotEmpty (text "instance" body) "instance"
                         })
@@ -62,27 +62,37 @@ let tests =
                 let! container = database.Force()
 
                 do!
-                    withApi (appConnection container) (fun client ->
+                    withApi (appConnection container) (fun api ->
                         task {
-                            let! response = client.GetAsync "/health/ready"
+                            let! response = api.management.GetAsync "/health/ready"
                             Expect.equal response.StatusCode HttpStatusCode.OK "200"
                         })
             }
 
             testTask "/health/ready is a 503 problem with a trace ID when the database is down" {
                 do!
-                    withApi unreachable (fun client ->
+                    withApi unreachable (fun api ->
                         task {
-                            let! response = client.GetAsync "/health/ready"
+                            let! response = api.management.GetAsync "/health/ready"
                             do! expectProblem response HttpStatusCode.ServiceUnavailable
+                        })
+            }
+
+            testTask "health and version are only on the management port, never on the public one (D73)" {
+                do!
+                    withApi unreachable (fun api ->
+                        task {
+                            for path in [ "/health/live"; "/health/ready"; "/version" ] do
+                                let! response = api.``public``.GetAsync path
+                                Expect.equal response.StatusCode HttpStatusCode.NotFound $"{path} is not public"
                         })
             }
 
             testTask "an unknown route is a 404 problem with a trace ID" {
                 do!
-                    withApi unreachable (fun client ->
+                    withApi unreachable (fun api ->
                         task {
-                            let! response = client.GetAsync "/nothing-here"
+                            let! response = api.``public``.GetAsync "/nothing-here"
                             do! expectProblem response HttpStatusCode.NotFound
                         })
             }
