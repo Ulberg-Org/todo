@@ -1,0 +1,12 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T18:05:04Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+<task-notification>
+<task-id>bpzwn318k</task-id>
+<tool-use-id>toolu_01GYoVH3LXp38FHbaBW91GVm</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-endreulberg-Github-Private-todo/65ce0d37-90f3-444e-87a8-31d5665c9866/tasks/bpzwn318k.output</output-file>
+<status>failed</status>
+<summary>Background command "Verify Postgres logs, trace, both MCP servers" failed with exit code 144</summary>
+</task-notification>

@@ -1,0 +1,41 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T16:14:11Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Locally the answer to your question is now yes: ArgoCD runs everything the way it will in Azure. The Azure side isn't built yet; that's Phase 4. It's in **platform #36** (https://github.com/Ulberg-Org/platform/pull/36), and the plan entries D67–D70 are in **todo #16** (https://github.com/Ulberg-Org/todo/pull/16). CI is green on both.
+
+**How it works:**
+- **Small bootstrap, then ArgoCD (D67):** `platform up` only creates the cluster, installs Cilium, starts the git server, and installs ArgoCD with one root application. ArgoCD then deploys everything else from the platform repo, including Envoy Gateway, ArgoCD itself and the app. In Azure, Pulumi will do the same bootstrap.
+- **One source of truth (D68):** the renderer runs inside ArgoCD as a plugin, so a local test goes through the same rendering and syncing as production.
+  - Locally, ArgoCD reads snapshots of your checkouts (uncommitted changes included). In Azure it reads GitHub.
+  - Only the environment file (`environments/local.yaml` vs `dev.yaml`) and the bootstrap differ.
+- **Deny-by-default:**
+  - An app's project may only deploy Deployments, Services, routes and network rules, only in its own namespace and only from its own repo.
+  - The platform's own namespaces (`argocd`, `gateway`, `gitops`) are locked down too.
+  - The database is allowed by name locally and by address range in Azure (D70). Cilium is 1.19.10, the version line AKS runs.
+
+**Tested on a fresh cluster:**
+- `up` takes 243 s, and every ArgoCD application is synced and healthy.
+- ArgoCD refused an application that tried to deploy into `kube-system`, and one that pointed at the platform repo.
+- The backend can't reach the internet, the Kubernetes API or the git server. ArgoCD may use HTTPS only (no HTTP), and the git server can't reach the internet.
+- Changing `platform.yaml` and running `platform sync` scaled to 3 instances and back to 2.
+- A deleted route came back within about 2 s, and hot reload served a code change in 4 s.
+
+**Bugs found and fixed along the way:**
+- **ArgoCD cut itself off:** it applied the platform's deny-all rule before the rule allowing its own traffic. Each platform namespace now has a single Cilium rule.
+- **Gateway app invalid:** the gateway chart, which comes from an OCI registry, needs `path: .` in its ArgoCD source.
+- **`todo` app refused:** the app's project must exist before its application, which sync ordering now guarantees.
+- **`sync` timed out when nothing had changed:** it now waits on the commit ArgoCD has compared, not on a new sync run.
+
+**Red-green-refactor:** noted and saved as a working rule. The new behaviour got failing tests first, and the renderer now has 13 tests. After it all worked I did a conciseness pass: `Cluster.fs` went from 345 to 301 lines with the same readability. ArgoCD found nothing to change after the refactored renderer was deployed, so the output is unchanged.
+
+**One thing to check:** Microsoft's table lists Cilium only up to Kubernetes 1.36. When Phase 3 creates AKS on 1.37, I'll recheck which Cilium it runs and match it locally.
+
+**What you need to do:** approve **todo #16** and **platform #36**. I'll merge once you have.
+
+Next is increment 3, the telemetry stack, which will now be ArgoCD components too.
+
+Sources:
+- [Azure CNI Powered by Cilium (Microsoft Learn)](https://learn.microsoft.com/en-us/azure/aks/azure-cni-powered-by-cilium)
+- [Azure China mirror of the same page](https://docs.azure.cn/en-us/aks/azure-cni-powered-by-cilium)

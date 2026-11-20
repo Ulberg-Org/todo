@@ -1,0 +1,28 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T17:59:09Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, there's quite a bit we can add before any business logic exists. (The fresh `make up` is still running; I'll report when it's done.)
+
+**Worth adding now** (infrastructure only, no app features needed):
+
+1. **Start each trace at the gateway.** Envoy Gateway can emit its own spans and access logs. A trace would then begin at the entrance, showing time spent in the gateway, and the access log line would carry the trace ID.
+2. **All pod logs and Kubernetes events in Loki**, not just the app's. That means ArgoCD, Envoy, the collector, and events such as failed scheduling, out-of-memory kills, failed probes and image pull errors. Today those need `kubectl`; this lets you and me find them in Grafana.
+3. **Network drops (Cilium's Hubble).** Every connection a deny-by-default rule blocks would be logged, with source, destination and the reason. That's the most useful debugging tool for our network rules. Caveat: in AKS the same flow logs need the paid add-on we just avoided, so this would be local-only, or a cost decision for later.
+4. **Postgres performance (D64):** a `todo_monitor` role, Postgres's own metrics (connections, locks, cache hit rate) and per-query statistics. That shows which queries are slow and how often they run. The Postgres MCP can already explain query plans as `todo_readonly`.
+5. **Dashboards and alert rules as code**, provisioned into Grafana:
+   - per-service request rate, error rate and latency;
+   - per-pod CPU and memory against requests and limits;
+   - ArgoCD sync health;
+   - a few alerts (error rate, restarts, out-of-sync), so problems surface without anyone searching.
+
+**Later, when it has something to measure:**
+- **Continuous profiling (Pyroscope):** CPU and memory flame graphs per service, linked from slow spans. That's the "why is this slow" layer once there's real code.
+- **Frontend:** browser telemetry (Grafana Faro, sending page loads, errors and web vitals linked to the backend trace), plus Chrome DevTools MCP so I can drive and inspect the UI end to end. I agree this belongs with the frontend shell (Phase 7).
+- **Audit trails:** two layers.
+  - **Infrastructure:** the Kubernetes audit log (who changed what in the cluster) is available locally now and in AKS later. ArgoCD's and Grafana's own audit logs too.
+  - **Application:** permission decisions and changes. I agree that comes with the permission system.
+- **Read-only Kubernetes access for infra developers' Claude,** for example a Kubernetes MCP with a view-only role. Per AGENTS §3, an app developer's Claude would still only see telemetry.
+
+My recommendation: items 1, 2 and 5 go into this increment. They're small, and they make what we just built much more useful to both of us. 3 and 4 make a follow-up increment, since each needs a decision (Hubble's cloud parity, the monitor role's grants). Should I go ahead with 1, 2 and 5 now?

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T17:59:09Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Perfect, there is nothing aside from traces and logs from the frontend / other telemetry/preformance that we can add and give access to for this? We could potentially give a chrome devtools and chrome MCP to allow for local testing of the end-to-end for Claude, this all happens when we build the actual BL. But inside of that I am also thinking of audit trails, but that comes when we build the permission system

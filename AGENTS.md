@@ -89,7 +89,6 @@ Tests: `.claude/hooks/test_agent_identity.py` (CI, both repos); `.github/scripts
 
 ## 5. Local development
 
-`make up` starts the app as it runs in the cloud: two backend instances behind Envoy (http://localhost:8080), Postgres 18 with the three roles, and telemetry through one collector into Grafana (http://localhost:3000). Always test through Envoy, never an instance directly. See README.md.
+`make up` runs the app as it runs in the cloud (D61, D67): a local Kubernetes cluster where Argo CD deploys the platform and the app from the checkouts, two backend instances on different nodes behind the gateway (http://localhost:9875), Postgres 18 outside the cluster with the three roles, and telemetry through one collector into Grafana (http://localhost:9876). Always test through the gateway, never an instance directly. Code changes reload by themselves; after changing `platform.yaml`, run `make sync`. See README.md.
 
-Claude reads the local system through two MCP servers in `.mcp.json`, both read-only: `grafana` (logs, traces and metrics of the app and of Postgres) and `postgres` (queries as `todo_readonly`). Debug from a request's trace ID, which every error response contains.
-
+Claude reads the local system through two MCP servers in `.mcp.json`, both read-only and both as itself: `grafana` (logs, traces and metrics of the app, Postgres and every pod, as Grafana's `claude` Viewer service account, whose token `make up` writes to `.local/grafana-claude-token`) and `postgres` (queries as `todo_readonly`). People sign in to Grafana as `admin`. Debug from a request's trace ID, which every error response contains.
