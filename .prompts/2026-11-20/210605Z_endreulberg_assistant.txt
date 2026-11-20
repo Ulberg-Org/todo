@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T21:06:05Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The CLI image is released and signed, but the first full test from it failed, so a small fix (#46) is waiting for your approval. The flake has cosign now.
+
+**The failure:** `make up` from the released v0.1.0 image broke while loading the renderer image into the cluster. That image is built for both Mac and Intel, and Docker downloads only your Mac's half. kind tries to load both halves and fails. My earlier tests used local single-architecture builds, so they never hit this.
+
+**The fix, platform #46** (https://github.com/Ulberg-Org/platform/pull/46): the CLI now loads only your machine's half, and a failing load prints its error instead of stopping silently. I tested it from inside the released image: all three cluster nodes got the renderer.
+
+**What already works from the release:**
+- Both packages are public and download without a login.
+- Both signatures verify, and an image signed by anyone else is refused.
+- `make up` gets past the signature check and through cluster creation, then stops at the image load (#46).
+
+**Your flake:** I added `cosign`, plus `jq` and `yq`, which the platform scripts use, to the Homebrew list in `~/Github/Private/dotfiles/.config/nix/flake.nix`. I didn't commit it, since the file already had uncommitted changes of yours. To install, run `sudo darwin-rebuild switch --flake $(readlink -f ~/.config/nix)#mbp`. Both READMEs now mention the nix-darwin route.
+
+**A flake for platform devtooling:** yes, I think that's the right move. A `flake.nix` in the platform repo would give every developer the same pinned tools (cosign, kind, kubectl, helm, jq, yq, dotnet, pulumi, gh, az) via `nix develop`, or automatically per repo with direnv. No personal flake would be touched. It also fits the Claude sandbox (Phase 2.5), which needs exactly that toolset. I'd add it as a TODO under Phase 2.5 rather than now, unless you want it first.
+
+**What you need to do:**
+1. Approve **platform #46** (the fix) and **platform #45** (CI speed-ups: access checks in parallel, NuGet cache): https://github.com/Ulberg-Org/platform/pull/45
+2. I'll merge them, tag v0.1.1, move todo's pin to it on **todo #23** (https://github.com/Ulberg-Org/todo/pull/23), run the full `make up`, and then ask you to approve #23.
