@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T19:19:02Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) GHRC, are we not using Azure Container Registry? But yes, MAJOR.MINOR.PATCH. Q2) which public package, but that is porbably ok. Q3) Sure, that is fine. Q4) fine I do not care about that, we could also add it to path as a part of devtooling for "our org"

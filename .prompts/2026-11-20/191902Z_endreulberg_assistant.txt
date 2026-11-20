@@ -1,0 +1,30 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T19:19:02Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+All four merges are done, and main is green in both repos. Your promotion is needed now.
+
+**Promote the platform:** two applies are queued, and they run in order:
+1. https://github.com/Ulberg-Org/platform/actions/runs/44797508073: from #37 (the telemetry stack). Review deployments → Approve.
+2. https://github.com/Ulberg-Org/platform/actions/runs/44800822791: from #39 (the pins). Its "Review deployments" appears once the first one has finished.
+
+Both previews passed, but I couldn't read what they planned to change: my GitHub identity isn't allowed to read workflow logs. None of these PRs changed the Pulumi stacks themselves. #39 did change two things the stacks use: the shared parsing library (missing fields are now reported instead of crashing) and the locked package restore. So both previews should say no changes. Please glance at "Resources: … unchanged" in each preview before approving. Run #38's apply was cancelled automatically, superseded by #39's.
+
+**Your questions:**
+
+**Q1 - GHCR or ACR?** ACR stays where the cluster pulls from: app images signed and deployed to AKS. For the developer CLI I recommend GHCR:
+- **Login:** our ACR only allows Entra sign-in (D54), so every developer would need `az login` just to run `make up`. AGENTS.md §3 says app developers' tooling shouldn't touch Azure at all.
+- **Cost:** anonymous pulls from ACR need a pricier SKU than Basic.
+- **On GHCR,** a public package needs no login, and cosign signs it with the platform repo's release workflow as the identity. That's the same keyless signing as our app images.
+- **Versions:** MAJOR.MINOR.PATCH, as you said.
+
+Unless you'd rather have everything in ACR, I'll go with GHCR.
+
+**Q2 - Which public packages:** two container images on GHCR under Ulberg-Org: `platform-cli` (the CLI with kind, helm, kubectl, the renderer) and `platform-renderer` (the image ArgoCD's plugin runs). After the first release, you make each one public once in the package settings (I'll send the exact URLs). The bot isn't allowed to change package visibility.
+
+**Q3 - Signature check:** agreed. `make up` verifies the cosign signature, and I'll add cosign to your nix flake.
+
+**Q4 - The CLI on your PATH:** good idea. I'll add a `platform` command to our org's dev tooling, either in the nix flake or as a small wrapper script that runs the pinned image, so `platform up` works from any app repo. I'd write that down as a TODO alongside the image work.
+
+Tell me when you've promoted, and whether GHCR is OK. Then I'll build D63.

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T19:23:59Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Do you think giving read access to workflows would make sense for the claude app? I think so Q1) Fine that is ok. Q2) That is fine, as long as the security to our platform is behind Entra. Q4) do not add it to my flake, or atleast if you do, add it as a part of the readme of the platform repo as well to explain how to get the CLI setup
