@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T20:19:05Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, but then you should make it only run for 2 min before stopping it or something

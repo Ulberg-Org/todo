@@ -1,0 +1,12 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T19:33:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+> 
+
+<pasted_content id="3c6e">
+Run .github/scripts/check_github_access.sh
+GitHub access differs from D43/D52:
+  ulberg-claude may do: contents=write,metadata=read,pull_requests=write,workflows=write
+</pasted_content id="3c6e">

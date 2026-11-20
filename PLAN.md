@@ -411,6 +411,11 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - **Done (D73, the part that needs no authentication):** health and version on the management port, which only the probes reach; no gateway route until the public API has endpoints.
 - **Done when** `make up` works from a fresh cluster, a request through the gateway (http://localhost:9875) shows in Grafana (http://localhost:9876) as trace + log + metric including the database step, every pod's CPU and memory are visible, and `make test-platform` passes.
 
+### Phase 2.5: A sandbox for Claude (TODO, grilled before it's built)
+- **Goal:** Claude works in an environment fully isolated from the developer's computer: like a git worktree, but its own machine. It can't read the developer's home folder, keys, browser or other repos. It holds only Claude's own identities (D41, D52) and reaches only what it needs.
+- **Options to weigh:** a devcontainer (Docker; shares the host's kernel and daemon), a micro-VM (e.g. Apple's Containerization framework, Lima or Firecracker; its own kernel), or a cloud workspace. What `make up` needs inside it (its own Docker for kind), how source gets in and out (a worktree per task, published only through `claude-push.sh`), which network it may reach (GitHub, registries, Grafana/MCP; nothing else), and what stays outside (the developer's own logins).
+- **Done when** a Claude session runs a task end to end (code, `make up`, tests, a PR) inside the sandbox, and a test shows it can't read anything outside it.
+
 ### Phase 3: Azure foundation (Pulumi F#, applied only by CI after approval)
 - Agents (D41) get AKS RBAC Reader and the DB read-only role as those resources appear.
 - Database access per D75: Entra groups → Postgres roles (developers and every Claude read-only, platform leads read-write); the backend's workload identity as the app role.
