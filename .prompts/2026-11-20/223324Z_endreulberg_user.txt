@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T22:33:24Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Also, just looking at full end-2-end examples that might give some insights into how other devs like to use this stack in the real world
