@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T18:56:38Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I just want to test once when we make new things that the developers are supposed to use, like Grafana + Loki, etc

@@ -11,6 +11,7 @@ Needs Docker (12 GiB of memory), kind, kubectl, helm, jq, and a checkout of
 ```
 make up       # a local Kubernetes cluster with the platform, Postgres and two backend instances (hot reload)
 make sync     # after changing platform.yaml
+make test-platform  # check the network rules against the running cluster
 make status   # what Argo CD runs, and which instance answers
 make down     # remove everything
 ```
