@@ -1,0 +1,17 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T19:28:22Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+https://github.com/Ulberg-Org/platform/runs/136512218933 "
+
+<pasted_content id="3c6e">
+The property '#/updates/0/cooldown/semver-major-days' is not supported for the package ecosystem 'github-actions'.
+The property '#/updates/0/cooldown/semver-minor-days' is not supported for the package ecosystem 'github-actions'.
+The property '#/updates/0/cooldown/semver-patch-days' is not supported for the package ecosystem 'github-actions'.
+The property '#/updates/3/cooldown/semver-major-days' is not supported for the package ecosystem 'docker'.
+The property '#/updates/3/cooldown/semver-minor-days' is not supported for the package ecosystem 'docker'.
+The property '#/updates/3/cooldown/semver-patch-days' is not supported for the package ecosystem 'docker'.
+</pasted_content id="3c6e">
+
+"

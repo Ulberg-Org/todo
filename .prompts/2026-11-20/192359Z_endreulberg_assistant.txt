@@ -1,0 +1,29 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T19:23:59Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've prepared both PRs, but the platform one can't merge until you grant the permission.
+
+**Granting it (signed in as `Ulberg`, the org owner):**
+1. Open https://github.com/organizations/Ulberg-Org/settings/apps/ulberg-claude/permissions. Under **Repository permissions** → **Actions**, choose **Read-only**, then click **Save changes**.
+2. Open https://github.com/organizations/Ulberg-Org/settings/installations. Click **Configure** next to `ulberg-claude`, then accept the permission request at the top.
+
+**The PRs:**
+- **platform #40** (https://github.com/Ulberg-Org/platform/pull/40) updates the access check to expect `actions=read`. Its check fails until you've done the steps above, which is the intended order.
+- **todo #20** (https://github.com/Ulberg-Org/todo/pull/20) has the same AGENTS.md §4 text as #40.
+- Both correct a stale §4: it still said "contents and pull requests only, can't change workflows", but the app has been allowed to edit workflow files since Phase 0b.
+
+When you've granted it, tell me and I'll re-run the check. Then approve both and I'll merge.
+
+**The CLI image (D63)** will be built with these choices:
+- **Q1:** GHCR for the developer CLI, versions MAJOR.MINOR.PATCH; ACR stays for what the cluster pulls.
+- **Q2:** the images will be public, but everything that protects the platform stays behind Entra: Azure, AKS, and Grafana and ArgoCD in the cloud. One thing to keep in mind: the CLI image will contain only what local development needs (`environments/local.yaml` and the components). I'll leave `environments/dev.yaml` out, so the public image doesn't show our Azure layout (registry name, database subnet).
+- **Q3:** `make up` verifies the image's cosign signature.
+- **Q4:** I won't touch your flake. The platform repo's README will explain how to set up the CLI, including an optional `platform` command on your PATH.
+
+**Promotion:** the two applies from earlier are still waiting:
+1. https://github.com/Ulberg-Org/platform/actions/runs/44797508073
+2. then https://github.com/Ulberg-Org/platform/actions/runs/44800822791
+
+Once I can read Actions, I'll check their previews for you before you approve.
