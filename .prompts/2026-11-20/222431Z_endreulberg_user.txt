@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T22:24:31Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Seems like you need to have some supply chain constraint. You should only install things that have atleast 1M downloads/weekly downloads or are from an official source. If not you should manually check the source code before using it

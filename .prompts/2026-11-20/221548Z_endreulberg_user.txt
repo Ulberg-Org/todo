@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T22:15:48Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I think we should also add a new step before you implement a new technology, whatever it is, you need to go online and check for best practices. Just to get some inspo

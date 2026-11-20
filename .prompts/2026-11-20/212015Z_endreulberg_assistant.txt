@@ -1,0 +1,35 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T21:20:15Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The CLI image (D63) is done. todo's `make up` now runs the signed `platform-cli:v0.1.1` image after your own cosign has verified it, and the last step is your approval of todo #23.
+
+**Tested from scratch on your Mac:**
+- a fresh `make up` took 340 s, and all 13 ArgoCD apps are Synced and Healthy;
+- `make test-platform` passes 12 of 12 network checks;
+- `make sync` takes 36 s;
+- my Grafana account works;
+- the platform runs from "release v0.1.1".
+
+**What you need to do:** approve **todo #23** (https://github.com/Ulberg-Org/todo/pull/23). CI is green. It switches `make up` to the image, updates the README, and adds the NuGet cache to CI.
+
+**Also done:**
+- **CI speed-ups (#45):** the access checks run next to the stack previews. On main the new setup worked: both jobs and the gate passed.
+- **The release fix (#46):** the released renderer image now loads into the cluster. This was why v0.1.0's test failed.
+
+**The pulumi apply from #45/#46 is waiting for you:** https://github.com/Ulberg-Org/platform/actions/runs. Its preview passed, and it only changes workflow files and the CLI, not Azure.
+
+**What's left before Phase 3:**
+1. **Phase 2, the infrastructure signals:**
+   - gateway spans and access logs;
+   - all pod logs and Kubernetes events;
+   - Hubble network decisions with alerts;
+   - Postgres metrics and query statistics;
+   - dashboards and alerts as code;
+   - audit logs;
+   - read-only Kubernetes access for my agent account.
+2. **Phase 2.5, the Claude sandbox,** probably with the platform devtooling flake as part of it. It needs a grilling round first.
+3. **Then grill Phase 3.**
+
+Should I start on the infrastructure signals, or grill Phase 2.5 first?

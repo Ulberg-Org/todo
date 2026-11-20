@@ -1,0 +1,64 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T21:27:01Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+todo #23 is merged, so `make up` now uses the signed image. Thanks for the approvals and the promotion.
+
+On to the infrastructure signals. A few design choices are still open, so here's a short grilling round, all with recommendations:
+
+❓ **Q1 - Collecting all pod logs:** add a second collector that runs on every node (a DaemonSet), next to the existing one. It reads every container's log file, labels each line with namespace, pod and container, and also picks up the Kubernetes events. All of it goes to Loki.
+➡️ Yes
+
+❓ **Q2 - The gateway:** Envoy Gateway sends its own spans and JSON access logs (with trace ID, route and status) over OTLP to the collector. A trace then starts at the gateway.
+➡️ Yes
+
+❓ **Q3 - Network decisions (Hubble):** turn on Cilium's Hubble locally.
+- Dropped flows (source, destination, port, reason) go to Loki, and drop counts per namespace go to Prometheus.
+- Alerts: a **warning** on any drop involving an app namespace, a **critical** when drops in a namespace exceed 20 in 5 minutes. Tunable later.
+- In Azure this needs the paid add-on (D70); that's decided in Phase 3.
+
+➡️ Yes
+
+❓ **Q4 - Postgres:**
+- The CLI creates a `todo_monitor` role (Postgres's built-in `pg_monitor`: read statistics, no data) and turns on `pg_stat_statements` for per-query statistics.
+- The collector reads both: connections, locks, cache hit rate, and the slowest and most frequent queries.
+- In Azure the same metrics come from Azure Monitor and Query Store.
+
+➡️ Yes
+
+❓ **Q5 - Dashboards and alerts as code:**
+- Dashboards as JSON in `components/grafana/dashboards/`, and alert rules as YAML, both loaded into Grafana when it starts.
+- Locally, alerts just show in Grafana; there's nowhere to send them. Email/Teams comes with Azure.
+- First set:
+  - request rate, errors and latency per service;
+  - CPU and memory per pod against requests and limits;
+  - ArgoCD sync health;
+  - network drops;
+  - Postgres.
+
+➡️ Yes
+
+❓ **Q6 - Audit logs:**
+- **The Kubernetes API:** kind's API server gets an audit policy that records who changed what, without request bodies for reads, plus full bodies for writes to Secrets and RBAC. The log goes to Loki.
+- **ArgoCD and Grafana:** their audit-relevant logs come via the pod logs (Q1).
+
+➡️ Yes
+
+❓ **Q7 - Read-only Kubernetes access for infra developers' Claude:**
+- Locally, a `claude` service account with Kubernetes' built-in `view` role, which can't read Secrets.
+- Its kubeconfig goes in `.local/`, used by a Kubernetes MCP server in read-only mode.
+- That MCP server goes in the **platform** repo's `.mcp.json`, not todo's. An app developer's Claude keeps only the telemetry (AGENTS.md §3).
+
+➡️ Yes
+
+❓ **Q8 - How to split it:** three branches, each a reviewable PR:
+1. logs, events, gateway spans and audit (Q1, Q2, Q6);
+2. Hubble and Postgres (Q3, Q4);
+3. dashboards, alerts and Kubernetes access (Q5, Q7).
+
+You'd test Grafana once at the end, since that's what developers will use.
+
+➡️ Yes
+
+Answer the ones you'd change; anything left unanswered gets my recommendation.

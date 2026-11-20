@@ -10,8 +10,13 @@
     "postgres": {
       "command": "docker",
       "args": [
-        "run", "--rm", "-i", "--network", "kind",
-        "crystaldba/postgres-mcp:0.3.0", "--access-mode=restricted",
+        "run",
+        "--rm",
+        "-i",
+        "--network",
+        "kind",
+        "crystaldba/postgres-mcp:0.3.0",
+        "--access-mode=unrestricted",
         "postgresql://todo_readonly:local-only-readonly@todo-todo:5432/todo"
       ]
     }

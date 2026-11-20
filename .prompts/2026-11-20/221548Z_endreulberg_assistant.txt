@@ -1,0 +1,43 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T22:15:48Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The infrastructure signals are done and pushed to **platform #47**: https://github.com/Ulberg-Org/platform/pull/47. CI was green before the last two pushes (the dashboard repackaging), which I haven't re-checked yet. Everything was verified on a fresh cluster, which is still running for you to test.
+
+**What's in #47:**
+1. **Logs:**
+   - every pod's log, from a collector on each node;
+   - Kubernetes events;
+   - the gateway's own spans and access logs. The spans continue the incoming `traceparent`, so a trace will run browser → gateway → backend → database.
+   - the Kubernetes API's audit log. For Secrets it records who and when, never contents.
+2. **Network and Postgres:**
+   - Hubble's dropped connections in Loki and Prometheus, switched on by the environment file (Azure decides in Phase 3);
+   - Postgres metrics and per-query statistics;
+   - your requirement: I can run EXPLAIN ANALYZE through the MCP. Writes are refused, and anything over 30 seconds is stopped.
+3. **Dashboards and access:**
+   - 5 dashboards and 6 alert rules, kept as plain dashboard JSON and Grafana's own alert YAML;
+   - ArgoCD's metrics;
+   - my read-only Kubernetes access, in the platform repo only. It can list pods but not read Secrets, and offers no write tools.
+
+**Your JSON-in-YAML point:** fixed. Dashboards are now Grafana's own `.json` files (edit in Grafana, export, replace the file) and alerts are its native YAML, packaged by Kustomize. I've also saved your new rule: before any new technology, I look up its current best practices first.
+
+**Problems the data itself showed, all fixed:**
+- **The baseline network rule** blocked Cilium's own health checks. That would have fired the drop alert constantly; the rule now selects only real pods.
+- **Bad Cilium setting:** a wrong Hubble value crashed Cilium. That cost a 10-minute wait, so bootstrap steps now fail within 3 to 5 minutes and show the failing pods' logs.
+- **The audit file** is readable by root only. The node agent runs as root locally, still with no capabilities and a read-only filesystem.
+
+**Test once in Grafana:** http://localhost:9876, signed in as `admin` / `local-only-admin`.
+- Dashboards → **Services**, **Pods**, **Argo CD**, **Network**, **Postgres**.
+- Alerting → **Alert rules**. The two drop alerts fired earlier, from the network test's deliberate drops, and resolve on their own.
+- Explore → Loki, `{service_name="kubernetes-audit"}`.
+
+**What you need to do:**
+1. **Renew my Azure agent session.** It has passed its 12-hour limit, and I need it for the next GitHub token (the current one expires around 22:43 UTC). In your own terminal, sign in as endre-agent with its passkey:
+   ```
+   AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+   ```
+2. **Test, then approve #47.** I'll then:
+   - merge it and release CLI v0.2.0, which brings the audit log, Hubble and Postgres setup to everyone's `make up`;
+   - update todo: the new pin, and `.mcp.json` switching the Postgres MCP to normal mode so EXPLAIN ANALYZE works (the database enforces read-only);
+   - reconnect my MCP servers with `/mcp`. They're stale after the fresh cluster.
