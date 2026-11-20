@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T20:51:20Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The release succeeded. Both images are published and signed:
+- `ghcr.io/ulberg-org/platform-cli:v0.1.0@sha256:028ffe2f…`
+- `ghcr.io/ulberg-org/platform-renderer:v0.1.0@sha256:8f6f2421…`
+
+**Your question:** they already run in parallel.
+- **Separate workflows:** build/test (`ci`) and `pulumi preview` are different workflows and start at the same time on every PR. `pulumi preview` doesn't wait for the build; it compiles the stacks itself.
+- **`pulumi up`** waits only for its own preview and your approval, not for `ci`.
+- **What can still be faster:**
+  - The preview job previews the two stacks (access, shared) one after the other; they could run as two parallel jobs.
+  - Neither workflow caches NuGet packages yet. Now that we have lock files, caching is safe.
+
+  Together that would save maybe a minute per PR. I can do it in a small PR after this; say if you want it.
+
+**What you need to do now:** make the two packages public, signed in as `Ulberg`. On each page: **Danger Zone** → **Change visibility** → **Public**:
+- https://github.com/orgs/Ulberg-Org/packages/container/platform-cli/settings
+- https://github.com/orgs/Ulberg-Org/packages/container/platform-renderer/settings
+
+Tell me when they're public. Then I'll check the signatures, switch todo's `make up` to the image, and run the one full `make up` from it.

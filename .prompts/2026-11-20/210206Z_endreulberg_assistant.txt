@@ -1,0 +1,14 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T21:02:06Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Signed in as **Ulberg** (the org owner), open https://github.com/organizations/Ulberg-Org/settings/packages
+
+Under **Package creation**, tick **Public**, then click **Save**. This lets packages in the org be public; until it's ticked, GitHub greys out the "Public" choice on each package.
+
+Then, on each package's page: **Danger Zone** → **Change visibility** → **Public**:
+- https://github.com/orgs/Ulberg-Org/packages/container/platform-cli/settings
+- https://github.com/orgs/Ulberg-Org/packages/container/platform-renderer/settings
+
+If the settings page shows no "Package creation" section, tell me what you see and I'll find the right panel.

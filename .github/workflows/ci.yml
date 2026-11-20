@@ -60,6 +60,9 @@ jobs:
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           global-json-file: global.json
+          # Packages restored from the cache, keyed on the lock files (D65).
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
       - run: dotnet tool restore
       - name: Format (Fantomas)
         run: dotnet fantomas --check backend/src backend/test

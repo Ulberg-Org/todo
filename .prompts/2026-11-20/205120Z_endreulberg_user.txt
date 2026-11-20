@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T20:51:20Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+can you build in parallell with pulumni preview, or is it just pulumni up that needs build to be done+
