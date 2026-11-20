@@ -5,5 +5,12 @@
     <Nullable>enable</Nullable>
     <!-- Culture-independent formatting everywhere; the chiseled image has no ICU (D56). -->
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- D65: every package pinned by content. Each project has a packages.lock.json; CI (CI=true) and the image
+         builds restore in locked mode, so a re-published package or a changed lock fails the build. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(CI)' == 'true'">true</RestoreLockedMode>
+    <!-- Packages always from nuget.org, never from the SDK's bundled copies: a source-built SDK (Homebrew's)
+         bundles FSharp.Core with different bytes than nuget.org's signed one, and the lock would differ by machine. -->
+    <DisableImplicitLibraryPacksFolder>true</DisableImplicitLibraryPacksFolder>
   </PropertyGroup>
 </Project>
