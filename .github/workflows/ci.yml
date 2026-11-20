@@ -10,13 +10,15 @@ permissions:
 
 env:
   GITLEAKS_VERSION: 8.21.2
+  # The release tarball's SHA-256, pinned here (D65): a checksum fetched from the same release proves nothing.
+  GITLEAKS_SHA256: 5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba
 
 jobs:
   secret-scan:
     name: secret scan (gitleaks)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - name: Install gitleaks (checksum verified)
@@ -24,7 +26,7 @@ jobs:
           base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
           tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           curl -sSfLO "$base/$tarball"
-          curl -sSfL "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt" | grep " $tarball\$" | sha256sum --check
+          echo "$GITLEAKS_SHA256  $tarball" | sha256sum --check
           tar -xzf "$tarball" gitleaks
       - name: Scan full history
         run: ./gitleaks git --redact --verbose .
@@ -33,7 +35,7 @@ jobs:
     name: prompt log
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check .prompts/ format
         run: python3 .github/scripts/check_prompt_log.py
       - name: Test the prompt-log hook
@@ -45,7 +47,7 @@ jobs:
     name: fsharp style
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: No mutation or null (docs/fsharp-style.md)
         run: .github/scripts/check_fsharp_style.sh
 
@@ -54,8 +56,8 @@ jobs:
     # arm64 everywhere (D56): the same architecture as developer Macs and the cluster.
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           global-json-file: global.json
       - run: dotnet tool restore
@@ -77,7 +79,7 @@ jobs:
     env:
       IMAGE: todo/backend
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build
         run: |
           docker build -t "$IMAGE:$GITHUB_SHA" \
@@ -93,7 +95,7 @@ jobs:
           for _ in $(seq 1 30); do curl -sf http://localhost:8081/health/live && break; sleep 1; done
           curl -sf http://localhost:8081/version | jq -e --arg c "$GITHUB_SHA" '.commit == $c'
           docker rm -f smoke
-      - uses: aquasecurity/setup-trivy@v0.3.1
+      - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
         with:
           version: v0.76.2
       - name: Scan (fails on critical/high with a fix; exceptions in .trivyignore with an expiry, D55)
@@ -102,7 +104,7 @@ jobs:
           --ignorefile .trivyignore "$IMAGE:$GITHUB_SHA"
       - name: SBOM (CycloneDX)
         run: trivy image --format cyclonedx --output sbom.cdx.json "$IMAGE:$GITHUB_SHA"
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sbom-${{ github.sha }}
           path: sbom.cdx.json
@@ -110,7 +112,7 @@ jobs:
       # main only: publish
       - name: Azure sign-in (todo's push identity)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: azure/login@v3
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ vars.ACR_PUSH_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -127,7 +129,7 @@ jobs:
           az acr repository update --name "${registry%%.*}" --image "$IMAGE:$GITHUB_SHA" \
             --write-enabled false --delete-enabled false -o none
           echo "ref=$digest" >> "$GITHUB_OUTPUT"
-      - uses: sigstore/cosign-installer@v4.1.3
+      - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       - name: Sign and attach the SBOM (keyless, bound to this workflow on main, D55)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
