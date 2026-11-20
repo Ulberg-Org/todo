@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T09:25:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+My point is just that we should keep refining how we write F#, the current standard is a bit lackluster at times :)

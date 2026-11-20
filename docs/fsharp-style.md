@@ -55,7 +55,17 @@ Effects live only at the edges (steps 1, 3 and 4), in functions whose name and s
 - Generic, reusable helpers go in their own module (e.g. `Parse.fs`), not as a pile of `private` functions in a domain file. Domain files contain domain rules.
 - Order files top-down in the `.fsproj`: primitives → domain → planning → actions → program.
 
-## 8. Formatting and warnings (CI-enforced)
+## 8. Readable code: name the parts first, then build
+
+A function first names what it needs, then puts the result together. The final expression (a record, a manifest, a request, a `validation {}` block) reads as a list of names, with no decisions inside it.
+
+- **No `if`/`match` nested inside a construction.** No branching inside a record, a list literal or an argument. Lift each decision into a named value or a small function earlier in the function (or above it), and use the name.
+- **Decide a choice once.** When several parts depend on the same choice (a mode, a role, an environment), match on it once into a record of what differs, and build from that record. Example: `Runtime` in `platform/renderer/…/Render.fs`.
+- **Optional parts are `Option`, not `if … then [x] else []`.** Something that's only there sometimes is a `'T option`. Put it in a list with `Option.toList`, or use a helper that leaves out the missing ones (`Manifest.optional`).
+- **Flat `validation {}` blocks.** One line per field: `and! port = Field.port d.port`. The rule logic goes in a private `Field` module next to it, and generic checks go in `Parse`.
+- **Deep nesting is a smell.** Past three or four levels, give the inner parts names.
+
+## 9. Formatting and warnings (CI-enforced)
 
 - Fantomas formats everything (`dotnet fantomas --check`). `TreatWarningsAsErrors` and nullness checking are on.
 - No warning suppressions without a comment saying why, and no `TODO` hacks.
