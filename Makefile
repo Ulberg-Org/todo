@@ -2,7 +2,7 @@
 # in Azure. The CLI is a public image (D63), pinned by digest, which runs only after cosign has checked that the
 # platform repo's release workflow signed it. Bump the pin with each platform release (its summary lists it).
 # Developing the platform itself: PLATFORM=../platform/cli/platform make up (runs it from that checkout).
-PLATFORM_IMAGE := ghcr.io/ulberg-org/platform-cli:v0.2.0@sha256:5804ceca04a939d6cc6819a8c156cf25c0410a7704f1265c5d8f9ed2aa8b5bed
+PLATFORM_IMAGE := ghcr.io/ulberg-org/platform-cli:v0.2.1@sha256:a82011b80d9920fb35ee80563c5daac8784b52370f1cdbab2f0c44b2b842cd8a
 COSIGN ?= cosign
 SIGNED_BY := --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   --certificate-identity-regexp '^https://github\.com/Ulberg-Org/platform/\.github/workflows/release\.yml@refs/tags/v'

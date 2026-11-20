@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T23:11:33Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q0) seperate proof is ok for now. Q1) Docker Sandboxes sounds good, unless it it weaker than the official thing from Apple. Q2) I think that you should seperate platform and todo, we are both platform and app devs, so we have access to both, but the claude needs to seperate between what it can access in which situation. An app dev should be able to spin up the full app and infra locally and have their claude interact with that + the app/infra in cloud that htey personally have access to. a platform dev should be able to code on the platform with claude, and have full local and cloud access for claude. Q3) Sounds resonable. Try to make the sandbox as Claude specifci and non-personal user as possible. It should probably make sure that the sandbox has the same tools as the flake for the app and flake for platform has to enable installing all of the deps. Q4) Sure those are ok, but I think it should only have access to those things by default and maybe to our app infra / local. We might enable web search for Claude so it can look up info on the web, but not regular CURL requests maybe. Q5) Yes! Q6) I do not understand
