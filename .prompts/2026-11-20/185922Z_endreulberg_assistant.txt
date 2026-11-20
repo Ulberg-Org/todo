@@ -1,0 +1,48 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T18:59:22Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+All four PRs are green: `make test-platform` and the pins are done, as #38/#18 and #39/#19. The third part, the CLI as an image, needs a few decisions from you first. I've also merged nothing yet, since these four need your approval.
+
+**`make test-platform` (D66): platform #38 + todo #18**
+- **12 network checks** against the running cluster, from real pods and by IP address. Among them:
+  - the backend reaches its database and the telemetry collector;
+  - the internet, the Kubernetes API and the git server are blocked;
+  - the gateway reaches the API port but not the health port;
+  - nothing else reaches the backend or the database.
+- **It found a real gap:** a pod in a namespace without rules (`default`) could reach the database. The fix is a cluster-wide baseline rule: every pod is deny-by-default except DNS, and each namespace's rules add what it needs. `argocd` is excluded, so ArgoCD can't lock itself out again. All 12 checks pass now.
+- **Your database access model is now D75** in the plan:
+  - Only the backend reaches the database, never the internet.
+  - Developers read-only, and their Claude read-only.
+  - Platform leads read-write, and their Claude read-only.
+  - The Entra role mapping is in Phase 3.
+
+**Pins and cooldown (D65): platform #39 + todo #19**
+- **Pinned by content:**
+  - NuGet lock files, restored in locked mode;
+  - images by digest;
+  - actions by commit SHA;
+  - gitleaks by a checksum written into the workflow;
+  - Helm charts by digest, checked in CI. The bootstrap also verifies ArgoCD's chart before installing it.
+- **Dependabot cooldown** everywhere: patch 7 days, minor 14, major 30; security fixes right away.
+- **Two real bugs found along the way:**
+  - **Locks differed by machine:** Homebrew's .NET bundles its own `FSharp.Core` with different bytes than nuget.org's, so a lock made on your Mac failed in Docker. Every machine now uses nuget.org's.
+  - **Parser crash:** a missing YAML field crashed it instead of being reported. Now it says `'field' is missing`.
+
+**What you need to do:** approve all four. Merge order: #38 before #18, then #39 and #19. None adds a new tool for developers, so I'll merge on your approval once checks pass.
+
+**The CLI as a signed image (D63)**
+The tricky part: inside a container, kind's cluster isn't at `localhost`. My plan is for the CLI container to join kind's Docker network and talk to the cluster there, while still writing a normal kubeconfig for you. Questions:
+
+❓ **Q1 - Versions:** a `vX.Y.Z` tag on the platform repo publishes two images on GHCR, multi-arch (arm64 for Macs, amd64 for CI): `platform-cli` and `platform-renderer` (the one ArgoCD's plugin runs). todo's Makefile pins both by version and digest, updated by Dependabot.
+➡️ Yes
+
+❓ **Q2 - Public packages:** the first publish creates the packages as private. Making them public is an org-owner setting the bot can't change, so it's a one-time step for you (I'll give the exact URL).
+➡️ Yes
+
+❓ **Q3 - Signature check on developer machines:** `make up` verifies the image's cosign signature (signed by the platform repo's release workflow) before running it. That means developers need cosign installed (Homebrew; I'd add it to your nix flake).
+➡️ Yes, always verify
+
+❓ **Q4 - Developing the platform itself:** `PLATFORM=../platform/cli/platform make up` keeps running the CLI from a checkout, building the renderer locally as now. Everyone else uses the image.
+➡️ Yes
