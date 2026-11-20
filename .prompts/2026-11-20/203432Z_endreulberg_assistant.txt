@@ -1,0 +1,31 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T20:34:32Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Fair question. Here's what was required, what wasn't, and what can run in parallel. Nothing has been pushed yet.
+
+**What's on the `cli-image` branch (uncommitted):**
+1. **Required for the CLI image (D63), and done:**
+   - the image itself, with every tool pinned by checksum;
+   - the release workflow that publishes and signs it;
+   - the platform README section on setting it up;
+   - the CLI changes that let it run inside a container.
+2. **Bug fixes the testing turned up, worth keeping either way:**
+   - `sync` now rebuilds the backend's dev image when packages change. That was why the pods were crash-looping after the lock files.
+   - `sync` gives up after 2 minutes and shows why.
+   - The early "not ready" exit you just stopped me fixing.
+3. **Where I was:** proving that a fresh `up` works from the image. That's the right last step, but it keeps uncovering small issues (buildx missing, a dropped wait). And it can't be fully proven until the first real, signed release exists.
+
+**Is D63 needed now?** No. Nothing in Phase 3 or 4 depends on it; it only spares app developers from checking out the platform repo. todo's `make up` already works from `../platform`.
+
+**Can things run in parallel?** Yes. The CLI image and the infrastructure signals (gateway spans, pod logs and events, Hubble, Postgres metrics, dashboards and alerts) don't touch the same files. Phase 3's grilling could start alongside both, since grilling is just questions for you. I could run the infrastructure signals as a separate agent in its own git worktree while I finish the CLI image, if you want that.
+
+**My recommendation:**
+1. Apply the one-line fix you just rejected, then commit and open the PR. The bug fixes are proven in checkout mode, and image mode is proven except for the signature, which needs a real release.
+2. After you merge, tag v0.1.0. The release workflow publishes and signs the images, you make the two packages public, and I test `make up` against the real signed image once. If anything breaks there, it's small and contained.
+3. In parallel: start Phase 3's grilling now, and let the infrastructure signals run as their own branch.
+
+Or, if you'd rather stop spending time on D63: I commit only the bug fixes (item 2), park the image work on its branch, and move on.
+
+Which do you want?

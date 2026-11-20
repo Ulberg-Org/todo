@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T20:02:16Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, this takes like a lot of time. Is it meant to take more than 5 min
