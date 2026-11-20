@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T21:56:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, now for later, is 10 min timeout a sensible option?

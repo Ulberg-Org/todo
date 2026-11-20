@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T21:58:19Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Also, remember to not have more than 1 side-channel at any point, if you get to a point where you need the side-channel to complete before moving on, then do the sensible thing and wait, but you do not need to be striclty sequential at ALL times, try to make sensible options

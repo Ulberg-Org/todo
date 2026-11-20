@@ -55,6 +55,12 @@ let create (args: string array) : WebApplication =
             management = port "ManagementPort" 8081
         }
 
+    // The platform names the service (OTEL_SERVICE_NAME); outside it, it's the backend. Null when unset.
+    let serviceName =
+        Environment.GetEnvironmentVariable "OTEL_SERVICE_NAME"
+        |> Option.ofObj
+        |> Option.defaultValue "backend"
+
     let connectionString =
         // The configuration indexer returns null for a missing key, hence Option.ofObj.
         builder.Configuration["Database:ConnectionString"]
@@ -68,7 +74,7 @@ let create (args: string array) : WebApplication =
 
     let services =
         builder.Services.AddRouting().AddOxpecker().AddNpgsqlDataSource(connectionString)
-        |> Telemetry.add build
+        |> Telemetry.add build serviceName
 
     let app = builder.Build()
 

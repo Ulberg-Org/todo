@@ -11,11 +11,11 @@ open OpenTelemetry.Trace
 open Npgsql
 open Core.BuildInfo
 
-let serviceName = "todo-backend"
-
 /// Registers OpenTelemetry for the app, the database client and the runtime. Every signal carries the
-/// service, the commit and the instance, so two instances (D57) are always told apart.
-let add (build: BuildInfo) (services: IServiceCollection) : IServiceCollection =
+/// service, the commit and the instance, so two instances (D57) are always told apart. The service's name and
+/// its app (service.namespace) come from the platform (OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES), the same in
+/// traces, metrics and logs (D71). Metrics carry exemplars: a sample request's trace on a measurement.
+let add (build: BuildInfo) (serviceName: string) (services: IServiceCollection) : IServiceCollection =
     services
         .AddOpenTelemetry()
         .ConfigureResource(fun resource ->
@@ -30,6 +30,7 @@ let add (build: BuildInfo) (services: IServiceCollection) : IServiceCollection =
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation()
                 .AddNpgsqlInstrumentation()
+                .SetExemplarFilter(ExemplarFilterType.TraceBased)
             |> ignore)
         .WithLogging()
         .UseOtlpExporter()

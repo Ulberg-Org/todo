@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T21:32:46Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) Sure, but only if two collectors is the real right choice. Q2) Yes, but as we discussed i want to use the parentspan thing to have it all the way from FE -> DB. Q3) Fine, we'll add it locally, and ideally in Azure, but we might need to isolate it so it is easy to derive both local and cloud settings from the same domain model for IaC. Q4) Yes, that is fine, but also remember that Claude needs to be able to run explain analyze on epxensive queries. Q5) Yes, that is right, we do not send the notification anywhere, and I like the suggestion to start. Q6) Yes, we need those audit logs, but also in the future the apps audit logs inside of the "SaaS". Q7) If that is the simplest way to set it up, I am fine with it. Q8) Sure do that, but try to make it as speedy as possible while not workign on too much before you check so you have to do expnesive fixes. Basically just be time sensitive..And yes I'll only check manually once at the end :)

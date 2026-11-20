@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v19 (2026-11-20, database access: D75).** Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
+> **Status: v20 (2026-11-20).** Phase 2's infrastructure signals done. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -399,7 +399,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
   - two backend pods with hot reload (D61), Postgres outside the cluster;
   - full resource metrics (D64).
 - **Then:** `make test-platform` (D66, done: 12 checks, and a cluster-wide baseline rule found by them), Dependabot cooldown and hash pins in both repos (D65), and Phase 1's compose files deleted (done).
-- **TODO, infrastructure signals into the same stream (D71),** each readable by the developer and by Claude:
+- **Done: infrastructure signals into the same stream (D71),** each readable by the developer and by Claude (platform #47; the image cache stays deferred):
   - the gateway's own spans and access logs (with the trace ID), so a trace starts at the entrance;
   - every pod's logs and the Kubernetes events (scheduling failures, OOM kills, failed probes, image pulls) in Loki;
   - network decisions from Cilium's Hubble: denied flows in Loki, drop and flow metrics in Prometheus, and alerts on a rise in denials or above thresholds. Cloud parity (Hubble flows in AKS need ACNS, D70) decided in Phase 3;

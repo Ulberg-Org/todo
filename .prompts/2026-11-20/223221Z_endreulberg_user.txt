@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T22:32:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I agree on 2,3 and 5. The DevEx for this type of setup should be quite common prior knowledge, so you can probably look it up

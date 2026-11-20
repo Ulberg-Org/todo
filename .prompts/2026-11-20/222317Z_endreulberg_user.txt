@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T22:23:17Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Also, is the data in Grafana, Loki, Promethus and Tempo usable in the state it is now, like could a regular dev actually use it for anything sensible?

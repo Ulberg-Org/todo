@@ -1,0 +1,40 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T22:24:31Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+v0.2.0 is released and pinned in **todo #24** (https://github.com/Ulberg-Org/todo/pull/24), so every developer's `make up` now gets the new infrastructure signals. CI hasn't finished on #24 yet. Below are your two questions; the supply-chain rule caught two of my own dependencies.
+
+## Supply-chain rule
+Saved as a working rule. Checked against it:
+
+| Dependency | Source | Verdict |
+|---|---|---|
+| Charts: Argo CD, Cilium, Envoy Gateway, OpenTelemetry, Prometheus, Grafana/Loki/Tempo (grafana-community) | the projects' own orgs | ok, official |
+| kind, kubectl, helm, cosign, Docker CLI, buildx; .NET images; Postgres image | official | ok |
+| `grafana/mcp-grafana` | Grafana Labs | ok, official |
+| **`kubernetes-mcp-server`** (npm) | the `containers` org; about 63k downloads a week | **fails both tests** |
+| **`crystaldba/postgres-mcp`** | a small company; about 566k pulls *in total* | **fails both tests** |
+
+The two that fail are both my MCP servers. Each is already limited by its identity: Kubernetes' `view` role with no Secrets, and a database role that can only SELECT. But the rule is right: I should read their source before relying on them. I'd review both at their pinned versions (what they run, what they connect to, whether they send anything out) and record the review in the platform repo. If either looks wrong, I'd drop it until there's an official option. I'd do that before Phase 2.5.
+
+## Is the telemetry usable for a regular developer today?
+Honestly: for debugging the platform, yes; for an app developer, only partly, mostly because the app does almost nothing yet.
+
+**Useful today:**
+- Following one request from the gateway to the database, with its logs, through the trace ID.
+- Seeing why a pod crashed or won't start (pod logs, events, restarts).
+- Seeing which network rule blocked something.
+- Spotting slow queries.
+
+**Weak today:**
+1. **There's almost nothing to look at.** The app only has health checks, so traces, metrics and the Services dashboard are thin. That fixes itself with the first real endpoints (Phase 9).
+2. **App logs appear twice:** once through the app's own telemetry, named `todo-backend`, and once as pod logs, named `backend`. That's confusing, so the pod-log copy of apps that already send their own should be dropped.
+3. **Inconsistent names across Loki, Prometheus and Tempo** (`todo-backend` vs `backend` vs the pod name). One app label everywhere would make every query and link line up.
+4. **No starting point.** A developer doesn't know where to begin. A "Start here" dashboard per app would help: errors, slowest requests, recent restarts, each linking to its traces and logs.
+5. **No link from a metric spike to an example trace.** Prometheus can attach the trace ID of a sample request to a metric (called exemplars), so a click on a latency spike opens that request's trace.
+6. **Short retention:** Prometheus keeps 2 days and Loki and Tempo are cleared with the cluster. That's fine locally, and Phase 5 sets real retention in Azure.
+
+My suggestion: make 2–5 a short Phase 2 follow-up (part of making D71 actually useful), together with the two MCP reviews. Then grill Phase 2.5 (the sandbox) and Phase 3.
+
+**What you need to do:** approve todo #24. Tell me whether to go ahead with the follow-up and the MCP reviews.
