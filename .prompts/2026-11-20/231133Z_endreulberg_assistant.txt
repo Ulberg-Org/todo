@@ -1,0 +1,41 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T23:11:33Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Neither is weaker. Both put each workload in its **own VM with its own kernel**, the same class of isolation:
+- **Apple's Containerization** is a low-level runtime (one VM per container, macOS 26+), with no network policies or credential handling for agents.
+- **Docker Sandboxes** runs each agent in a dedicated micro-VM and adds what we need on top: network allow and deny lists, and credentials kept outside the VM.
+
+So Docker Sandboxes, revisited if Apple adds agent features.
+
+Your answers lead to a clean model: **two sandbox profiles, chosen from what the developer is in `access/people.yaml`.**
+
+| | App profile | Platform profile |
+|---|---|---|
+| Repos inside | the app's repo only | platform + apps |
+| Local | the full app and platform via `make up` (the CLI image) | the same, plus the CLI from the checkout |
+| Claude reads locally | Grafana (all telemetry), the app's database read-only | also Kubernetes (read-only MCP) |
+| Claude reads in the cloud | the app telemetry the developer may see (Phase 5) | what the developer's agent identity may read (Azure, Kubernetes) |
+| Tools | the app repo's flake | the platform repo's flake |
+
+**Q6 explained:** "done when" is how we'll know Phase 2.5 is finished. Claude completes one real task inside the sandbox (write code, `make up`, tests, open a PR), and we test that the walls hold. From inside, these must all fail:
+- reading your home folder or `~/.ssh`;
+- `curl` to a site that isn't on the allowlist;
+- pushing with your GitHub account instead of the app.
+
+A follow-up round:
+
+❓ **Q7 - Profile choice:** a developer who is in `infra-developers` gets the platform profile, everyone else the app profile. People in both (like you) choose per session, and the default is the app profile.
+➡️ Yes
+
+❓ **Q8 - Web access:** Claude Code's web search runs on Anthropic's side, so it only needs Anthropic's API, which is already on the allowlist. Plain `curl` and direct page fetches go only to the allowlist, so Claude can search the web but can't pull arbitrary pages or send data out.
+➡️ Yes
+
+❓ **Q9 - A non-personal sandbox:** the sandbox holds nothing of yours. It's named after Claude's identity (`<name>-agent`), and its git identity is `ulberg-claude[bot]`. Its tokens are minted on your Mac and passed in for one session (GitHub 1 hour; Azure through a proxy, platform profile only).
+➡️ Yes
+
+❓ **Q10 - Flakes:** each repo gets a `flake.nix` with exactly its tools: todo's with Docker, cosign, .NET; the platform's adds kind, kubectl, helm, Pulumi, az. The sandbox image is built from it, and developers can use the same one (`nix develop`), so everyone has the same versions.
+➡️ Yes
+
+Once you've answered, I'll write D76 onwards into PLAN as Phase 2.5. Also waiting for your approval: **todo #25** (the v0.2.1 pin, green).

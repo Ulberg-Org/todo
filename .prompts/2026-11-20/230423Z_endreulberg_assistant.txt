@@ -1,0 +1,48 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T23:04:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+**Phase 2.5, the Claude sandbox.** Research summary: the current recommendation for coding agents is a micro-VM per agent, not a container. **Docker Sandboxes** (from Docker, an official source) does this for Claude Code: its own kernel, network allow and deny lists, and credentials kept outside the VM. One Phase 2 item first:
+
+❓ **Q0 - Phase 2's "done when":** it says "a request through the gateway shows trace + log + metric including the database step". Since D73 the gateway has no routes (the public API is still empty). Each piece is proven separately: a gateway span with my `traceparent` as parent, and backend → database traces with logs and metrics. Amend it to "…through the gateway, or to the management port while the public API is empty"?
+➡️ Yes; that closes Phase 2
+
+❓ **Q1 - What isolates:** Docker Sandboxes, a micro-VM per sandbox, rather than a devcontainer (shares your kernel) or a hand-built Lima/Firecracker VM.
+➡️ Yes
+
+❓ **Q2 - What runs inside:**
+- Claude Code, fresh clones of `todo` and `platform`, and a **private Docker inside the sandbox**, so `make up` builds its own kind cluster there.
+- It's fully separate from your cluster, but costs about 6 GiB, so one sandbox at a time.
+
+➡️ Yes
+
+❓ **Q3 - Identities:** only Claude's own.
+- A helper on your Mac mints the 1-hour GitHub app token and hands it in.
+- The Azure agent session stays on your Mac (its passkey can't move), so the sandbox gets no Azure access for now. Phase 3 can add read-only Azure access through a host-side proxy if needed.
+- Your own `gh`, `az`, SSH keys and git identity never enter.
+
+➡️ Yes
+
+❓ **Q4 - Network:** deny by default. Allowed:
+- GitHub;
+- the image registries (GHCR, MCR, Docker Hub, Quay, registry.k8s.io);
+- NuGet and npm;
+- the Helm chart repositories;
+- grafana.com and Google Cloud Storage;
+- Anthropic's API.
+
+Nothing else.
+➡️ Yes
+
+❓ **Q5 - Tooling:** the sandbox's tools come from one definition in the platform repo, the devtooling you suggested. Developers can use the same definition, so "works for Claude" means "works for you".
+➡️ Yes; a devtools image (or flake) in the platform repo
+
+❓ **Q6 - Done when:** Claude finishes one task end to end inside the sandbox (code, `make up`, tests, a PR), and escape tests fail as they should:
+- reading `~/.ssh` or your home folder;
+- reaching a host that isn't on the list;
+- pushing without the app token.
+
+➡️ Yes
+
+Answer the ones you'd change; anything left unanswered gets my recommendation. The v0.2.1 release is still running in the background; after it I'll open the todo PR that pins it.
