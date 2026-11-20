@@ -1,0 +1,33 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T20:43:18Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The CLI image is ready for review in **platform #44** (https://github.com/Ulberg-Org/platform/pull/44), with CI green. It isn't released yet: the signature check and a full `make up` from the published image happen after you merge.
+
+**What's in #44:**
+- **The image:** every tool it bundles is checked against a pinned checksum, and only local-development files go in, nothing about Azure.
+- **Release workflow:** a `vX.Y.Z` tag builds both images for Mac and Intel, publishes them on GHCR and signs them with cosign.
+- **The CLI inside the image** reaches the cluster over kind's network and checks the renderer image's signature before using it.
+- **The platform README** explains how to set up the CLI.
+
+**Fixes found while testing, also in #44:**
+- `sync` rebuilds a service's dev image when its packages change. That was what crash-looped the backend after the lock files.
+- `sync` gives up after 2 minutes and shows why, instead of hanging.
+- The baseline network rule from #38 broke the gateway's setup on a fresh cluster. The baseline now covers only namespaces without their own rules, as originally intended.
+
+**Faster from here:** I check each fix with a quick `make sync` (about 30 s) and save the 5-minute fresh `make up` for one final proof. I've saved that as a working rule.
+
+**Sandbox:** added to the plan as Phase 2.5, before Phase 3, in **todo #22** (https://github.com/Ulberg-Org/todo/pull/22). Claude would work in an isolated environment with only its own identities and a limited network. The options to weigh are a devcontainer, a micro-VM (for example Apple's Containerization, Lima or Firecracker) or a cloud workspace. It gets grilled before anything is built.
+
+**What you need to do:**
+1. **Approve** #44, todo #21 (https://github.com/Ulberg-Org/todo/pull/21, the Dependabot fix) and todo #22. All are green. I'll merge them.
+2. **After #44 is merged**, I tag `v0.1.0`, which publishes and signs both images.
+3. **Then make the two packages public** while signed in as `Ulberg`. Each package's settings page → **Change visibility** → **Public**:
+   - https://github.com/orgs/Ulberg-Org/packages/container/platform-cli/settings
+   - https://github.com/orgs/Ulberg-Org/packages/container/platform-renderer/settings
+4. **Then** I switch todo's `make up` to the signed image and run one full test.
+
+**Two applies may still be waiting for promotion.** Both previews show no changes:
+- https://github.com/Ulberg-Org/platform/actions/runs/44803859498
+- https://github.com/Ulberg-Org/platform/actions/runs/44804214073

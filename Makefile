@@ -1,6 +1,14 @@
 # Local development (PLAN §11, D61): the platform CLI runs the app in a local Kubernetes cluster, the way it runs
-# in Azure. Until the CLI ships as an image (D63), it runs from a checkout of the platform repo next to this one.
-PLATFORM ?= ../platform/cli/platform
+# in Azure. The CLI is a public image (D63), pinned by digest, which runs only after cosign has checked that the
+# platform repo's release workflow signed it. Bump the pin with each platform release (its summary lists it).
+# Developing the platform itself: PLATFORM=../platform/cli/platform make up (runs it from that checkout).
+PLATFORM_IMAGE := ghcr.io/ulberg-org/platform-cli:v0.1.0@sha256:028ffe2fdfb1bb9f879dfe11f0d1189f4503f271cfb2e7c540af5aed1b16cac7
+COSIGN ?= cosign
+SIGNED_BY := --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp '^https://github\.com/Ulberg-Org/platform/\.github/workflows/release\.yml@refs/tags/v'
+PLATFORM ?= $(COSIGN) verify $(PLATFORM_IMAGE) $(SIGNED_BY) >/dev/null 2>&1 \
+  || { echo "The platform CLI image isn't signed by Ulberg-Org/platform's release (is cosign installed?)" >&2; exit 1; }; \
+  docker run --rm -i -v /var/run/docker.sock:/var/run/docker.sock -v "$(CURDIR):$(CURDIR)" -w "$(CURDIR)" $(PLATFORM_IMAGE)
 KUBECTL := kubectl --kubeconfig .local/kubeconfig
 .PHONY: up sync test-platform down status
 
