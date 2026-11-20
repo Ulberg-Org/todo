@@ -1,0 +1,54 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T18:38:42Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Agreed, and it's a real gap today. todo's `platform.yaml` routes `/`, so `/health/live`, `/health/ready` and `/version` are all reachable from outside through the gateway. `/version` gives away the exact commit and build time, which helps an attacker match us against known vulnerabilities.
+
+**My recommendation, in short:**
+- **Health checks are for Kubernetes only.** The kubelet calls the pods directly and never goes through the gateway, so health needs no route at all. It moves to a separate management port that only the kubelet can reach.
+- **`/version` goes in the internal API**, behind authentication.
+- **One app port per audience, enforced in both layers:**
+  - **App layer:** each port has its own endpoint group and its own authentication middleware, so an endpoint can't end up on the wrong audience by accident.
+  - **Infrastructure layer:** the renderer routes each audience only to its own port. The gateway also checks the token for authenticated audiences (Envoy's JWT validation), and Cilium allows each port only from the callers that audience permits.
+  - **The private API** never gets a route; only declared callers inside the cluster can reach it. Deferred, as you say.
+
+Before I write this into the plan, a grilling round:
+
+❓ **Q1 - Health checks:** move health to a management port (for example 8081) with no route. Only the kubelet may reach it; Cilium allows the node, nothing else.
+➡️ Yes
+
+❓ **Q2 - Version:** `/version` moves to the internal API (authenticated). The platform's own tools can read the commit from the image labels and from Argo CD instead.
+➡️ Yes
+
+❓ **Q3 - What the audiences mean.** Here's my reading of your four; tell me where it's wrong:
+- **Public:** anonymous, from the internet. Only what anyone may see: the public OpenAPI spec, perhaps a status page. Every request is logged and traced like the rest.
+- **Internal:** our company's own frontends and apps. Authenticated, with our workforce identity or app identities (Entra).
+- **External:** end users reaching their own data. Authenticated with External ID (customer accounts).
+- **Private:** only reachable inside Kubernetes, from declared callers; stricter access control in both layers. Deferred.
+
+The open point: todo's own frontend is used by end users. Is its API therefore **external**, with internal meaning staff tools and service-to-service calls?
+➡️ todo's user-facing API is external; internal is for staff and company services
+
+❓ **Q4 - How the app enforces it:** one listener (port) per audience. Each has its own Oxpecker endpoint group and its own authentication middleware (none, Entra, External ID), so the compiler and the router decide which audience an endpoint belongs to, not a naming convention. The tests check that every endpoint answers only on its own port.
+➡️ Yes
+
+❓ **Q5 - How `platform.yaml` declares it:** the app declares its APIs instead of free routes, for example `apis: { public: { port: 8080, routes: [/openapi.json] }, external: { port: 8082, routes: [/api] } }`. The renderer produces a route per audience to its port only, the gateway's token check for authenticated audiences, and the network rules per port.
+➡️ Yes
+
+❓ **Q6 - Gateways:** one public gateway, with a hostname per audience (for example `api.<domain>` and `internal.<domain>`) and the token checked at the gateway. Not separate gateways or load balancers per audience. The company's browser frontends reach the internal API over the internet anyway, so a private network would only add cost. Revisit if internal ever has to be reachable only from a company network.
+➡️ Yes
+
+❓ **Q7 - OpenAPI specs:** each audience serves its own spec on its own port. Only the public spec is public; the internal and external specs need that audience's authentication, so we don't publish the shape of our non-public endpoints.
+➡️ Yes
+
+❓ **Q8 - Agents (MCP):** `/mcp` belongs to an audience like any endpoint. A user's agent acting on its owner's data goes through **external**; a company agent goes through **internal**. REST and MCP stay in sync per audience (Phase 8).
+➡️ Yes
+
+❓ **Q9 - When:**
+- **Now, in Phase 2:** the broken window. Health moves to the management port, `/version` comes off the gateway, and the route lists explicit prefixes instead of `/`.
+- **In the plan now, built in Phase 6:** the full audience model, once the first authenticated endpoint exists. The renderer gets `apis`, the gateway checks tokens, and each port gets its own rules.
+
+➡️ Yes
+
+Once you've answered, I'll write the decisions into PLAN (D73 onwards) and fix the broken window on the open branches, red first. #37 and #17 are still unmerged, waiting for your local test.

@@ -4,7 +4,9 @@ module TodoBackend.Test.Server
 
 open System
 open System.IO
+open System.Net
 open System.Net.Http
+open System.Net.Sockets
 open System.Runtime.ExceptionServices
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Builder
@@ -37,19 +39,48 @@ let appConnection (container: PostgreSqlContainer) =
 let unreachable =
     "Host=127.0.0.1;Port=1;Database=todo;Username=todo_app;Password=none;Timeout=2"
 
-/// Starts the app with `connectionString`, runs `test` against it over HTTP, and always stops the app.
-let withApi (connectionString: string) (test: HttpClient -> Task<unit>) : Task<unit> =
+/// A port nothing listens on right now.
+let private freePort () =
+    use listener = new TcpListener(IPAddress.Loopback, 0)
+    listener.Start()
+    (listener.LocalEndpoint :?> IPEndPoint).Port
+
+/// The app's APIs as a client sees them, one port each (D73).
+type Api =
+    {
+        /// What the gateway routes from outside.
+        ``public``: HttpClient
+        /// What only the platform reaches: health and version.
+        management: HttpClient
+    }
+
+/// Starts the app with `connectionString` on two free ports, runs `test` against it over HTTP, and always stops
+/// the app.
+let withApi (connectionString: string) (test: Api -> Task<unit>) : Task<unit> =
     task {
+        let publicPort, managementPort = freePort (), freePort ()
+
         let app =
             TodoBackend.Program.create
                 [|
-                    "--urls"
-                    "http://127.0.0.1:0"
+                    $"--Api:PublicPort={publicPort}"
+                    $"--Api:ManagementPort={managementPort}"
                     $"--Database:ConnectionString={connectionString}"
                 |]
 
         do! app.StartAsync()
-        use client = new HttpClient(BaseAddress = Uri(Seq.head app.Urls))
+
+        use publicClient =
+            new HttpClient(BaseAddress = Uri $"http://127.0.0.1:{publicPort}")
+
+        use managementClient =
+            new HttpClient(BaseAddress = Uri $"http://127.0.0.1:{managementPort}")
+
+        let client =
+            {
+                ``public`` = publicClient
+                management = managementClient
+            }
 
         let! outcome =
             task {

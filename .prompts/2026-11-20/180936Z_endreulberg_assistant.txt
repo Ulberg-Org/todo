@@ -1,0 +1,24 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T18:09:36Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I haven't merged either one, and they'll stay unmerged until you say it works. You're right that I should have handed this over for testing first; I've noted that as a rule. The cluster from my last fresh `make up` is still running, with all 11 ArgoCD apps Synced and Healthy.
+
+**What to test:**
+
+1. **Sign in** at http://localhost:9876 as user `admin`, password `local-only-admin`.
+2. **A request's trace**, including its Postgres step: [open trace ff84660d…](http://localhost:9876/explore?schemaVersion=1&panes=%7B%22a%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22query%22%3A%22ff84660ded22b5f4d5eb0b63873bd1ea%22%2C%22queryType%22%3A%22traceql%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D). From a span, "Logs for this span" should jump to that request's log lines in Loki.
+3. **Postgres's own log:** [open in Loki](http://localhost:9876/explore?schemaVersion=1&panes=%7B%22a%22%3A%7B%22datasource%22%3A%22loki%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22loki%22%2C%22uid%22%3A%22loki%22%7D%2C%22expr%22%3A%22%7Bservice_name%3D%5C%22postgres%5C%22%7D%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D). You should see connections by `todo_app`.
+4. **CPU per pod, all namespaces:** [open in Prometheus](http://localhost:9876/explore?schemaVersion=1&panes=%7B%22a%22%3A%7B%22datasource%22%3A%22prometheus%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22prometheus%22%2C%22uid%22%3A%22prometheus%22%7D%2C%22expr%22%3A%22sum%20by%20%28namespace%2C%20pod%29%20%28rate%28container_cpu_usage_seconds_total%7Bcontainer%21%3D%5C%22%5C%22%7D%5B5m%5D%29%29%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D)
+5. **Claude's account:** under Administration → Users and access → Service accounts, there's `claude` with the Viewer role.
+6. **Generate data yourself:** open http://localhost:9875/health/ready a few times, then look again in Grafana.
+7. **Optional, from scratch:** `make down && make up` in the todo repo (about 5 minutes, needs `../platform`).
+
+**My own access as Claude:** I'll read the same data through the MCP servers in a new session. For that, run `/mcp` to reconnect them, or restart Claude Code once. In this session I tested both MCP servers directly, as `claude` and as `todo_readonly`.
+
+**Your caching question:** yes, and it won't fail in strange ways. I've planned it as D72 rather than built it. Plain mirror containers outside the cluster would keep a copy of every downloaded image and survive `make down`, and the kind nodes would use them first. Since every image is pinned by an exact content hash (D65), a cached image can't differ from the pinned one, and if a mirror is down the nodes pull straight from the registry. It should save most of the image downloads, probably 1–2 of the 5 minutes. It's in the PLAN TODOs and works best together with the content-hash pins.
+
+**Your other points** are now TODOs in todo #17's PLAN v17: items 1–5, the audit logs, and read-only Kubernetes access for my agent account. The later items are placed with their phases (browser telemetry and Chrome DevTools MCP in Phase 7, profiling in Phase 9, the permission audit trail in Phase 10). D71 records that it all goes into one stream that both you and I can read.
+
+Tell me when you've tested it and I'll merge platform #37, then todo #17.

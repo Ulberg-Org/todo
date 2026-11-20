@@ -16,7 +16,7 @@ RUN dotnet publish src/TodoBackend/TodoBackend.fsproj -c Release -o /app --no-re
 # internet). A change to the package list means rebuilding this image, which `make up` does.
 FROM mcr.microsoft.com/dotnet/sdk:11.0.100-resolute AS dev
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 NUGET_PACKAGES=/nuget HOME=/tmp \
-    DOTNET_USE_POLLING_FILE_WATCHER=1 DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1 ASPNETCORE_HTTP_PORTS=8080 \
+    DOTNET_USE_POLLING_FILE_WATCHER=1 DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1 \
     # NuGet's vulnerability audit needs the internet; CI audits every build (and Trivy scans every image).
     NuGetAudit=false
 WORKDIR /restore
@@ -38,5 +38,6 @@ ARG BUILD_COMMIT=local
 ARG BUILD_TIME=local
 ARG IMAGE_TAG=local
 ENV BUILD_COMMIT=$BUILD_COMMIT BUILD_TIME=$BUILD_TIME IMAGE_TAG=$IMAGE_TAG
-EXPOSE 8080
+# The public API and the management port (health, version), D73.
+EXPOSE 8080 8081
 ENTRYPOINT ["dotnet", "TodoBackend.dll"]

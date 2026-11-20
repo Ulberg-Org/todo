@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T18:47:05Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) That sounds great! as long as that does not stop any of the things that need to check health like AKS from reaching it. Q2) That sounds good. Q3) Yes, maybe we shuold integrate with those external status page setups. like status.todoapp.com. on the External we should make sure that it has the possiblity to give ut API-KEYS, but in the background it can be an a user in our app that we give pwd and username to like the delegate system and api-users from the reference app. Private is correct. The internal one should have the frontend used by customers. While an admin app might use the internal and private endpoints. The point of the internal is that it is just supposed to be communicated with by systems that we have made, i.e. the frontend and other services. Q4) Just do the same as the reference app, but it seems to be what you descibe more or less. Q5) yes, but just remember that each of the apis have their own openAPI :) and that it is generated build time by the system like in the reference app :) Q6) That is what I was thinking atleast. Q7) That is correct! Q8) Yes! Q9) Yes we do what we can now, and the things that need the authentication system is deferred. but we add TODOS now so we remember it

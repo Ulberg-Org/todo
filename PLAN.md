@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v16 (2026-11-20, GitOps design: D67–D70).** Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI and Argo CD are done; next the telemetry stack.
+> **Status: v18 (2026-11-20, APIs by audience: D73–D74).** Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -178,6 +178,10 @@ Pulumi (F#) turns this into:
 | D68 | **The renderer runs inside Argo CD**, as its `platform` plugin (a sidecar of the repo server), for apps and for the root application: `platform.yaml` + the environment file + the image tag go in, manifests come out; nothing rendered is ever committed (D62 holds). Locally Argo CD reads snapshots of the developer's checkouts (uncommitted changes included) from a git server in the cluster; in Azure it reads GitHub. So a local test goes through the same rendering, ordering and sync as production | msg 2026-11-20 |
 | D69 | **Database credentials come from Entra in Azure.** The app's pods get an Entra workload identity and Npgsql fetches a token as the password; no database secret exists. Locally Postgres can't use Entra, so it stays a password Secret created by the CLI. The environment file chooses which; the backend's Npgsql setup asks Entra for a token when the connection string has no password (Phase 3) | msg 2026-11-20 |
 | D70 | **Network rules allow the database by address range in Azure, by name locally.** Name-based rules (and the DNS inspection they need) require AKS's paid Advanced Container Networking Services, so Azure allows the database subnet's range (`dev`: 10.20.2.0/24 in VNet 10.20.0.0/16, created in Phase 3); locally the database is allowed by name. The environment file chooses (`database.range`). Local Cilium is pinned to the version AKS runs (1.19 for Kubernetes 1.36; recheck for 1.37 in Phase 3), not the newest. Every namespace, the platform's included, is deny-by-default; an app's project allows only Deployments, Services, HTTPRoutes and Cilium rules, only in its own namespace and only from its own repo | msg 2026-11-20 |
+| D71 | **One stream of telemetry, readable by people and by Claude alike.** Everything the app and the infrastructure emit (traces, logs, metrics, Kubernetes events, network decisions, audit logs, profiles, browser telemetry) goes into the same Grafana. People sign in as themselves (locally `admin`); each Claude reads as its own read-only identity (locally Grafana's `claude` Viewer service account, through `mcp-grafana`), so its reads are attributed to it and it can't change anything. Dashboards and alert rules are code in the platform repo, never made by hand | msg 2026-11-20 |
+| D72 | **A local image cache that survives `make down`**: pull-through registry mirrors (Docker Hub, Quay, GHCR, registry.k8s.io) in containers outside the cluster, which the kind nodes use first. Safe because every image is pinned by digest (D65): a cached image is byte-for-byte the pinned one, and a missing mirror falls back to the registry | msg 2026-11-20 |
+| D73 | **An app's APIs are split by who may call them, and both layers enforce it.** **Public**: anonymous, from the internet; only what anyone may see (its OpenAPI spec, status). **Internal**: only systems we built (the customer frontend, our other services, an admin app); authenticated as those systems or their users. **External**: customers reaching their own data with API keys; behind a key is an API user of our app, which signs in with a username and password and gets a short-lived token (the delegate/API-user pattern). **Private**: only from declared callers inside the cluster, with stricter access control in both layers; deferred until something needs it (an admin app would use internal and private). Each API is one endpoint group with its own port, authentication and OpenAPI document generated from the code at build time. The renderer routes each API to its own port only (one gateway, a hostname per API), validates tokens at the gateway for authenticated APIs as well as in the app, and allows each port separately in the network rules; private is never routed. Health and version have their own management port, reached only by the kubelet's probes (as on AKS; Azure's load balancer probes the gateway, not the app); `/version` moves to the internal API once it has authentication | msg 2026-11-20 |
+| D74 | **A public status page** (e.g. `status.<domain>`) from an external status-page service, fed by synthetic checks and the alerts of D71, so customers see outages without reaching our systems | msg 2026-11-20 |
 
 ## 4. Sign-off and bootstrap
 
@@ -393,7 +397,17 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
   - the renderer (D60, D62) turns todo's `platform.yaml` into the backend's Kubernetes YAML and gateway route; ArgoCD runs it as a plugin and deploys from the local checkout (D67, D68);
   - two backend pods with hot reload (D61), Postgres outside the cluster;
   - full resource metrics (D64).
-- **Then:** `make test-platform` (D66), Dependabot cooldown and hash pins in both repos (D65), and Phase 1's compose files deleted.
+- **Then:** `make test-platform` (D66), Dependabot cooldown and hash pins in both repos (D65), and Phase 1's compose files deleted (done).
+- **TODO, infrastructure signals into the same stream (D71),** each readable by the developer and by Claude:
+  - the gateway's own spans and access logs (with the trace ID), so a trace starts at the entrance;
+  - every pod's logs and the Kubernetes events (scheduling failures, OOM kills, failed probes, image pulls) in Loki;
+  - network decisions from Cilium's Hubble: denied flows in Loki, drop and flow metrics in Prometheus, and alerts on a rise in denials or above thresholds. Cloud parity (Hubble flows in AKS need ACNS, D70) decided in Phase 3;
+  - Postgres metrics and query statistics (D64): the `todo_monitor` role (`pg_monitor`), `pg_stat_statements`; in Azure, Azure Monitor metrics and Query Store;
+  - dashboards and alert rules as code (D71): per service request rate, errors and latency; per pod CPU and memory against requests and limits; Argo CD sync health; alerts on error rate, restarts, OOM kills, out-of-sync applications and network denials;
+  - audit logs in Loki: the Kubernetes API's (who changed what in the cluster), Argo CD's and Grafana's;
+  - read-only Kubernetes access for infra developers' Claude (a Kubernetes MCP server with a view-only role); an app developer's Claude keeps only the telemetry (AGENTS.md §3);
+  - the local image cache (D72), to make `make up` faster (deferred: after the hash pins of D65).
+- **Done (D73, the part that needs no authentication):** health and version on the management port, which only the probes reach; no gateway route until the public API has endpoints.
 - **Done when** `make up` works from a fresh cluster, a request through the gateway (http://localhost:9875) shows in Grafana (http://localhost:9876) as trace + log + metric including the database step, every pod's CPU and memory are visible, and `make test-platform` passes.
 
 ### Phase 3: Azure foundation (Pulumi F#, applied only by CI after approval)
@@ -412,7 +426,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 
 ### Phase 5: Observability platform on Azure
 - OTel Collector → Loki / Prometheus / Tempo (Blob) → Grafana (Entra SSO, two orgs, tenants).
-- Infra signals: kube-state-metrics, node metrics, AKS audit logs, Postgres metrics/logs, Envoy access logs, ArgoCD.
+- Infra signals: the same as locally (Phase 2 TODOs), from Azure's sources where they differ: kube-state-metrics, node metrics, AKS audit logs, Postgres metrics/logs and Query Store, Envoy access logs, Argo CD, network flows (if ACNS).
 - Dashboards + alerts as code; `mcp-grafana` setup documented for both groups.
 - Entra sign-in and audit logs → alerts (D40): any emergency-account sign-in, role or group-membership changes not made by the apply identity, changes to PIM policies or Conditional Access.
 - **Done when** each group's Claude sees exactly its column of §5.1, proven by tests.
@@ -421,6 +435,9 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - TLS, HSTS, CSP, security headers, strict CORS, rate limiting.
 - External ID JWT validation (issuer, audience, scopes, **verified email**), email → user → permissions (`bindPermissionsByBearer` pattern), deny by default.
 - Users table, migrations Job.
+- **APIs by audience (D73):** `platform.yaml` declares an app's APIs (`public`, `internal`, `external`, later `private`) instead of free routes. The renderer gives each its route (hostname), port, gateway token check and network rule. The app gets one endpoint group, port and auth middleware per API, plus one OpenAPI document per API generated at build time; tests check that every endpoint answers only on its own API. `/version` moves to the internal API.
+- **External API keys (D73):** API users (username and password, exchanged for short-lived tokens) owned by a customer and acting only on that customer's data, like the reference app's delegates.
+- **Status page (D74):** choose the service, then synthetic checks of the public and external APIs and the alerts feed it.
 - **Done when** the security suite (authz matrix, CORS, headers, anonymous/wrong-scope rejection) passes locally and against dev.
 
 ### Phase 6b: `prod` environment + releases (D37, D38)
@@ -431,20 +448,24 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 
 ### Phase 7: Frontend shell
 - Vite + React + TS, TanStack Router (CSR) + Query, shadcn/ui, MSAL.
-- `openapi-typescript` + `openapi-fetch` with auth + `traceparent` middleware; the spec is committed and checked for drift in CI.
-- Browser telemetry (OTel web / Faro) joined to the backend traces.
+- `openapi-typescript` + `openapi-fetch` with auth + `traceparent` middleware, from the internal API's OpenAPI document (D73); each API's document is committed and checked for drift in CI.
+- Browser telemetry (OTel web / Faro: page loads, errors, web vitals) joined to the backend traces, in the same Grafana (D71).
+- Chrome DevTools MCP for Claude, so it can drive and inspect the UI end to end locally.
 - **Done when** login works and a "who am I" page shows one trace browser → API → DB.
 
 ### Phase 8: Agent shell (MCP)
+- `/mcp` per audience (D73): a customer's agent through the external API, our own agents through the internal one.
 - Stateless `/mcp`, protected-resource metadata, pre-registered client(s), scopes, audit log, per-client rate limit.
 - REST/MCP parity check in CI; first tool `whoami`.
 - **Done when** the feature template (domain → DBO → use case → REST → MCP → FE hook → tests → dashboard panel) is documented in `AGENTS.md`.
 
 ### Phase 9: Todo features
 - Create, list, get, edit, delete, each through the template.
+- Continuous profiling (Pyroscope): CPU and memory profiles per service, linked from slow spans, in the same Grafana (D71).
 - **Done when** all five operations work for a human (FE) and an agent (MCP) under the same permissions, with tests and a dashboard panel for each.
 
 ### Phase 10: Sharing
+- An audit trail of every permission decision and change (who, what, on whose behalf: a person or their Claude), in Loki and queryable by both (D71).
 - Grant, admin change/revoke, grant list for admins, pending grants, no-enumeration tests (same response + timing), property tests, untrusted-content marking in MCP.
 - **Done when** the property tests (no escalation), the no-enumeration tests (same response and timing) and the authz matrix all pass, and sharing works the same from the FE and from MCP.
 

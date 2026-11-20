@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T18:01:56Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Aside from that. can we have local caching to make the Cilium etc go faster, or would that make it fail in weird ways. 1) yes, we want to add all the telemetry we can from the infra as well into the same stream of data that I and Claude can access 2) Yes that should be in Loki! 3) Yes we should add that, but also maybe add alerts for something like increases in denials or with thersholds 4) Yes that we need to add. 5) Yes I want all that but ideally as IaC. All of those things you suggest at the end, we should add, and make sure that I and Claude can access all of it. Can you just make it into appropriate TODOs?

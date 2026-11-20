@@ -1,0 +1,32 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T18:13:55Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Through the MCP tools, Grafana confirms I'm signed in as `claude`, a non-admin account. Here's what the data shows about the application:
+
+**1. Almost all traffic is Kubernetes checking the app's health** (Prometheus).
+- In the last hour: about 321 requests to `/health/live`, about 329 to `/health/ready`, and one 404 (my test of an unknown URL).
+- `/version` was never called. Nobody is using the app yet; the cluster only asks the two instances whether they're alive.
+
+**2. The database is about 70% of a readiness check, and still fast** (Tempo).
+- A typical `/health/ready` trace takes 1.6 ms, of which the Postgres ping is 1.1 ms. `/health/live` doesn't touch the database and takes about 0.5–0.9 ms.
+
+**3. Connection pooling works** (Loki, Postgres's own log).
+- Hundreds of readiness checks reached the database, but Postgres logged only 17 new connections in the hour. Npgsql reuses its connections instead of opening one per request.
+
+**4. The backend uses 3× the memory it asks for** (Prometheus, kubelet and kube-state-metrics).
+- Each instance uses about 800 MiB but requests 256 MiB. That's the local dev image: the full .NET SDK compiling with hot reload. Production images are capped at 256 MiB.
+- Locally, though, the scheduler thinks each pod needs 256 MiB while it really needs about 800. Develop mode should probably request more memory. That's a small renderer change; tell me if you want it.
+
+**5. Postgres's log shows something I did myself** (Loki).
+- The only warning in the hour: `there is already a transaction in progress`, from user `todo_readonly` at 18:01:27 UTC. That was my test of the Postgres MCP server. The log names that account, so the warning is attributable even though `todo_readonly` isn't exclusive to Claude.
+
+**Two problems found while doing this, both fixed and pushed:**
+- **Wrong links:** Grafana's links pointed at `localhost:3000`, because its own address wasn't set. Fixed in platform #37.
+- **Grafana lost my account on restart:** it had no disk, so restarting it deleted my service account and my token stopped working. It now has a small local disk, and I checked that the token survives a restart.
+
+**One step for you:**
+- **Reconnect my MCP servers:** fixing the second problem replaced my token, so run `/mcp` once to reconnect them. After a fresh `make up` that will always be needed, and AGENTS.md §5 in todo #17 now says so.
+
+**PR status:** both PRs got new commits after your approvals, so they may need approving again once you've tested. I'll still wait for your go before merging.
