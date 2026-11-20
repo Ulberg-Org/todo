@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v18 (2026-11-20, APIs by audience: D73–D74).** Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
+> **Status: v19 (2026-11-20, database access: D75).** Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -182,6 +182,7 @@ Pulumi (F#) turns this into:
 | D72 | **A local image cache that survives `make down`**: pull-through registry mirrors (Docker Hub, Quay, GHCR, registry.k8s.io) in containers outside the cluster, which the kind nodes use first. Safe because every image is pinned by digest (D65): a cached image is byte-for-byte the pinned one, and a missing mirror falls back to the registry | msg 2026-11-20 |
 | D73 | **An app's APIs are split by who may call them, and both layers enforce it.** **Public**: anonymous, from the internet; only what anyone may see (its OpenAPI spec, status). **Internal**: only systems we built (the customer frontend, our other services, an admin app); authenticated as those systems or their users. **External**: customers reaching their own data with API keys; behind a key is an API user of our app, which signs in with a username and password and gets a short-lived token (the delegate/API-user pattern). **Private**: only from declared callers inside the cluster, with stricter access control in both layers; deferred until something needs it (an admin app would use internal and private). Each API is one endpoint group with its own port, authentication and OpenAPI document generated from the code at build time. The renderer routes each API to its own port only (one gateway, a hostname per API), validates tokens at the gateway for authenticated APIs as well as in the app, and allows each port separately in the network rules; private is never routed. Health and version have their own management port, reached only by the kubelet's probes (as on AKS; Azure's load balancer probes the gateway, not the app); `/version` moves to the internal API once it has authentication | msg 2026-11-20 |
 | D74 | **A public status page** (e.g. `status.<domain>`) from an external status-page service, fed by synthetic checks and the alerts of D71, so customers see outages without reaching our systems | msg 2026-11-20 |
+| D75 | **Who reaches the database.** Of the applications, only the backend (the service that declares it in `platform.yaml`), never from the internet (§9.1: no public endpoint). Of the people: developers read-only, and their Claude read-only; platform leads read-write, and their Claude read-only. Each as their own identity: Entra identities mapped to the database roles in Azure, `todo_readonly` locally. The cluster's baseline rule makes every pod deny-by-default, so no other pod reaches it either; `make test-platform` checks this (D66) | msg 2026-11-20 |
 
 ## 4. Sign-off and bootstrap
 
@@ -397,7 +398,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
   - the renderer (D60, D62) turns todo's `platform.yaml` into the backend's Kubernetes YAML and gateway route; ArgoCD runs it as a plugin and deploys from the local checkout (D67, D68);
   - two backend pods with hot reload (D61), Postgres outside the cluster;
   - full resource metrics (D64).
-- **Then:** `make test-platform` (D66), Dependabot cooldown and hash pins in both repos (D65), and Phase 1's compose files deleted (done).
+- **Then:** `make test-platform` (D66, done: 12 checks, and a cluster-wide baseline rule found by them), Dependabot cooldown and hash pins in both repos (D65), and Phase 1's compose files deleted (done).
 - **TODO, infrastructure signals into the same stream (D71),** each readable by the developer and by Claude:
   - the gateway's own spans and access logs (with the trace ID), so a trace starts at the entrance;
   - every pod's logs and the Kubernetes events (scheduling failures, OOM kills, failed probes, image pulls) in Loki;
@@ -412,6 +413,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 
 ### Phase 3: Azure foundation (Pulumi F#, applied only by CI after approval)
 - Agents (D41) get AKS RBAC Reader and the DB read-only role as those resources appear.
+- Database access per D75: Entra groups → Postgres roles (developers and every Claude read-only, platform leads read-write); the backend's workload identity as the app role.
 - Workforce groups, External ID app registrations, workload identities.
 - VNet + subnets + NSGs (`dev`: 10.20.0.0/16, database subnet 10.20.2.0/24, D70), private DNS, Key Vault (ACR already exists from Phase 1, D54), AKS (Entra RBAC, no local accounts, workload identity, Azure CNI overlay + Cilium), Postgres Flexible (private access, Entra-only auth with migrator/app/read-only identities).
 - Pulumi unit tests (mocks); `preview` on every PR, `up` after approval.

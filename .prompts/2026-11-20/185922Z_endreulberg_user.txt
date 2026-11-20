@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T18:59:22Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I htink the people that should have access to the database is the developer has read-only, as well as their mcp, and the platform-leads have read-write with mcp for read-only. the only application that should reach it is the backend, it should not be public on internet

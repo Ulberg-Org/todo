@@ -2,7 +2,7 @@
 # in Azure. Until the CLI ships as an image (D63), it runs from a checkout of the platform repo next to this one.
 PLATFORM ?= ../platform/cli/platform
 KUBECTL := kubectl --kubeconfig .local/kubeconfig
-.PHONY: up sync down status
+.PHONY: up sync test-platform down status
 
 ## up: a fresh cluster with the platform, the database and two backend instances with hot reload.
 up:
@@ -11,6 +11,11 @@ up:
 ## sync: hands Argo CD a changed platform.yaml (code changes reload by themselves).
 sync:
 	$(PLATFORM) sync .
+
+## test-platform: checks the network rules against the running cluster (D66): who may reach the backend, the
+## database, the telemetry collector, the Kubernetes API and the internet.
+test-platform:
+	$(PLATFORM) test .
 
 ## down: removes the cluster and the database.
 down:

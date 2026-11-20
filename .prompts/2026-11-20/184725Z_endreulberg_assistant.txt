@@ -1,0 +1,36 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T18:47:25Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Health and version are off the gateway. From outside, `/health/*`, `/version` and `/` all return 404 now; inside the cluster they answer on their own port, 8081. Both PRs are green, and the rest of your answers are written into the plan.
+
+**What changed now:**
+- **App (todo #17):** each API answers only on its own port, the way the reference app gives each API its own endpoint group.
+  - The public API is on 8080 and has no endpoints yet.
+  - The management port, 8081, carries health and version. Nothing routes to it and no network rule lets anyone in.
+  - A new test checks that health and version are never on the public port. I wrote the tests first and they failed; all 6 pass now.
+  - CI's smoke test of the release image now asks port 8081.
+- **Renderer (platform #37):** `platform.yaml` declares the health port, which must differ from the API port. The probes use it; the Service, the gateway and the network rules never expose it. 16 tests pass, red first.
+- **AKS (your Q1):** nothing that needs health is blocked. AKS's health checks come from the kubelet on the node, just like in kind, and Cilium always lets the node through. Azure's load balancer checks the gateway, not the app.
+- **Bug found and fixed:** `platform sync` read the app's plan with the old renderer before rebuilding it, so it rejected the new `health.port` field.
+
+**Written into the plan (todo #17, PLAN v18):**
+- **D73, APIs by audience:**
+  - **Public:** anonymous; the OpenAPI spec and status.
+  - **Internal:** only systems we built (the customer frontend, our services, an admin app).
+  - **External:** customers' own data via API keys. Behind each key is an API user with a username and password, exchanged for short-lived tokens, as in the reference app.
+  - **Private:** cluster-only, deferred.
+  - Each API has its own port, authentication, and OpenAPI document generated from the code at build time. The token is checked at the gateway and in the app.
+- **D74:** a public status page (for example `status.<domain>`) from an external service, fed by synthetic checks and our alerts.
+- **TODOs:** the full audience model, API keys and the status page in Phase 6; the frontend using the internal API's spec in Phase 7; `/mcp` per audience in Phase 8.
+
+**You're right that Phase 3 starts with a grilling round, but Phase 2 isn't finished yet.** What's left:
+1. **Infrastructure signals:** gateway spans and access logs, all pod logs and Kubernetes events, Hubble network decisions with alerts, Postgres metrics and query statistics, dashboards and alerts as code, audit logs, and read-only Kubernetes access for my agent account.
+2. **`make test-platform` (D66):** the network-rule tests as a command.
+3. **Version pins (D65):** the update cooldown, and pinning every dependency by content hash, in both repos.
+4. **The CLI as a signed image (D63):** so `make up` no longer needs `../platform`.
+
+The image cache (D72) is deferred, as you said. I'd do the four in that order, then grill Phase 3.
+
+**What you need to do:** test locally (the cluster is running), then re-approve platform #37 and todo #17. They got new commits after your approval. Merge order: #37 first, because todo's `platform.yaml` needs the new `health.port`. Run `/mcp` once if my Grafana MCP has lost its token.
