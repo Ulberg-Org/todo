@@ -1,0 +1,13 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T09:31:17Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've folded everything into #34. Its CI has one expected failure: the style-guide sync check compares platform's style guide with todo's main branch, and todo gets §8 only when #14 merges.
+
+- **platform #34** now holds the renderer, the CLI and the §8 refactor as one branch: https://github.com/Ulberg-Org/platform/pull/34. Its description covers all three.
+- **#35 is closed** and its branch deleted. I've saved a memory to keep follow-up work on the open branch from now on.
+
+**CI on #34:** the `dotnet (format, build, test)` job failed only at that step. Nothing after it in the job ran yet, so the build, format check and tests will only run in CI once #14 is merged. The Pulumi preview was still running when I looked.
+
+**What you need to do:** approve **todo #14** and **platform #34**: https://github.com/Ulberg-Org/todo/pull/14. I'll merge #14 first, re-run #34's checks, and merge #34 once they pass.

@@ -11,17 +11,6 @@ RUN dotnet restore src/TodoBackend/TodoBackend.fsproj
 COPY src/ src/
 RUN dotnet publish src/TodoBackend/TodoBackend.fsproj -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:11.0.0-resolute-chiseled
-WORKDIR /app
-COPY --from=build /app ./
-# What /version reports (BuildInfo): set by CI from the commit it builds.
-ARG BUILD_COMMIT=local
-ARG BUILD_TIME=local
-ARG IMAGE_TAG=local
-ENV BUILD_COMMIT=$BUILD_COMMIT BUILD_TIME=$BUILD_TIME IMAGE_TAG=$IMAGE_TAG
-EXPOSE 8080
-ENTRYPOINT ["dotnet", "TodoBackend.dll"]
-
 # `dev`: what the local cluster runs (D61). The SDK with hot reload: the source is mounted read-only at /src, so
 # packages are restored here, at build time, and `dotnet watch` runs offline (the network rules deny the
 # internet). A change to the package list means rebuilding this image, which `make up` does.
@@ -40,3 +29,14 @@ WORKDIR /src/backend
 USER 1654
 ENTRYPOINT ["dotnet", "watch", "--non-interactive", "--project", "src/TodoBackend", "run", "--artifacts-path", "/tmp/artifacts"]
 
+# The release image, last so a plain `docker build` (CI) builds it.
+FROM mcr.microsoft.com/dotnet/aspnet:11.0.0-resolute-chiseled AS release
+WORKDIR /app
+COPY --from=build /app ./
+# What /version reports (BuildInfo): set by CI from the commit it builds.
+ARG BUILD_COMMIT=local
+ARG BUILD_TIME=local
+ARG IMAGE_TAG=local
+ENV BUILD_COMMIT=$BUILD_COMMIT BUILD_TIME=$BUILD_TIME IMAGE_TAG=$IMAGE_TAG
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "TodoBackend.dll"]

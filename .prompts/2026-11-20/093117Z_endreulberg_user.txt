@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T09:31:17Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+No, fuck, merge 35 into 34 instead of doign it twice, this is clearly one branch that you instead of editing on branch seperate into two branches.
