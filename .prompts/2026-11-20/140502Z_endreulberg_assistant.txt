@@ -1,0 +1,27 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T14:05:02Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+ArgoCD now deploys the app in the local cluster, and it's in **platform #36**: https://github.com/Ulberg-Org/platform/pull/36. CI is green.
+
+**How it works:**
+- `platform up` turns `platform.yaml` into Kubernetes files as before. It then commits them to a small local git repo in `.local/gitops/`, and a git server inside the cluster serves that repo to ArgoCD.
+- Nothing applies the app's manifests with `kubectl` any more; ArgoCD does it, the same way it will read the GitOps repo in Azure.
+- **New `platform sync`:** after you change `platform.yaml`, it renders again, commits, and waits until every instance has rolled out.
+- The git server runs on ArgoCD's own image. My first choice, `alpine/git`, can't serve repos.
+
+**Tested on a fresh cluster:**
+- `up` takes about 200 s and uses about 5.5 GiB of Docker's 12. The app answers on http://localhost:9875 with one instance on each worker node.
+- Changing `min: 3` in `platform.yaml` and running `platform sync` gave 3 instances; reverting it gave 2.
+- A route I deleted was put back by ArgoCD within about 3 seconds.
+
+**Two renderer fixes these tests turned up:**
+- **A third instance could never start.** The spread rule counted the control-plane node, which can't run apps, as an empty node. AKS's system nodes would cause the same problem. The renderer now tells Kubernetes to ignore those nodes.
+- **Startup probe added.** The first compile in a dev pod is slow, and without this the liveness check could restart pods mid-compile.
+
+**Version choice:** ArgoCD 3.6.1 via Helm chart 10.14.0. That's the newest chart past the 14-day wait for new minor versions we agreed (D65). Newer charts ship nearly the same ArgoCD (3.6.1, at most 3.6.2).
+
+**What you need to do:** approve #36. I'll merge once you have, and its checks are green.
+
+Next is increment 3: the telemetry stack (collector, Loki, Tempo, Prometheus, and Grafana at http://localhost:9876), with full resource metrics (D64).

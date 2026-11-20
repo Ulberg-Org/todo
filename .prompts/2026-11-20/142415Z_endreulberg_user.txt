@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T14:24:15Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+1) Thoes things should be there, are those things we can develop locally and then just push to the cloud and it will work? 2) Sure 3) Yes from Entra DB Secrets. What is the cleanest, is it ArgoCD managing things, and also can we make it so that local and cloud have a single source of truth to avoid testing things locally that then does not owrk in cloud? I will answer the last ones in the next msg
