@@ -1,0 +1,14 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:54:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+It depends on the kind of block. `and!` itself only promises that the parts are **independent**; each block type decides what to do with that.
+
+| Block | What `and!` does |
+|---|---|
+| `validation { }` (ours) | **No parallelism.** The parsers run one after another, in order, but none can see another's result, and all errors are collected. They're pure and microseconds fast, so parallel would gain nothing. |
+| `task { }` | **Concurrent.** Both tasks are started and awaited together, e.g. two database queries or HTTP calls in flight at the same time. With `let!` they'd run one after the other. |
+| `result { }` | Sequential, and it stops at the first error. It exists, but it's rarely worth using over `let!`. |
+
+So in what you saw, it's purely about collecting every error. In `task { }` it's real concurrency, which we'll use in the backend when an endpoint needs two independent things, for example a todo and its sharing grants, fetched at once.

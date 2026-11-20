@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-19T21:52:35Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Just to check, !and is basically a boolean AND between async/expressions that all have to pass to move to the next block of code?

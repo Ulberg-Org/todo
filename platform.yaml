@@ -1,0 +1,16 @@
+# What the todo app needs from the platform (D47). The platform renders it for every environment (D60): the
+# same services, routes and database locally and in Azure; only what the environment decides differs.
+apiVersion: platform/v1
+app: todo
+services:
+  - name: backend
+    build: backend # the Dockerfile's folder; locally its `dev` target runs with hot reload (D61)
+    image: todo/backend # the repository in ACR (D54)
+    port: 8080
+    replicas: { min: 2, max: 4 } # never fewer than two (D57)
+    resources: { cpu: 250m, memory: 256Mi }
+    health: { live: /health/live, ready: /health/ready }
+    routes: [ / ]
+    database: todo
+databases:
+  todo: { engine: postgres }

@@ -1,0 +1,34 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T22:35:38Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Increment 1 of the platform CLI works. todo now runs in a local Kubernetes cluster built from scratch by `platform up`, and the cluster is still running if you want to try it: **http://localhost:9875/version**
+
+**Verified on a fresh cluster:**
+
+| Check | Result |
+|---|---|
+| Two instances, on **different nodes** | ✅ `todo-worker` and `todo-worker2` |
+| Requests through the gateway reach both instances | ✅ 20 requests split 7/13 |
+| The app reaches its database outside the cluster, as its own role | ✅ `/health/ready` = 200 |
+| Backend → database | ✅ connects |
+| Backend → internet, backend → Kubernetes API, any other pod → database | ✅ all blocked |
+| Hot reload (a code change on your Mac served by the cluster) | ✅ within **3 seconds** |
+
+**Fixed while running it:**
+- the manifests folder (so `plan.json` isn't applied);
+- quoted ports (Cilium requires strings);
+- Envoy Gateway's traffic policy (requests from your Mac hung, because only the node running the proxy answered).
+
+**PRs:**
+- **platform #34,** the renderer (step 1): https://github.com/Ulberg-Org/platform/pull/34
+- **platform #35,** the CLI (increment 1), stacked on #34: https://github.com/Ulberg-Org/platform/pull/35
+- **todo #14,** `platform.yaml` and the Dockerfile's `dev` target: https://github.com/Ulberg-Org/todo/pull/14
+
+**What you need to do:** approve all three. I'll merge #34 first, then #35 and #14.
+
+**Next increments:**
+1. **ArgoCD** with the built-in git server (GitOps, as in Azure).
+2. **The telemetry stack** (collector, Loki, Tempo, Prometheus, Grafana at http://localhost:9876) with full resource metrics (D64).
+3. **The CLI as a signed image,** then todo's `make up` switches over and compose is removed.

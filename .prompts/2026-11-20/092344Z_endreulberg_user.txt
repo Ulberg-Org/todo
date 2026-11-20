@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T09:23:44Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I think I am not supermuch a fan of the if else, and match statements being nested into other constructs, they should be lifted earlier in the function. If you look at the code in the reference project you'll see that we define moer things upfront and then use it in the construction of the final payloads, instead of inlining things

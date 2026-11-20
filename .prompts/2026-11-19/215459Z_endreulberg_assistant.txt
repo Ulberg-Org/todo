@@ -1,0 +1,17 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-19T21:54:59Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+It's how we turn untrusted input (here an app's `platform.yaml`) into domain values that are guaranteed valid. This is the "parse, don't validate" rule from the style guide. The block gives you three things at once:
+
+1. **Either a fully valid value, or the complete list of what's wrong.** Nothing in between. Once you hold a `Service`, its replicas are ≥ 2, its port is a real port and its database exists. The renderer never has to check again, and can't accidentally work with a half-checked value.
+2. **Every error in one go.** A developer who writes a broken `platform.yaml` sees all five problems in one run, not one per attempt. Writing that by hand means collecting errors into a list after every check, which is exactly the boilerplate the block removes.
+3. **No exceptions, no hidden control flow.** Failures are ordinary values (`Error [...]`), so the pure part stays pure and trivially testable, and the program decides at the edge what to do with them: print and exit 1.
+
+Without it, the usual alternatives are worse:
+- **Throwing on the first bad field:** one error per run, and exceptions as control flow.
+- **Hand-written if-chains appending to a list:** long, easy to get wrong, and the "is it valid yet?" state leaks out.
+- **Checking fields where they're used, deep in the renderer:** validation is scattered, and invalid states can travel far before something notices.
+
+The block is just the compact way to write "check these independent fields, give me all the problems, or give me the finished value".

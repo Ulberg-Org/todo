@@ -1,0 +1,27 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T09:25:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've refactored the renderer's F# so every decision is named before the manifest is built, and added the rule to the style guide. The changes are committed locally but not pushed yet: my agent account's Azure sign-in passed its 12-hour limit, so I can't get a new GitHub token. Please run this in your own terminal and sign in as endre-agent with its passkey:
+
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+```
+
+Then I'll push the platform change onto #35 and the guide onto todo #14. The platform commit went on #35, not #34, because the renderer fixes it builds on (quoted ports, the database host pattern) are only in #35.
+
+**Renderer refactor:** the renderer's 6 tests pass, and the rendered local manifests are byte-identical to before. I didn't re-render the dev environment against the old code, so the dev output is only covered by the tests.
+- **One decision, made once:** the develop/release choice is now a single `match` at the top (`runtime`) that fills a small `Runtime` record. The manifests just read its fields, so `if develop then … else []` no longer appears anywhere.
+- **Your `volumes` example:** develop-only parts (the volume mounts, the volumes, the release memory cap) are now `Node option`. A new helper, `Manifest.optional`, leaves out the ones that are `None`.
+- **Names first, then the payload:** the environment variables, health probes, rules and network permissions are each built as a named value up front. The final manifest is now a flat list of names, and the deepest nesting dropped from about 15 levels to 3–4.
+- **The environment-mode check** moved out of the validation block into `Field.mode`, so that block is one line per field like the others.
+
+**Style guide, new §8 "name the parts first, then build"** (identical in both repos):
+- no `if`/`match` inside a construction; lift it into a named value or function first;
+- a choice several parts depend on is decided once, into a record;
+- optional parts are `Option`, not `if … then [x] else []`;
+- `validation {}` blocks have one line per field;
+- past 3–4 levels of nesting, give the inner parts names.
+
+**Older code:** the access stack (`Entra.fs`, `GitHub.fs`, `People.fs`) has a dozen or so places that break §8, for example a `match` on the user list inside the Conditional Access payloads. I'd fix those in a separate PR. Its Pulumi preview should then show no changes, which proves the refactor didn't change anything in Azure or GitHub. Do you want that next, or straight on to increment 2 (ArgoCD)?

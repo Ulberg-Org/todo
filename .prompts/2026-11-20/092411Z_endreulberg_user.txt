@@ -1,0 +1,23 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T09:24:11Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Also - this seems like something you should use optionality to handle or something " 
+
+<pasted_content id="3c6e">
+        if develop then
+            [
+                "volumes",
+                items
+                    [
+                        // The app repo, mounted into every kind node by the platform CLI (D61: hot reload).
+                        fields [ "name", text "source"; "hostPath", fields [ "path", text "/src" ] ]
+                        fields [ "name", text "scratch"; "emptyDir", fields [] ]
+                    ]
+            ]
+        else
+            []
+</pasted_content id="3c6e">
+
+"
