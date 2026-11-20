@@ -1,0 +1,51 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T14:24:15Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes to all three, with a few limits. Here are the answers and my recommendation; I'll hold off building until you've answered the rest.
+
+## 1) Develop locally, push to the cloud, and it works?
+
+**Mostly, if both run the same components at the same versions:**
+- **ArgoCD projects:** yes, identical. It's plain ArgoCD configuration with nothing cloud-specific.
+- **Network rules:** yes for the rule logic. AKS can run the same Cilium ("Azure CNI powered by Cilium") and reads the same policies. There are two catches:
+  - **AKS runs its own Cilium version,** probably behind upstream; I'll confirm which in Phase 3. Locally we run 1.20.5. Local Cilium should then be pinned to the AKS version, or a rule could work locally and not in Azure.
+  - **The database rule allows the database by name.** On AKS that needs a paid add-on (Advanced Container Networking Services). We could instead allow the database's private IP range, which needs no add-on. That's a Phase 3 cost decision, and I'd write it into the plan now.
+
+## 3) What is cleanest: ArgoCD managing everything, from one source of truth?
+
+**Yes. My recommendation:**
+
+1. **A small bootstrap, different per environment and nothing more.**
+   - Locally the CLI creates kind, installs Cilium (the network must exist before anything else runs), installs ArgoCD, and adds one root Application.
+   - In Azure, Pulumi creates AKS (Cilium is part of AKS), installs ArgoCD, and adds the same root Application.
+2. **ArgoCD manages everything else, from the platform repo:** Envoy Gateway, the telemetry stack, ArgoCD itself, each app's project and network rules, and the apps. It all comes from the same definitions, with the environment file (`environments/local.yaml`, `dev.yaml`) as the only difference.
+3. **ArgoCD runs the renderer itself** (option a from before). For apps, that means `platform.yaml` + environment file + image tag. For platform components, it means our Helm values per environment (D62 already planned "generated values for third-party charts"). Locally ArgoCD reads your checkouts through the git server; in Azure it reads GitHub. The rendering, ordering and sync behaviour are then identical, and a local test exercises the same path production uses.
+
+**What stays different, and only through the environment file or the bootstrap:**
+- the cluster (kind vs AKS);
+- the database (a container vs Flexible Server);
+- the images (local dev build vs signed images from the registry);
+- the image signature check (Azure only);
+- ArgoCD sign-in (Entra SSO in Azure, none locally);
+- **database credentials:** with Entra, Azure has no secret at all. The app's pod gets an Entra identity (workload identity), and Npgsql fetches a token as its password. Locally Postgres can't use Entra, so it stays a password Secret. The environment file says which (`database.auth: password | entra`), and the renderer outputs either the Secret reference or the identity.
+
+**One small app change for the Entra route:** when the connection string has no password, the backend's Npgsql setup asks Entra for a token. That's a few lines in `Program.fs`, coming in Phase 3.
+
+## Questions for you (I'll write the answers into PLAN as D67+ before building)
+
+❓ **Q1 - Bootstrap and ArgoCD:** only the cluster, Cilium, ArgoCD and one root Application differ per environment. ArgoCD manages everything else, itself included, from the platform repo plus the environment file.
+➡️ Yes
+
+❓ **Q2 - Renderer inside ArgoCD (option a):** ArgoCD runs our renderer for apps and platform components. Nothing rendered is ever committed (D62 holds), and locally ArgoCD reads your checkouts.
+➡️ Yes
+
+❓ **Q3 - Cilium version:** pin local Cilium to the version AKS runs, not the newest.
+➡️ Yes
+
+❓ **Q4 - The database rule in Azure:** allow the database's private address range instead of its name, so there's no paid add-on. The renderer outputs a name rule locally and an address-range rule in Azure, chosen by the environment file.
+➡️ Yes, unless you want the add-on for name-based rules
+
+❓ **Q5 - Scope of #36:** grow #36 into this design (bootstrap + root app + renderer inside ArgoCD + per-app project + platform network rules) on the same branch, rather than merging the current version first.
+➡️ Yes, one branch

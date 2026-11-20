@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T14:40:09Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Also, in addition to grilling and F# style guides, I want you to do red-green refactor on everything

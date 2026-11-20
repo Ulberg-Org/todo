@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v15 (2026-11-19, Phase 2 grilled: D61–D66).** Phase 0, 0b and 1 done. Next: Phase 2, starting with a thin end-to-end slice.
+> **Status: v16 (2026-11-20, GitOps design: D67–D70).** Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI and Argo CD are done; next the telemetry stack.
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -174,6 +174,10 @@ Pulumi (F#) turns this into:
 | D64 | **Full resource metrics for every service, platform-level**: CPU, memory, network, restarts and throttling per pod (kubelet), Kubernetes state (kube-state-metrics), node CPU/memory/disk, Postgres (connections, size, transactions, locks, cache hits) through a fourth role `todo_monitor` that reads statistics only, and Envoy Gateway per route. Same set locally and in Azure | msg 2026-11-19 |
 | D65 | **Dependency updates wait, and are pinned by content.** Dependabot cooldown in both repos for every ecosystem: patch 7 days, minor 14, major 30; security fixes immediately. Everything is pinned by hash so a re-published version can't slip in: NuGet lock files (CI restores in locked mode), Docker images by digest, GitHub Actions by commit SHA, Helm charts by digest or checksum, downloaded tools by checksum | msg 2026-11-19 |
 | D66 | **Network rules are tested by hand**: `make test-platform` checks them against the local cluster (backend → database allowed; other pods and unlabelled pods blocked). No CI job | msg 2026-11-19 |
+| D67 | **Argo CD manages everything after a small bootstrap.** Per environment, only the bootstrap differs: locally the platform CLI creates kind, installs Cilium, Argo CD and one root Application; in Azure, Pulumi creates AKS (which brings Cilium), installs Argo CD and the same root Application. Argo CD then deploys everything else from the platform repo, itself included: the platform components (`components/<name>/`: chart + values per environment + plain manifests per environment), and each app with its own project. Cilium stays in the bootstrap (the network must exist before anything runs) | msg 2026-11-20 |
+| D68 | **The renderer runs inside Argo CD**, as its `platform` plugin (a sidecar of the repo server), for apps and for the root application: `platform.yaml` + the environment file + the image tag go in, manifests come out; nothing rendered is ever committed (D62 holds). Locally Argo CD reads snapshots of the developer's checkouts (uncommitted changes included) from a git server in the cluster; in Azure it reads GitHub. So a local test goes through the same rendering, ordering and sync as production | msg 2026-11-20 |
+| D69 | **Database credentials come from Entra in Azure.** The app's pods get an Entra workload identity and Npgsql fetches a token as the password; no database secret exists. Locally Postgres can't use Entra, so it stays a password Secret created by the CLI. The environment file chooses which; the backend's Npgsql setup asks Entra for a token when the connection string has no password (Phase 3) | msg 2026-11-20 |
+| D70 | **Network rules allow the database by address range in Azure, by name locally.** Name-based rules (and the DNS inspection they need) require AKS's paid Advanced Container Networking Services, so Azure allows the database subnet's range (`dev`: 10.20.2.0/24 in VNet 10.20.0.0/16, created in Phase 3); locally the database is allowed by name. The environment file chooses (`database.range`). Local Cilium is pinned to the version AKS runs (1.19 for Kubernetes 1.36; recheck for 1.37 in Phase 3), not the newest. Every namespace, the platform's included, is deny-by-default; an app's project allows only Deployments, Services, HTTPRoutes and Cilium rules, only in its own namespace and only from its own repo | msg 2026-11-20 |
 
 ## 4. Sign-off and bootstrap
 
@@ -386,7 +390,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 ### Phase 2: Local platform (kind) and the renderer
 - **First a thin end-to-end slice**, then extend it into the cloud (Phase 3+):
   - the platform CLI (D63) creates a kind cluster with Kubernetes 1.37, Cilium, Envoy Gateway, ArgoCD and the telemetry stack (Helm, same charts as Azure);
-  - the renderer (D60, D62) turns todo's `platform.yaml` into the backend's Kubernetes YAML and gateway route; ArgoCD deploys it from the local checkout;
+  - the renderer (D60, D62) turns todo's `platform.yaml` into the backend's Kubernetes YAML and gateway route; ArgoCD runs it as a plugin and deploys from the local checkout (D67, D68);
   - two backend pods with hot reload (D61), Postgres outside the cluster;
   - full resource metrics (D64).
 - **Then:** `make test-platform` (D66), Dependabot cooldown and hash pins in both repos (D65), and Phase 1's compose files deleted.
@@ -395,13 +399,13 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 ### Phase 3: Azure foundation (Pulumi F#, applied only by CI after approval)
 - Agents (D41) get AKS RBAC Reader and the DB read-only role as those resources appear.
 - Workforce groups, External ID app registrations, workload identities.
-- VNet + subnets + NSGs, private DNS, Key Vault (ACR already exists from Phase 1, D54), AKS (Entra RBAC, no local accounts, workload identity, Azure CNI overlay + Cilium), Postgres Flexible (private access, Entra-only auth with migrator/app/read-only identities).
+- VNet + subnets + NSGs (`dev`: 10.20.0.0/16, database subnet 10.20.2.0/24, D70), private DNS, Key Vault (ACR already exists from Phase 1, D54), AKS (Entra RBAC, no local accounts, workload identity, Azure CNI overlay + Cilium), Postgres Flexible (private access, Entra-only auth with migrator/app/read-only identities).
 - Pulumi unit tests (mocks); `preview` on every PR, `up` after approval.
 - On demand (D45): a persistent stack (state, ACR, Key Vault, identities, telemetry storage, static IP + DNS label per environment) and an environment stack that a `start` workflow creates and a scheduled workflow destroys after 4 h.
 - **Done when** everything exists, and the access tests show: app devs can change nothing; infra devs' Claude can read but not write; the DB isn't resolvable or reachable from outside the VNet.
 
 ### Phase 4: GitOps + cluster baseline on Azure
-- ArgoCD (Entra SSO, admin login disabled), app-of-apps, the `platform.yaml` PR flow (§2.1 steps 1–3), signed images + admission policy.
+- ArgoCD installed by Pulumi with the same root Application as locally (D67), the renderer image published for its plugin (D68), Entra SSO, admin login disabled; Argo CD's GitHub access; release image tags per environment in `apps/<app>.yaml`; the `platform.yaml` PR flow (§2.1 steps 1–3), signed images + admission policy.
 - The release-PR flow (§2.1 step 4): the pr-bot opens it, the policy check runs, and the path-based `CODEOWNERS` (app leads own `apps/<app>/prod/`) is generated and checked by the `access` stack. Until prod exists (Phase 6b), nothing syncs `apps/<app>/prod/`.
 - Backend ≥2 replicas, HPA, PDB, topology spread; default-deny network policies (identical to tier 2).
 - **Done when** an app-repo merge reaches the cluster with no human touching the cluster.

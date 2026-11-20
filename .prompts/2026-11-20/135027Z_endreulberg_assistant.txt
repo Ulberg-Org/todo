@@ -1,0 +1,14 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T13:50:27Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Everything is green and merged:
+
+- **todo main is green again.** CI built the real release image from #15 and pushed, locked, signed and attested it in the registry.
+- **The #33 apply succeeded.** The image check is now required on todo's main, alongside the other four checks.
+- **platform #34** (renderer, CLI and style §8) is merged with all checks green.
+
+One more deployment from #34 is waiting for your approval. That PR didn't touch any infrastructure stacks, so it should change nothing: https://github.com/Ulberg-Org/platform/actions/runs/44712952285
+
+Next is increment 2: ArgoCD running in the local cluster, deploying the rendered manifests from your checkout through a small git server inside the cluster. It will be on one branch with one PR.

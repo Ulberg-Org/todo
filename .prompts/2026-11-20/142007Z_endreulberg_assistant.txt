@@ -1,0 +1,28 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T14:20:07Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+No. #36 covers only the core of ArgoCD: it's installed, it reads git, and it keeps one app in sync. Two gaps belong in #36 now, and the cloud side has some undecided questions.
+
+**1. Belongs in #36 now (same branch):**
+- **The app is in ArgoCD's `default` project,** which lets an app deploy anything anywhere. That isn't deny-by-default (AGENTS §2). Each app should get its own project, limited to its own namespace and ordinary kinds (Deployment, Service, HTTPRoute, network rules). Then a `platform.yaml` can never create cluster roles or touch other namespaces.
+- **Platform namespaces have no network rules.** Only the app's namespace is deny-by-default. The `argocd`, `gitops` and `gateway` namespaces should be too, opened only where needed (for example ArgoCD → git server and → Kubernetes API).
+
+**2. Comes later in the plan:**
+- **ArgoCD's own metrics and logs in Grafana:** increment 3 (the telemetry stack).
+- **Claude reading sync status:** works locally through kubectl. The cloud read-only route is Phase 4.
+
+**3. Cloud only (Phase 4), with open questions:**
+- Entra SSO with the admin login disabled, two of each ArgoCD component (D57), app-of-apps, and the signature check on images. These are already in the plan.
+- **Database secrets:** locally the CLI creates the Secret by hand. In Azure it should come from Entra workload identity, never through ArgoCD. That's undecided.
+- **Who installs the platform components:** locally the CLI installs Cilium, Envoy Gateway and ArgoCD with Helm. In Azure, Pulumi installs ArgoCD, but whether ArgoCD then manages the rest is undecided.
+- **Where ArgoCD gets the rendered files in Azure.** This is the big open question. D62 says rendered files are never committed. Two ways that fit:
+  - **(a) ArgoCD runs the renderer itself** (a renderer plugin inside ArgoCD). It reads `platform.yaml`, the environment file and the image tag straight from git. Locally that's literally the same: ArgoCD would read your checkout, which is what D61 described.
+  - **(b) CI renders into a deploy branch** that ArgoCD reads. That's closer to what #36 does now.
+
+**I didn't follow D61 exactly.** It says ArgoCD reads the checkout. #36 instead serves the already-rendered files from a separate local repo. It's simple and it works, but if we pick (a) for Azure, the local setup should switch too.
+
+My recommendation is to add the per-app project and the network rules to #36 now. (a) or (b) should be decided in a short grilling round before Phase 4, unless you want to settle it now. If it's (a), switching #36 to it is about the same amount of work as the current approach.
+
+Should I add those two to #36?
