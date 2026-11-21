@@ -5,6 +5,9 @@ A todo app built infrastructure-first and AI-first. The plan is in [PLAN.md](PLA
 
 ## Run it locally
 
+The tools are pinned in `flake.nix` (D79): `nix develop` gives you the same versions as Claude's sandbox. On macOS
+it uses your system's .NET 11 (`brew install dotnet`), since nixpkgs would build its dependencies from source.
+
 Needs Docker (12 GiB of memory) and cosign (`brew install cosign`, or in a nix-darwin flake's Homebrew brews), which checks that the platform CLI image is
 the one the platform repo's release signed. Everything else (kind, kubectl, helm) is in that image
 ([Ulberg-Org/platform](https://github.com/Ulberg-Org/platform), see its README).
