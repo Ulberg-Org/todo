@@ -1,0 +1,13 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:42:55Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Added. The allowlist reloaded live in the running sandbox, and the change is on #53.
+
+Everything else in the log is refused on purpose:
+- **`mcp-proxy.anthropic.com`:** the claude.ai connectors, not needed in the sandbox.
+- **`http-intake.logs.us5.datadoghq.com`:** Claude Code's error telemetry.
+- **`host.lima.internal:9876` and `example.com`:** the probes from my escape tests.
+
+When `make up` finishes, Claude in the sandbox will continue with the MCP checks.

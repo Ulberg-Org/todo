@@ -1,0 +1,18 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:37:50Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Fixed. The launcher had assumed it runs inside my Claude session, where Claude's profiles are already set. From your terminal it saw your own `gh`, and the token script refused it. It would have hit your own `az` next.
+
+Now the launcher and the token helper always use Claude's profiles themselves: `~/.azure-agent` and `~/.config/gh-claude`. Starting it with a clean environment like your terminal's works. The fix is on #53, but you can run it now from your checkout:
+
+```
+~/Github/Private/platform/sandbox/sandbox todo
+```
+
+Only if Claude's Azure session has expired (it lasts 12 hours) will it stop with an `az` error. Then sign the agent in again in your terminal (AGENTS §4 step 4):
+
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant <tenant-id>
+```
