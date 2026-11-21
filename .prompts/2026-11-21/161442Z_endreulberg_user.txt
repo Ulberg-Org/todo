@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T16:14:42Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q11) Yes. Q12) Ye snow. Q13) Yes, as long as these are the strictest settings we can do that are feasible. Q14) Sounds ok, but I am not 100% certain. Q15) I think we should do access now. but not with a bastion, the only requirement is that we need to be able to use Nvim DBUI to login, either through having another pane that opens it locally, or directly via URL. Q16) That sounds right. All of it controlled via Entra though! Q17) Sounds ok. Q18) Sure! Q19) Yh, sounds sane

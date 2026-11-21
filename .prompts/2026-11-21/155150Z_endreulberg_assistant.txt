@@ -1,0 +1,18 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T15:51:50Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Phase 2.5 is checked off. Status:
+
+| PR | State |
+|---|---|
+| platform #55 (sandbox fixes, the extra MCPs, Node.js, author) | merged |
+| platform #56 (the sandboxed Claude's Grafana limit) | merged |
+| **todo #30** (AGENTS rules, CLI v0.2.4, PLAN v24 "Phase 2.5 done") | **needs your approval once more**: my PLAN push after your approval dismissed it. Only PLAN.md changed since. <https://github.com/Ulberg-Org/todo/pull/30> |
+
+Two things for you:
+1. **Approve todo #30**, and I'll merge it.
+2. **The platform's apply runs for #55 and #56** are in progress on `main`. They'll wait for your promotion to dev as usual: <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml>
+
+From now on I won't push to a PR after you've approved it; anything later goes into the next PR. After #30, the next step is grilling Phase 3 (Azure foundation).

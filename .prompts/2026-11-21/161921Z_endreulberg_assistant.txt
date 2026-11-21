@@ -1,0 +1,37 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T16:19:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Round 4. Your answer to Q22 changes one earlier decision, and it raises an ordering question.
+
+❓ **Q24 - Claude on your Mac gets the same reach as its developer, read-only**: Today only infra developers have a Claude agent (D41), and AGENTS §3 says an app developer's Claude may not touch Azure, Kubernetes or the database. Your answer means changing that. Every developer gets a Claude agent account (`<name>-agent`, as now), and its rights mirror its developer's group, but never write:
+
+| Developer's group | Their Claude (unsandboxed, on their Mac) |
+|---|---|
+| infra developer | Azure Reader, AKS RBAC Reader, database read-only (`platform db dev`), telemetry |
+| app developer | database read-only (`platform db dev`), telemetry; no Azure or Kubernetes beyond the `db-proxy` port-forward |
+
+Sandbox Claude stays development-only, with the local cluster and no Azure (D81). AGENTS §3 and D41 are updated to match.
+
+➡️ Yes.
+
+---
+
+❓ **Q25 - Which phase `db-proxy` and `platform db` belong to**: `db-proxy` is a platform component, and D67 says Argo CD deploys every component. In Azure, though, Argo CD arrives with Phase 4, along with the published renderer image and its GitHub access. So:
+- **(a)** Phase 3 creates the server and its roles (the Job, part of the bootstrap like locally). `db-proxy` and `platform db dev` come with Phase 4, deployed by Argo CD like every other component. Phase 3's done-when then checks the roles and that the database is unreachable from outside, and Phase 4's checks access through `platform db`.
+- **(b)** Pulumi deploys `db-proxy` itself in Phase 3, outside Argo CD, which breaks D67.
+
+➡️ Yes: (a). Phase 3 ends at "everything exists, the roles are in place, the database is private", and `platform db` arrives with Argo CD in Phase 4.
+
+---
+
+❓ **Q26 - Phase 3's "done when"**: Everything exists in Norway East (or Sweden Central, if `az` says no): `shared` (ACR, static IP and DNS label, telemetry storage, budget alert) and dev (VNet, NSGs, AKS, Postgres with its roles), started by `start` and destroyed by the 4-hour job. The access tests show:
+- app developers can change nothing;
+- infra developers and every Claude can read but not write;
+- the database isn't reachable from outside the VNet;
+- the database roles map to the Entra groups.
+
+➡️ Yes.
+
+Still open: the Norway East check with `az`, once you've signed the agent in again.

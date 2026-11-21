@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T16:06:40Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) We need everything aside from External ID for dev to work as far as i can understand. Q2) Yes, for cost savings. Q3) I think free is completely fine. Q4) That should be fine for now. Q5) Are all resources available in Norway, if yes, could we move shared and ACR? Q6)Fine Q7)Yes Q8) Depends on if it is as simple to just do that now? If it is simpler to wait, we'll split it up. Q9) Yes, 500 NOK per month. Q10) Yes

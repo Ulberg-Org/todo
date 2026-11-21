@@ -1,0 +1,77 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T16:06:40Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q5's facts, so far: third-party listings show `D2ps_v6` in Norway East ([Northflank](https://northflank.com/cloud/azure/instances/Standard_D2ps_v6), [Devzero](https://www.devzero.io/instances/azure/regions/Norway%20East)), and Microsoft says PostgreSQL 18 is GA "across all Azure public regions" ([Microsoft Tech Community](https://techcommunity.microsoft.com/blog/adforpostgresql/postgresql-18-now-ga-on-azure-postgres-flexible-server/4469802/replies/4481019)). It's likely, but not confirmed for our subscription: Claude's Azure session expired (the 4-hour limit), so I couldn't ask Azure directly. Once you've signed the agent in again (`AZURE_CONFIG_DIR=~/.azure-agent az login --tenant <tenant-id>`), I'll check with `az` before we move anything.
+
+Round 2:
+
+❓ **Q11 - Move `shared` and ACR to Norway East, if `az` confirms**: ACR only holds todo's images so far, and they're rebuilt from `main` by CI. So the move is: create the new ACR in Norway East, let CI push again, then delete the old one. The Pulumi state stays where it is (bootstrap). Should we move, provided `az` confirms both sizes?
+
+➡️ Yes, after the `az` check.
+
+---
+
+❓ **Q12 - Telemetry storage now**: It's simple: one storage account in `shared` with a container each for Loki and Tempo, a 14-day lifecycle rule, and no public access. About 15 lines, and nothing uses it until Phase 5. Should we create it now?
+
+➡️ Yes, now. Phase 5 only adds the identities that write to it.
+
+---
+
+❓ **Q13 - Network layout**: VNet `10.20.0.0/16` for dev (D70):
+- an AKS node subnet `10.20.0.0/23`, with pods on the overlay's own range;
+- the database subnet `10.20.2.0/24`, delegated to Postgres;
+- an NSG that lets only the node subnet reach 5432;
+- a private DNS zone for Postgres linked to the VNet.
+
+Nothing else.
+
+➡️ Yes.
+
+---
+
+❓ **Q14 - Database roles: created inside the cluster, from the same SQL as locally**: The database is private, so CI's Pulumi can't reach it to create roles. Instead:
+- the server's Entra admin is a managed identity (`db-admin`);
+- Pulumi's bootstrap runs a Kubernetes Job in AKS, as that identity, applying `cli/templates/database.sql` with Entra principals in place of passwords.
+
+It's the same SQL as locally, and the same split: only the bootstrap differs (D67).
+
+➡️ Yes.
+
+---
+
+❓ **Q15 - Who can reach the database in Azure, for now**: D75 gives developers and every Claude read-only access. But a private database has no path from a laptop. Bastion costs money, and `kubectl port-forward` needs more than the Reader role. Should we create the read-only roles now (mapped to the Entra groups), but leave interactive access in Azure until it's needed? Until then, people and Claude read the database's metrics and query statistics through telemetry.
+
+➡️ Yes: the roles now, the access path later.
+
+---
+
+❓ **Q16 - Cluster access**:
+- the API server is public, with Entra-only sign-in and no local accounts (CI's runners have changing IPs);
+- `platform-read` and the agents get *RBAC Reader* (no Secrets);
+- `platform-write`, through PIM, gets *RBAC Cluster Admin*;
+- app developers get nothing in the cluster (AGENTS §3: telemetry only).
+
+➡️ Yes.
+
+---
+
+❓ **Q17 - Resource groups and identity**: dev gets its own resource group (`rg-dev`), created and destroyed with the environment. `shared` keeps its own, and the static IP lives there. CI applies with its existing identity, which gets the extra rights it needs: User Access Administrator for the role assignments, scoped to `rg-dev` and `shared`.
+
+➡️ Yes.
+
+---
+
+❓ **Q18 - Start and destroy**:
+- a `start` workflow (input: `dev`), behind the existing GitHub environment approval, runs `pulumi up` for the environment stack;
+- a `destroy` workflow runs every 15 minutes and destroys any environment started more than 4 hours ago (the start time is a tag on the stack);
+- destroy needs no approval (D45).
+
+➡️ Yes.
+
+---
+
+❓ **Q19 - Pulumi tests, lazily**: unit tests only for our own logic (parsing `platform.yaml`, `people.yaml` and the environment files into what to create), not mocks of every Azure resource. Plus `preview` on every PR (exists) and the done-when access tests as a script against the real dev.
+
+➡️ Yes.
