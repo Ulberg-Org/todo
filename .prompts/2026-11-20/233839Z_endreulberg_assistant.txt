@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T23:38:39Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes. Moving this way of working into a sandbox is the point of Phase 2.5, and it's close. Moving *this* session isn't just copying it, though, because it currently relies on things on your Mac:
+
+| What this session uses now | In the sandbox |
+|---|---|
+| The GitHub app token in `~/.config/gh-claude` | the launcher mints it on your Mac and hands it to `sbx` as a secret; the sandbox sees only a placeholder |
+| The Azure agent session (`~/.azure-agent`), for Key Vault signing | stays on your Mac (its passkey can't move). The launcher signs on your Mac before starting; Azure reads inside need the proxy (platform profile, later) |
+| Your Mac's Docker and the running cluster | the sandbox's own Docker and its own `make up`. Your Mac's cluster has to be down while the sandbox runs, or memory runs out |
+| My memory and settings (`~/.claude/...`: the memory files, the identity env block, hooks) | the sandbox has its own `~/.claude`. My memory folder is mine, not yours, so the kit mounts it in; without it, the sandboxed me forgets everything we agreed. The settings come from the kit |
+| The prompt log | works unchanged: it lives in the repo |
+
+**My proposed order:**
+1. **The footprint pass (1–4), now.** It's quick, and it decides whether `make up` fits comfortably in the sandbox.
+2. **The launcher and the kit:** the tools from the flake, the GitHub token, my memory and settings, both profiles, and the escape tests as a script.
+3. **Move:** I write a short handover, you stop this session and `make down` on your Mac, then start the next session with `sandbox platform` and continue there.
+
+Steps 1 and 2 together are probably one to two hours of work. Should I start with 1?

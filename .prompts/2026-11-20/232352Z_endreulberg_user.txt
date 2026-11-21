@@ -1,0 +1,30 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T23:23:52Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+
+
+<pasted_content id="3c6e">
+Warning: No available formula with the name "docker/tap/sbx". Did you mean dockerfmt?
+Installing docker/tap/sbx has failed!
+Using fd
+Using pnpm
+Using poppler
+Using pulumi/tap/pulumi
+Using vim
+Using yq
+Using 1password
+Using 1password-cli
+Using azure-cli
+Using claude-code
+Using docker-desktop
+Using ghostty
+Using hiddenbar
+Using raycast
+Using session-manager-plugin
+Using shortcat
+Using tidal
+Using zen
+`brew bundle` failed! 1 Brewfile dependency failed to install
+</pasted_content id="3c6e">

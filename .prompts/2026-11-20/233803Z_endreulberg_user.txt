@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T23:38:03Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+1) Ok, so that stops me needing to do "/login" in my sbx claude sessions? 2) it seems to work? 3) i did them. 1a) for make up it cannot be helped. So unless there are smart optimisations we can do, we'll live with it. 2a) Let us just profile it and check?

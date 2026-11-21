@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T23:32:28Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Saved as a standing principle: least privilege and zero trust everywhere, and the smallest memory, storage and compute footprint, in what we choose, run and write.
+
+Applied to where we are now, I measured the local setup, and it matters right away:
+
+| | Now |
+|---|---|
+| Local cluster | **about 8.1 GiB** (3 nodes: 2.4 + 2.8 + 3.0 GiB), plus Postgres at 38 MiB |
+| Backend dev pods | about 800 MiB each: the .NET SDK with hot reload, not the app |
+| NuGet cache | 575 MB |
+
+**What this changes in current work:**
+1. **The sandbox (Phase 2.5):** an app-profile sandbox running its own full `make up` would be a *second* 8 GiB cluster. That's the zero-trust choice, but the opposite of least footprint. Options:
+   - a smaller "sandbox" size of the local platform: one instance per service, no Hubble, a smaller telemetry stack;
+   - or the sandbox's Claude reaches your existing cluster read-only. That weakens isolation, so it's not my recommendation.
+
+   I'd go with the first.
+2. **A footprint pass on the local platform,** since nothing has resource limits yet. That means requests and limits for every platform component, Prometheus/Loki/Tempo sized for one developer, and checking what each component costs against its value (for example, Grafana bundles a Profiles app we don't use yet). My guess is the cluster can drop well below 8 GiB.
+3. **Code:** for the F# work ahead, I'd add a line to the style guide: avoid needless allocations, and prefer structs or value types where it matters on hot paths. Readable first, but no allocating for its own sake.
+4. **The repo rules:** I'd put both principles in AGENTS.md §2, so every agent and person working in the repos follows them, not just me.
+
+Should I do 2 and 4 now, before continuing with the sandbox?

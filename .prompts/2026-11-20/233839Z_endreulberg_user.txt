@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T23:38:39Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, but then we should soon move this shell into sbx then right?

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T23:32:28Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I just want to note something on health and cleanliness factors. You should always strive for least priviliges and zero trust. You should always attempt to use the least memory footprint both from the tools you download, run and the code you write. You should always try to be as performant and simple as possible, meaning stack over heap allocations. IN addition you should always use the least storage and compute footprint as possible both when selecting tehcnologies, setting up local dev, for the cloud and just in general.
