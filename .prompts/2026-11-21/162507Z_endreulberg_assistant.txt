@@ -1,0 +1,22 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T16:25:07Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Increment 1 of Phase 3 is ready for your approval. It was developed in the platform sandbox: the restore, Release build, format check, F# style check and all tests (Access 58, Shared 6, Renderer 20) ran in the VM, not on your Mac.
+
+**platform #58: `shared` in Norway East**
+- **Each environment's address:** a static IP and the DNS label `ulberg-dev`.
+- **Telemetry storage:** Entra-only, containers for Loki and Tempo, 14-day retention.
+- **The budget alert:** 500 a month, at 50%, 80% and 100%, to the alert list.
+- **The move to Norway East:** Azure's public price list confirms both sizes there (about a third dearer for the VM, 10% for Postgres; a few kroner a month with 4-hour runs). The new resource group and registry are created before the old ones are deleted. todo's CI gets the new registry's address on its own, and pushes there on its next `main` build.
+- **CI's preview:** green, with 6 creates, 5 replacements and 3 updates.
+
+**Waiting for your approval:**
+- **platform #58:** this increment.
+- **platform #57:** a sandbox fix found on the way. Nix's .NET needs a newer glibc than the VM's Ubuntu, so programs now run through `dotnet`.
+- **todo #31:** PLAN v25 with D82–D90.
+
+**Still blocked:** Azure's management endpoint refuses your network ("The request is blocked", even without a token). It doesn't affect CI. It does block `az` for me and for you, so if you're on a VPN, try without it.
+
+**Next:** increment 2, the dev environment stack: VNet, NSGs, AKS, Postgres, `db-admin`, and the roles Job. I'll develop it in the sandbox the same way.
