@@ -1,0 +1,13 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T18:14:25Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Two things:
+
+1. **`start` is waiting for your approval in the `dev` environment.** Starting the run and approving it are two separate clicks in GitHub. Approve it here: <https://github.com/Ulberg-Org/platform/actions/runs/44933967937> ("Review deployments", tick `dev`, "Approve and deploy").
+2. **The budget exists now:** `platform-monthly`, 500. There's also an older one, **`Ulberg_Platform_Bugdet` (200)**, which isn't in code; I think you made it by hand earlier. Should it stay as an extra, stricter alert, or should I remove it? Removing it is your step, since I only have read rights: Cost Management → Budgets → `Ulberg_Platform_Bugdet` → Delete. Or I can add a line to `shared` to delete it.
+
+Once you've approved, I'll follow the run. It takes about 10 to 15 minutes, mostly AKS and Postgres. Then I'll check that dev is what we decided: the access by group, the database private, and nothing reachable that shouldn't be.
+
+Also waiting for your promotion: **#61's apply**, which makes `workflow guard` a required check: <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml>

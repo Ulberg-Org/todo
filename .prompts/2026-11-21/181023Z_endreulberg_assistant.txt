@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T18:10:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+That works, but it changes D45 (where a platform lead approves each start), so two quick decisions.
+
+**What it means for security:** `start` would get the apply identity without your approval, just like `destroy`. The same door then serves both. I'd rename `teardown` to `environments`, and the guard from #61 would allow exactly `start.yml` and `destroy.yml` and nothing else. The control moves entirely to the PR review, where it already is for `destroy`.
+
+❓ **Q1 - What starts dev**: you don't want to click, so which trigger?
+- **(a)** the "Run workflow" button, without approval (still one click);
+- **(b)** a schedule, for example weekdays at 08:00 (Oslo time), destroyed at 12:00;
+- **(c)** automatically on every merge to `main` in the platform or todo repo, if dev isn't already running, so dev is there when there's something new to try. Claude can't start workflows itself: the GitHub app only reads Actions. A merge, though, is something you approve anyway.
+
+➡️ **(c), plus (a) for the odd manual start.** Dev then exists when there's something new, and costs nothing when nothing happens. Each run is still destroyed 4 hours after it started, and a merge while dev runs doesn't extend that.
+
+---
+
+❓ **Q2 - Who may change this**: with no approval per run, the only gate is the PR review. Should `start.yml` and `destroy.yml` (and the guard) also get **you as their explicit code owner** in CODEOWNERS? That way, even with more people in the repo later, nobody else's approval counts for those files.
+
+➡️ Yes.

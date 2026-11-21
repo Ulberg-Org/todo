@@ -1,0 +1,39 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T17:16:47Z
+session: c23ef4aa-cf4e-4b4a-bbc2-9573186c7fc4
+
+Yes, a few things are worth adopting, but less than you might expect. The last three radars (Vol 33 Nov 2025, Vol 34 Apr 2026, Vol 35 Nov 2026) already endorse much of what you do:
+
+| Radar entry | Where you already have it |
+|---|---|
+| Agent sandboxing (Adopt, Vol 35) | Lima VM confined by `srt`, no host mounts (D81) |
+| Zero trust, agent identity (Adopt, Vol 34) | Separate Entra and GitHub identities for Claude, read-only (D41, D52, D88) |
+| Grilling (Trial) | §6 "Grill, then build" |
+| Reference application (Trial) | `reference/` |
+| Curated shared instructions (Adopt) | `AGENTS.md` |
+| Feedback sensors in the agent loop (Trial) | Claude reads Grafana and Postgres through MCP, and runs tests |
+| "MCP by default" (Caution) | You use MCP only where you need the access control |
+| Measuring by tokens or % of AI-written code (Caution) | You don't |
+
+**What I'd add, most valuable first:**
+
+1. **Toxic flow analysis ("lethal trifecta", Trial in Vol 35).** This is the real gap. A trifecta is private data, untrusted content and a way to send data out, all in one agent. In your setup Claude reads the database (private data). It reads logs and traces through Grafana, and those can carry text that users typed (untrusted content). It can also write public PR bodies and run web searches (a way out). D78 limits the network, but it doesn't close this path. Phase 8 makes it worse, because users' agents will read other users' shared content. Write the analysis down once in `PLAN.md`, one row per agent profile and MCP tool, and decide which part of the trifecta to break for each.
+2. **Progressive context disclosure (Adopt) and agent instruction bloat (Caution).** `AGENTS.md` loads in full every session. §4 is mostly one-time setup steps that belong in a linked doc. On top of that come 21 memories and D1–D90. The radar's advice matches your own "be lazy" rule: turn each rule into a CI check where you can, and keep a short index that links to the rest. Some memories repeat AGENTS.md §6 almost word for word, and those could go.
+3. **Mutation testing (moved to Adopt in Vol 35).** This catches tests that pass without checking anything, which matters when agents write the tests. You already found one example: `dotnet test` exits 0 without running any tests. The catch is that Stryker.NET supports C# only, as far as I know, not F#. So this may mean a small check of your own, or waiting. Check before planning it.
+4. **Promptfoo or a similar eval and attack-test tool (Trial), from Phase 8.** It would run repeatable prompt-injection tests against your `/mcp` tools. It fits next to your "untrusted content marking" work.
+5. **Risk-tiered oversight, and the "human-in-the-loop theater" warning.** Every PR needs your approval. That's fine now, but if Claude's PRs get large, consider requiring a deeper review only for changes to access, infrastructure or hooks.
+
+**Probably skip:** Act (running GitHub Actions locally) adds another tool to your supply chain for little gain. Agent Scan sends metadata to Snyk. OpenSpec and Spec Kit overlap with `PLAN.md`, and the radar now warns about spec sprawl. Most of the platform and framework entries (LangGraph, Bedrock AgentCore and similar) don't apply to you.
+
+**How reliable this is:** the Vol 35 blip list comes from a consultancy's summary ([onext](https://www.onext.es/en/insights/thoughtworks-radar-35-what-to-adopt-agents/)). Vol 34 comes from a third-party wiki, and I didn't check it against the official PDF. For Vol 33 I found only the press release's themes (MCP, context engineering such as AGENTS.md, AI antipatterns), not the individual blips. Check the rings at [thoughtworks.com/radar](https://www.thoughtworks.com/radar) before relying on them.
+
+`AGENTS.md` says plan changes need agreement first, so I can draft items 1 and 2 as proposed `PLAN.md` entries if you'd like.
+
+Sources:
+- [Thoughtworks: Themes in Radar Vol 35](https://www.thoughtworks.com/insights/podcasts/technology-podcasts/themes-technology-radar-vol-35)
+- [PR Newswire: Vol 35 press release](https://www.prnewswire.com/apac/news-releases/as-ai-agents-scale-thoughtworks-technology-radar-highlights-the-need-for-stronger-controls-302925196.html)
+- [onext: Radar 35, what to adopt](https://www.onext.es/en/insights/thoughtworks-radar-35-what-to-adopt-agents/)
+- [Radar Vol 34 PDF](https://www.thoughtworks.com/content/dam/thoughtworks/documents/radar/2026/04/tr_technology_radar_vol_34_en.pdf)
+- [Agentic AI KB: Vol 34 digest](https://agentic-ai.readthedocs.io/en/latest/AgenticTechStack/thoughtworks-radar-vol34/)
+- [Thoughtworks: Vol 33 news](https://www.thoughtworks.com/about-us/news/2025/thoughtworks-tech-radar-33-rapid-ai)

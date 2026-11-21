@@ -1,0 +1,9 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T18:39:59Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Checked:
+- **#61's apply:** done, so `workflow guard` is now a required check.
+- **The manual budget:** `Ulberg_Platform_Bugdet` is still listed. Either the deletion hasn't gone through, or it didn't stick. Worth a look in Cost Management → Budgets: <https://portal.azure.com/#view/Microsoft_Azure_CostManagement/Menu/~/budgets>
+- **`start`:** still running. AKS and Postgres take a while, and I'll report when it's done.

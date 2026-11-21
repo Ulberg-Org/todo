@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T17:15:07Z
+session: c23ef4aa-cf4e-4b4a-bbc2-9573186c7fc4
+
+Quick questiono, in my AI workflow does it seems like i should use anything from the last 3 technology radars from ThoughtWorks

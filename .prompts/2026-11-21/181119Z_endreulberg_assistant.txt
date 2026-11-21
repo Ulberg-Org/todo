@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T18:11:19Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Got it, and that's what Phase 4 already plans:
+
+| | How it reaches dev |
+|---|---|
+| **Infrastructure** (`start`, Pulumi) | one click: you approve each start, as now |
+| **Apps** (todo, …) | **merge to `main` is enough**: todo's CI builds and signs the image, the image's tag reaches `apps/todo.yaml`, and Argo CD deploys it to dev. No click, and nobody touches the cluster (Phase 4's "done when") |
+
+One consequence of dev running on demand: if dev isn't running when you merge, nothing is lost. The new version waits in git, and the next `start` gets the latest straight away, because Argo CD always syncs to what's in git.
+
+So nothing changes for now. #61 stands as it is, since only `destroy` uses the door without approval. I'll take the details of the app flow into Phase 4's grilling: how the image tag gets into `apps/todo.yaml`, and when the release PR to prod comes in.
+
+Your next steps are unchanged:
+1. **Promote the apply waiting for #59 and #60:** <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml>
+2. **Approve #61** (the guard).
+3. **Run `start` (`dev`) and approve it:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>

@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T17:25:02Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Your apply of #58 got halfway, and I've fixed the rest:
+- **In Azure now (in `rg-platform-shared`):** dev's static IP, the telemetry storage and its 14-day retention.
+- **Failed:** the budget alert. CI passed the alert list secret only to the `access` stack, so the budget had no recipients and Azure refused it. The preview couldn't catch that, because Azure only checks recipients at creation.
+
+**Waiting for your approval:**
+
+| PR | What |
+|---|---|
+| **platform #60** (small) | The budget's recipients: `pulumi.yml` passes `PLATFORM_ALERT_EMAILS` to `shared`, and an empty list now fails with a clear message. After merging, promote the apply again and the budget gets created. |
+| **platform #59** | The dev stack plus `start` and `destroy`. All checks green: the environment preview shows 23 resources, and the `access` preview the new `teardown` environment and its federation. |
+
+The sandbox caught three things on #59 before CI did:
+- **Mutation:** a mutation in `access`, flagged by the style check.
+- **A bug in the federation:** the new teardown credential would have been treated as made by the bootstrap and imported, and the apply would have failed. Each claim now records whether the bootstrap made it.
+- **The dev stack's secrets key:** the stack lacked one. It now shares the same Key Vault data key as `access` and `shared`.
+
+**#59's accepted risk, for you to judge:** `destroy` runs without approval (D45). To do that, CI's apply identity is also federated with a new `teardown` GitHub environment that has no reviewers. Code on `main` can therefore use the apply identity without your approval. Only reviewed code reaches `main`, and only `destroy` uses `teardown`.
+
+**After #59 is merged:**
+1. Run **start** (`dev`) from GitHub Actions and approve it: <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>. That's the first real build of dev, about 10 to 15 minutes. `destroy` removes it 4 hours later on its own.
+2. I'll continue with increment 2b, the database roles Job.

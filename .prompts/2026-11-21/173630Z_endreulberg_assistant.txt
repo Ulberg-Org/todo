@@ -1,0 +1,29 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T17:36:30Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Both are merged: #60 (the budget's recipients) and #59 (the dev stack, `start` and `destroy`). Their apply on `main` waits for your promotion as usual. It creates the budget, the `teardown` environment and its federation; dev itself is only built by `start`.
+
+## The risk, explained
+
+**How CI gets into Azure today.** CI has no passwords. A GitHub job gets a short-lived OIDC token from GitHub, and Azure swaps it for an Azure token, but only if the token's *subject* matches a federation we configured. For the apply identity that subject is `…platform…:environment:dev`. The `dev` GitHub environment requires your approval, so every job that wants the apply identity stops and waits for your click.
+
+The apply identity is powerful: Contributor and RBAC Administrator on the subscription, plus rights in Entra. bootstrap/README calls it effectively a tenant admin.
+
+**What `teardown` changes.** `destroy` has to run without anyone clicking (D45), so there's now a second door: the `teardown` environment, with no reviewers, also federated with the apply identity. A job that names `environment: teardown` gets the full apply identity without asking you.
+
+**What still guards that door:**
+1. **`teardown` only accepts `main`** (its branch policy). Jobs from branches or pull requests are refused, Claude's included.
+2. **Only reviewed code reaches `main`:** a PR needs your approval as code owner, and green checks.
+3. **The actions `destroy.yml` uses are pinned by SHA,** so a hacked action version can't slip in.
+
+**What's weaker than before.** For `dev` there are two gates: you approve the PR, *and* you approve each run. For `teardown` there's only the first. In practice:
+- **Code you approve without noticing:** a PR adds a step to `destroy.yml`, or a new workflow that names `environment: teardown`. Once merged, it runs with full rights without a second look. The approval of the PR is the only check.
+- **A mistake in `destroy` itself:** say `due_environments.sh` reports an environment as due when it isn't. It would be torn down unasked. That's a small loss, since environments are rebuilt from code (D45).
+
+**A cheap way to close the first gap (my recommendation):** a CI check that fails any PR where a workflow other than `destroy.yml` names `environment: teardown`. That's about 5 lines. A stray use of the door then can't get past CI, only an edit to `destroy.yml` itself, which is easy to spot in a review.
+
+The thorough option would be a separate, narrow identity that can only tear environments down. That's more to build and maintain for a risk that the PR review already covers, so by "Be lazy" I'd skip it.
+
+Shall I add the check? And remember to promote the apply first: <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml>

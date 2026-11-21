@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T16:54:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Azure answers again (your network was the problem), and `az` changed the picture:
+
+| Check | Result |
+|---|---|
+| Postgres 18 in Norway East | offered (11 through 18; **no 19 yet** in Azure) |
+| Kubernetes 1.37 in AKS | offered |
+| ARM VM sizes in **Norway East** | **none for our subscription**: it sees 72 sizes there, none ARM, though Azure sells them |
+| ARM VM sizes in **Sweden Central** | `D2ps_v5` (0.082 USD/h) and `D2ps_v7` (0.127 USD/h); no `v6` |
+
+**What I did, per our decisions:**
+- **Region:** D83's fallback applies, so everything stays in Sweden Central. I reverted the move commit in #58.
+- **Node size:** `D2ps_v5`, the cheapest ARM size we can get, at about 140 NOK a month for 2 nodes at ~20 four-hour runs. Tell me if you'd rather have v7.
+- **Postgres 19:** a PLAN TODO to move local and Azure together once Azure offers it.
+- **Merged:** platform #57 (the .NET-in-the-sandbox fix).
+
+**Waiting for you:**
+- **platform #58**, again: the revert dismissed your approval. It's back to just increment 1 (the addresses, telemetry storage, the budget) in Sweden Central. <https://github.com/Ulberg-Org/platform/pull/58>
+- **todo #31:** it has no approval yet; I think it was missed among the others. It now also has Sweden Central, `D2ps_v5` and the Postgres 19 TODO. <https://github.com/Ulberg-Org/todo/pull/31>
+
+Meanwhile I'll start increment 2, the dev environment stack, in the sandbox.
