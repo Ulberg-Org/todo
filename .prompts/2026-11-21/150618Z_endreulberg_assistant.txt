@@ -1,0 +1,28 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T15:06:18Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Done:
+- **Merged:** platform #53, todo #29 and the sandboxed Claude's todo #28.
+- **CLI v0.2.3:** released and signed.
+
+**Your feedback, applied:**
+- **AGENTS §6 in both repos has two new rules:**
+  - *"Be lazy: simple over strict, and less code"*: solve a problem where one shared solution serves everyone (feature → core utility, BFF → core, auth → infra, …), and prefer short rules that survive change.
+  - *"Text in files, not inline."*
+- **The CLI's five inline blocks are now files** in `cli/templates/`.
+- **The sandbox's allowlist goes by vendor domain:** 41 entries, robust to Anthropic and others moving their hosts.
+- **Claude's env in the VM comes from a file.**
+- **The platform README has your overview:** how the platform fits together, plus every top-level folder.
+
+**Found and fixed along the way:**
+- Grafana's Tempo connection went to the proxy. The data sources now use their full in-cluster names.
+- The CLI hid the cause when an install failed. It now prints the command's last lines.
+
+Verified in the sandbox: a fresh `up`, 12/12 network checks, the database roles, Tempo off the proxy, and the allowlist.
+
+**For you, in this order** (fewest re-approvals):
+1. **Approve platform #54.** I merge it, release CLI v0.2.4 (the templates), and move todo #30's pin to v0.2.4.
+2. **Then approve todo #30:** the AGENTS rules and the pin.
+3. **Then the platform profile's test:** `limactl stop endre-agent-todo`, then `~/Github/Private/platform/sandbox/sandbox platform --app todo`.
