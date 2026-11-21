@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T13:33:50Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+1) ok 2) sure 3) Yes. That is fine, but try to make it so it is in a usable state soon so we can move on to Phase 3 soon

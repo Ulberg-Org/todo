@@ -1,0 +1,15 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T13:16:52Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The login has to be done by you: it signs in with your Anthropic account in your browser, and I don't act as you. It takes a minute. In your own terminal (not through me):
+
+```
+limactl shell --workdir /tmp claude-spike
+~/.local/bin/claude
+```
+
+Then type `/login`, choose your subscription, open the link it shows in your browser, and paste the code back. Your Mac's browser does the sign-in, so only `claude.ai` and `platform.claude.com` need to be reachable from the VM, and both are allowed. If the login stalls, it's probably a refused host. Tell me and I'll check the proxy's log and allow it live, without a restart.
+
+Meanwhile I'm checking the last application (`gateway`), which needed a retry of its chart download.

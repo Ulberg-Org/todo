@@ -1,0 +1,34 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T00:54:29Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've hit a blocker: **Cilium won't run inside a Docker Sandbox.** That means `make up` can't run in there, so I've stopped before opening the sandbox PR or moving this session into the sandbox.
+
+**What works in the sandbox (app profile, `endre-agent-app-todo`):**
+- **Launcher:** `sandbox/sandbox <app repo>` or `sandbox platform`. It checks you against `access/people.yaml` and builds the image: Docker's Claude image plus the repo flake's `packages.tools`, 3.1 GB. It then creates a private clone with 4 CPUs and 10 GB.
+- **GitHub:** Claude's app token is added by your Mac on the way out. Inside, only a placeholder is visible. The sandbox reaches `Ulberg-Org/todo` and `platform` as the app, commits as `ulberg-claude[bot]`, and `cosign verify` of the CLI image passes inside it.
+- **Escape tests:** all 7 checks in `sandbox/test` pass. Your SSH keys, SSH agent, home folder, GitHub account and Docker are out of reach, and `example.com` is blocked.
+- **kind:** it starts once the launcher creates `/dev/kmsg`.
+
+**What doesn't:** Cilium stops with `replace local ipv4 rule: address family not supported by protocol`. The sandbox's kernel (Docker's 7.0.14) lacks policy routing, so `ip rule` fails even in the VM itself, and it also lacks `NET_CLS_BPF`. sbx has no setting for a different kernel, so we can't fix this from our side.
+
+**Options:**
+- **A (recommended for now):** the cluster stays on your Mac and Claude works in the sandbox.
+  - The sandbox mounts the repo folder instead of a clone, so your cluster reloads Claude's edits.
+  - Claude reads the cluster through the Grafana MCP. That's all an app developer's Claude may use anyway (AGENTS §3).
+  - Cost: you run `make up` and `make test-platform`, not Claude. It also changes D78's "private clone" and needs a PLAN entry.
+  - I still need to check that the sandbox can reach your Mac's Grafana port.
+- **B:** a sandbox whose kernel we control, such as Apple's `container`, which supports custom kernels. This needs research, and we'd lose sbx's credential proxy and network policy, which were the reasons we chose it.
+- **C:** a different network plugin (kindnet) inside the sandbox. Not recommended: local would no longer match AKS, and network policies and Hubble would stop working.
+
+Whatever you pick, I'd also report the missing kernel options to Docker.
+
+**Current state:**
+- I stopped your cluster for this test. `make up` is bringing it back up in the background.
+- The test sandbox is stopped and the old `endre-agent-app` one is removed.
+- The work is pushed to the platform branch `sandbox` (no PR yet).
+- I added two packages to the open PRs: `packages.tools` in todo #27 (cosign and .NET) and platform #51 (the platform tools, without az).
+- Still waiting for your approval: todo #26 and #27, platform #49, #50 and #51.
+
+Shall I go with A?

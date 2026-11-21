@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T12:51:50Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Still running, now at the Cilium step, and no host has been refused yet. The full version is working so far:
+
+**Confinement, verified:**
+- Lima's host process runs under our Seatbelt profile and may connect only to `srt`'s proxy and the VM's SSH port.
+- From inside the VM, even as root, direct connections are refused: HTTPS, raw TCP, and by IP.
+- Through the proxy, allowed hosts work and everything else is refused, including your Mac's Grafana and your LAN.
+
+**Made to work behind the proxy so far:**
+- **Docker:** reads the proxy from `/etc/environment`.
+- **kind's nodes:** get it from the CLI.
+- **git:** needs `http.proxyAuthMethod=basic`.
+- **Argo CD's chart downloads and Grafana's plugins:** a new optional `platform-proxy` ConfigMap from the CLI, HTTPS only, so in-cluster traffic never goes there. It's on #52 and changes nothing on your Mac.
+- **Allowlist:** three hosts were missing, AWS's public registry, its CDN and Kubernetes' image CDN. The allowlist now reloads live, so a missing host no longer costs a VM restart.
+
+**Lessons for the trim:**
+- **The proxy auth token is fragile:** git sends the request without it first and gets disconnected, and any other client that does the same will break. The proxy's port also changes on every start, so everything has to pick it up again.
+- **Missing hosts surface one at a time:** that's the brittleness you warned about. The log of refused hosts makes each one quick to find, though.
+- **DNS still works from inside:** a small leak, left open for now.
+
+When this run finishes, I'll check `make test-platform` and then Claude Code itself in the VM. Then I'll write up which parts stay and which go.

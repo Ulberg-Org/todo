@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T11:03:05Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I want you to complete Phase 2.5 before we merge the PRs, but you can make the PRs now

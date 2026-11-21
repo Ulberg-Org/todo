@@ -1,0 +1,60 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T11:40:57Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The research changes Q1. Here's what people actually use Lima for, and what that means for us.
+
+## What I found
+
+**1. Nobody has a mature Lima setup that blocks the internet.**
+- Lima's own egress-policy work (issue #5820, PR #4326) is open, unmerged, and a maintainer is "inclined to close it".
+- Trail of Bits' `coop` (822 stars) runs agents in Lima but leaves egress open on macOS. Its proxy only keeps API keys out of the VM.
+- In Lima a guest with root can get around any firewall inside the VM, because Lima's host process recreates every guest connection as an ordinary connection from your Mac.
+
+**2. The only robust design is to restrict that host process, not the VM.**
+- Two small projects do it (apomonosi/sandboxing PR #20 and boxery PR #103, both merged in autumn 2026). They start `limactl` under macOS's `sandbox-exec`, which Lima's host process inherits, so it may only connect to the proxy port and the VM's SSH port on your Mac.
+- The VM's only way out is then the proxy, which allows the allowlist and nothing else. Your Mac's kernel enforces this, so root in the VM can't lift it.
+- Caveats: Apple has deprecated `sandbox-exec`, though it still ships and works on macOS 26. Nobody has reported it on 27.2, which you run. apomonosi says it's "not yet a live install". Neither project meets our supply-chain rule, so I'd copy the pattern, not the code.
+
+**3. Anthropic ships that exact pattern as an official tool, [`sandbox-runtime`](https://github.com/anthropics/sandbox-runtime) (`srt`).**
+- On macOS it starts a program under `sandbox-exec` and allows network only through its own allowlisting proxy.
+- Its [secure-deployment guide](https://code.claude.com/docs/en/agent-sdk/secure-deployment) recommends that design: "a connection to an outside host that skips the proxy fails".
+- So we could start the VM through `srt` (`srt limactl start …`) and get the proxy plus the confinement from an official source, without writing our own.
+
+**4. kind with Cilium in Lima is plausible but not proven recently.**
+- Lima, `vz` and Cilium with kind worked in 2023 ([bcollard](https://github.com/bcollard/kind-on-lima-public)), and kubeadm with Cilium in Lima worked in January 2026 ([ypeavler](https://ypeavler.github.io/blog/local/kubernetes/2026/01/17/k8s-cluster-with-lima-macos.html)).
+- Neither is a recent report of exactly our setup.
+
+## Proposal: a short spike before building
+
+The open points are all facts, so I'd settle them with a time-limited test rather than guess:
+1. **Our platform in Lima:** a Lima `vz` Ubuntu VM with Docker and no mounts, then `make up` and `make test-platform` inside it.
+2. **The egress block:** start that VM through `srt` on your Mac 27.2 and check from inside as root that the allowlisted hosts work while a direct connection to anything else, your Mac's other ports and your LAN all fail.
+
+If both hold, I build on that. If `srt` or `sandbox-exec` can't confine Lima on 27.2, I'll come back to you with the options rather than guess.
+
+## Q4 (still open)
+
+You're right that todo shouldn't be built into the platform VM. Since the platform repo has no app of its own, I propose the platform VM clones only the platform repo. `sandbox platform --app todo` adds an app repo when Claude needs to test the platform in a cluster, and it works for any app the GitHub app can read, not just todo.
+
+Shall I run the spike, and is `--app` right for Q4?
+
+Sources:
+- [Anthropic: Securely deploying AI agents](https://code.claude.com/docs/en/agent-sdk/secure-deployment)
+- [anthropics/sandbox-runtime](https://github.com/anthropics/sandbox-runtime)
+- [trailofbits/coop](https://github.com/trailofbits/coop)
+- [coop issue #615](https://github.com/trailofbits/coop/issues/615)
+- [boxery PR #103](https://github.com/benvinegar/boxery/pull/103)
+- [boxery issue #67](https://github.com/benvinegar/boxery/issues/67)
+- [apomonosi/sandboxing PR #20](https://github.com/apomonosi/sandboxing/pull/20)
+- [Lima issue #5820](https://github.com/lima-vm/lima/issues/5820)
+- [Lima PR #4326](https://github.com/lima-vm/lima/pull/4326)
+- [Lima: user-mode network](https://lima-vm.io/docs/config/network/user/)
+- [jurajpiar/devkit issue #25](https://github.com/jurajpiar/devkit/issues/25)
+- [pvillega/sandbox-claude](https://github.com/pvillega/sandbox-claude)
+- [Apple Developer Forums on pf](https://developer.apple.com/forums/thread/776505)
+- [Cirrus CI: isolating Tart VMs](https://cirrus-ci.org/blog/2022/07/07/isolating-network-between-tarts-macos-virtual-machines)
+- [bcollard/kind-on-lima](https://github.com/bcollard/kind-on-lima-public)
+- [ypeavler: k8s cluster with Lima](https://ypeavler.github.io/blog/local/kubernetes/2026/01/17/k8s-cluster-with-lima-macos.html)
+- [Cilium: installation using kind](https://docs.cilium.io/en/stable/installation/kind/)

@@ -1,0 +1,39 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T13:23:28Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The full version works end to end. In the confined Lima VM, with everything going through `srt`'s allowlisting proxy, `make sync` brings all 13 Argo CD applications to synced and healthy, and all 12 network checks pass. Claude Code runs in there with your login.
+
+The last problem was our own network policy: Argo CD may reach the internet only on port 443, and the proxy listens on another port. The CLI now creates a small extra policy for exactly the proxy's address and port when there is a proxy. That and the other platform changes are on #52, and none of them changes anything on your Mac, where there's no proxy.
+
+## What the full version consists of
+
+| Part | Size | How fragile |
+|---|---|---|
+| Confinement: `srt`'s proxy, a 5-line Seatbelt profile for Lima, and the allowlist that reloads live | ~50 lines of ours | low; it fails closed |
+| Inside the VM: Docker gets the proxy, git needs `proxyAuthMethod=basic`, `NO_PROXY` for the cluster | setup lines | low once in the VM's setup |
+| Platform: the optional `platform-proxy` ConfigMap and policy, and Argo CD and Grafana reading it | ~30 lines in the CLI plus 2 values files | low; `sync` handles the port changing |
+| Allowlist: about 40 hosts | a JSON list | medium: every new tool may need a host. So far 5 were missing, and each was a 10-second fix thanks to the log of refused hosts |
+
+## Refactor: what to cut
+
+I'd keep the confinement. It works, it fails closed, and the parts that broke during the spike are now handled. I'd cut or simplify:
+1. **The proxy's auth token, if `srt` lets me turn it off:** git's quirk would go away, and the VM is the only client anyway.
+2. **The fixed list of `NO_PROXY` entries:** derive it from the cluster's settings instead.
+3. **Ad-hoc setup:** everything I did by hand in the VM goes into a single setup script.
+
+If the allowlist starts costing real time, the fallback is Trail of Bits' `coop` model: no allowlist, only no mounts and your Mac's `localhost` blocked. That would remove the proxy and all of its plumbing in one step.
+
+## Next
+
+Turn the spike into the real thing on #52:
+- the launcher (`sandbox <app repo>` / `sandbox platform [--app …]`);
+- the VM's setup script with the flake tools;
+- copying the GitHub token into the VM and renewing it;
+- the escape tests rewritten for the VM;
+- the sbx files removed.
+
+Then a real task end to end, and the PRs.
+
+Should I go ahead with that, keeping the confinement?

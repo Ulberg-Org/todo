@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T12:30:15Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Applying that rule right away to part 2. The proxy design is exactly the brittle kind:
+- **Everything in the VM would have to use the proxy:** Docker, kind's node images, the pods themselves (Argo CD pulls charts, Grafana downloads plugins), NuGet, Nix, and Claude Code itself, whose Node `fetch` ignores proxy settings by default.
+- **Failures would be hard to read:** anything that forgets the proxy fails in ways that look unrelated.
+- **The pieces would be ours to maintain:** a profile of our own on top of `sandbox-exec`, which Apple has deprecated.
+
+So I'm going with the simpler design Trail of Bits' `coop` uses for Lima. Your Mac stays protected:
+- **No mounts:** the VM can't see your files, keys or logins.
+- **Your Mac's own services are closed:** Lima's `hostLoopback: false` (one line, Lima 2.3) refuses the VM's connections to your Mac's `localhost`, so Postgres, Grafana and your cluster's API are out of reach.
+- **Nothing of yours runs Claude's code:** its work only reaches you as a PR.
+
+The VM may reach the internet freely. That's the risk we accept: a tricked Claude could send out what's in the VM, which is the app's GitHub token (1 hour, can't approve or merge), its Claude sign-in and the code. The code is public anyway. It could also reach devices on your LAN.
+
+I'll record this in PLAN as accepted, with the allowlist as a TODO for when Lima's own egress policy lands or Docker Sandboxes fits.
+
+That replaces my Q1 recommendation, where you agreed to the proxy, so tell me if you'd rather keep the allowlist anyway. Part 1, our platform in the VM, is still running, and I'll continue when it finishes.

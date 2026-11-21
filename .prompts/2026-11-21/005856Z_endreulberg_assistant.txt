@@ -1,0 +1,19 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T00:58:56Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I couldn't check whether your cluster came back up: your Mac's disk is full. Claude Code can no longer save command output, so I can't run anything until some space is freed.
+
+Most of the space is likely from today's sandbox work: three builds of the sandbox image (3–5 GB each), Docker's build cache, the sandbox's own disk, and the template copy sbx keeps. You can free it safely by typing these in the prompt:
+
+```
+! sbx rm --force endre-agent-app-todo
+! docker image rm ulberg/claude-sandbox-todo:local
+! docker builder prune -f
+! df -h /System/Volumes/Data
+```
+
+None of these touch your repos or your kind cluster. The sandbox, its template and the image can all be rebuilt with `sandbox/sandbox` whenever we need them. If that isn't enough space, `! sbx df` shows what else sbx keeps.
+
+Once there's room, I'll check whether `make up` actually brought your cluster back, since the full disk may have broken it partway. Your choice between options A, B and C for the sandbox is still open.

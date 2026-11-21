@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T11:57:41Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Start with Lima and SRT but write a Issue / TODO on checking periodically if Docker Sandboxes becomes good enough for our use-case

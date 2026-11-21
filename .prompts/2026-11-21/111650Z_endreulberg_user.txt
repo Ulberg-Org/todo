@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T11:16:50Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, but like, I am a bit confused, this must be a well-known risk with SBX then? Why would people use it then? Do they accept the trade-off or what is it that is the most common sandbox setup, read the technology rader from ThoughtWorks

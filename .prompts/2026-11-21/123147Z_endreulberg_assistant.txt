@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T12:31:47Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, we still need Lima. The proxy only solves the network part, and neither of the other two can do what made us need a VM:
+
+| What Claude needs | Docker Sandboxes | Anthropic's `srt` on its own | Lima (+ `srt`'s proxy) |
+|---|---|---|---|
+| A kernel that runs Cilium (for `make up`) | **no**: the missing kernel options | it's your Mac's own, via Docker Desktop | **yes** |
+| A Docker that isn't yours | yes | **no**: it would have to use your Docker Desktop, and anyone who can use that can mount any folder on your Mac (`docker run -v ~:/x`) | **yes** |
+| Network allowlist | yes, built in | yes, built in | `srt`'s proxy, the part I'm wiring up now |
+
+- **Docker Sandboxes** fails on the kernel, which a proxy can't change.
+- **`srt` on its own** fails on Docker. `srt` restricts one program, but `make up` drives Docker Desktop, and Docker Desktop has access to your whole Mac.
+- **In this setup** Lima provides a kernel and a Docker of Claude's own, and `srt` provides the network allowlist. Each covers what the other can't.
+
+Docker Sandboxes would be the simplest, because it does all three itself. That's what the PLAN TODO tracks: as soon as its kernel can run Cilium, we move back.
+
+I'm continuing with the full version. Part 1's `make up` is still running in the VM.

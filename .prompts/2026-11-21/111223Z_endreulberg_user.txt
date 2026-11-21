@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T11:12:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, but with --clone will it not be able to run tests locally and run say e-2-e (FE -> DB) mcps etc while researching a feature to uncover things like performance issues etc

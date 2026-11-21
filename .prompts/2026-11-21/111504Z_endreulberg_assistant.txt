@@ -1,0 +1,47 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T11:15:04Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've read Lima's docs on running AI agents. They change my recommendation, because the bridge I proposed would be slow.
+
+## Why sbx plus a separate VM would be slow
+
+With Claude in sbx and the cluster in a Lima VM, `make up` would run against the VM's Docker, but the repo (Claude's clone) would sit in the sandbox. The platform CLI reads the repo from disk: `platform.yaml`, the snapshots for Argo CD, and the folders reloaded on change. So every change would have to be copied from the sandbox into the VM first.
+
+That's a sync step on every edit and two VMs to keep running, which is exactly the slowdown you're worried about.
+
+## Alternative: Claude runs inside the Lima VM
+
+Lima's docs recommend it for this case: "Lima is useful for running AI agents inside a VM, so as to prevent agents from directly reading, writing, or executing the host files."
+
+| | sbx + cluster VM | **Claude in one Lima VM** |
+|---|---|---|
+| Kernel runs Cilium, `make up` works | in the second VM, via a sync | **yes, natively** (Ubuntu kernel) |
+| Speed of the edit → reload loop | sync on every change | **same as on your Mac** |
+| Memory | two VMs (about 4 GB + 8 GB) | **one VM** (about 10 GB) |
+| Your Mac never runs Claude's code | yes | **yes**: no mounts at all (`--mount-none`), and Claude clones from GitHub inside |
+| Network deny by default | sbx's proxy (filters by host name) | **a firewall in the VM**, the pattern of Anthropic's own Claude Code devcontainer (`init-firewall.sh`): iptables allows only the allowlist. It's weaker: it filters by IP, and CDNs share IPs |
+| GitHub token | never enters (the proxy adds it) | **enters the VM**: the app's token, valid 1 hour, minted on your Mac and readable inside |
+| Supply chain | Docker | Lima is a CNCF project, installed through Homebrew |
+
+The firewall is set by root at boot, and Claude runs as a user without `sudo`, so it can't change it.
+
+**What you'd give up:** two of D78's protections get weaker.
+- **The allowlist:** it filters by IP instead of host name.
+- **The GitHub token:** it's in the VM instead of being added on the way out. A tricked Claude could send it to an allowed host, such as a gist on GitHub. The token expires within the hour and only has the app's rights: push branches and open PRs, never approve or merge.
+
+**What you'd gain:** the full loop runs at your Mac's speed. Claude codes, runs `make up` and tests end to end FE → DB with Grafana, Tempo and Postgres EXPLAIN ANALYZE, then opens a PR. It's one VM, and your files are never mounted.
+
+I recommend Claude in one Lima VM, accepting the two weaker points. Shall I amend D78 and D80 for that and build it?
+
+Sources:
+- [Lima: AI agents](https://lima-vm.io/docs/examples/ai/)
+- [Lima: user-mode network (`hostLoopback`)](https://lima-vm.io/docs/config/network/user/)
+- [Lima: Docker](https://lima-vm.io/docs/examples/containers/docker/)
+- [Lima: mounts](https://lima-vm.io/docs/config/mount/)
+- [Lima: vz](https://lima-vm.io/docs/config/vmtype/vz/)
+- [Lima v2.1 (CNCF)](https://www.cncf.io/blog/2026/03/25/lima-v2-1-macos-guests-and-enhanced-ai-agent-safety/)
+- [Lima v2.3 (CNCF)](https://cncf.io/blog/2026/11/08/lima-v2-3-native-on-windows-vmnet-on-linux-and-menu-tui)
+- [sbx `docker-tcp` kit](https://hub.docker.com/r/sbx/docker-tcp)
+- [Docker Sandboxes architecture](https://docs.docker.com/ai/sandboxes/architecture/)

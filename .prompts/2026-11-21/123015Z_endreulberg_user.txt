@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T12:30:15Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, fine, but if this is becoming too large and brittle, you'll have to make trade-offs on security in favour of stability, usability and speed :)
