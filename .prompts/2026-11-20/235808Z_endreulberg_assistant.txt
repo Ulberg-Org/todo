@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T23:58:08Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The todo flake's first test finished: `nix develop` built the developer shell without errors. Its tool versions didn't print, so I'll confirm them when the flake goes into the repo. Both flakes are still only in my scratchpad.
+
+The rest is as I listed: the footprint pass (Prometheus trimming on branch `footprint`, saving not yet confirmed), the `sandbox` branch without a PR, the shared rules into AGENTS.md, and the launcher and kit for Phase 2.5.

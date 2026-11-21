@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-20T23:41:49Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+but is not the .claude already in git? but yes we should make it so that everyone shares a claude session for the repo. But aside from that I am ok with what you suggest

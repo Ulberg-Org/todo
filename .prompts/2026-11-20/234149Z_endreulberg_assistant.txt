@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T23:41:49Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Your usage limit has been reached, so I'm stopping here.
+
+**Footprint pass:** only the first item is started. It's on the platform branch `footprint`, with no PR yet. Prometheus now skips the Kubernetes API server's own metrics (55,800 of its 100,618 series) and the kubelets' metrics, and keeps only CPU, memory and network from cAdvisor. ArgoCD applied it and the pod memory data is still there. I couldn't confirm the saving: Prometheus keeps recent series in memory for about 2 hours, so the series count stays at about 100k until then.
+
+**Done since we started on the telemetry stack:**
+- **Merged:** the infrastructure signals, the developer-friendly telemetry (one name per service, logs once, exemplars, Drilldown) and the review of my two MCP servers.
+- **Released:** platform CLI v0.2.1, pinned in todo.
+- **Plan:** Phase 2 is done and Phase 2.5 is in the plan.
+- **Sandbox:** `sbx` installed through your flake, and the one-time setup applied on your Mac (deny-all network with an allowlist, no SSH forwarding).
+
+**Not merged or unfinished:**
+- **Platform branch `sandbox`:** the sandbox setup script. Committed and pushed, no PR yet.
+- **Footprint pass:** the remaining items are memory limits for the Go components, switching off Grafana's two unused apps, the kube-state-metrics allowlist, and 24-hour retention for Loki and Tempo. Each still needs a before-and-after measurement.
+- **The two flakes:** written in my scratchpad, not in the repos yet. The todo flake's first `nix develop` test was still running in the background.
+- **Rules into AGENTS.md:** moving the shared working rules from my memory there, so every developer's Claude has them.
+- **Phase 2.5 itself:** the launcher and kit, then moving this way of working into the sandbox.
