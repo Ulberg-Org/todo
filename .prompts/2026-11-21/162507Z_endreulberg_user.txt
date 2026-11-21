@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T16:25:07Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes! I have logged in again. Now please start, and use the sandbox as much as possible if you are developing things that are going in IaC

@@ -1,0 +1,53 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T16:21:10Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, I think so too. It's the same rule everywhere: Claude gets at most what its developer has, and only read-only. It also stays under its own name in every log, so "you did X" and "your Claude did X" can still be told apart.
+
+That empties the frontier. The only things left are facts I check myself: Norway East (`D2ps_v6`, Postgres 18) and whether AKS offers Kubernetes 1.37 (D61), both with `az`.
+
+## Shared understanding: Phase 3 (Azure foundation, dev only)
+
+**Scope:** dev only. External ID moves to Phase 6, prod to 6b. Everything is applied only by CI after approval.
+
+**`shared`** (persistent, moved to Norway East if `az` confirms):
+- ACR;
+- a static IP and DNS label per environment;
+- telemetry storage: one account, containers for Loki and Tempo, a 14-day lifecycle rule, no public access;
+- a 500 NOK monthly budget alert at 50%, 80% and 100%, to the alert list.
+
+**dev** (rebuilt on demand, in `rg-dev`):
+- **Start and destroy:** `start`, behind your approval, runs `pulumi up`; `destroy` runs every 15 minutes and removes anything older than 4 hours.
+- **Network:**
+  - VNet `10.20.0.0/16`: node subnet `/23`, database subnet `10.20.2.0/24` (delegated);
+  - NSGs: the database accepts only 5432 from the nodes, the nodes only 80/443 to the static IP;
+  - no public IPs on nodes, outbound through the load balancer;
+  - Cilium's default-deny inside the cluster, as locally;
+  - no Azure Firewall (cost).
+- **AKS:** Free tier, 2 × `D2ps_v6` (ARM), CNI overlay with Cilium, workload identity, Entra RBAC, no local accounts, a public API server with Entra-only sign-in.
+- **Postgres:** Flexible 18 on B1ms, private, Entra-only. Its Entra admin is a managed identity (`db-admin`). The roles come from a Job in AKS that runs the same `database.sql` as locally, mapped to the Entra groups.
+
+**Access, all through Entra groups:**
+- `platform-read` and the agents: AKS RBAC Reader;
+- `platform-write` (PIM): AKS RBAC Cluster Admin;
+- app developers: nothing in the cluster.
+
+**Claude:**
+- **Agents for all developers:** every developer gets one, with the developer's reach and read-only (Q24; AGENTS §3 and D41 updated).
+- **Sandbox Claude:** development only, with a 1-hour read-only Azure token copied in and renewed.
+- **Cloud database MCP:** Phase 5.
+
+**Moved to Phase 4:** `db-proxy` and `platform db dev` (port-forward plus your Entra token, for nvim DBUI, Teleport-style), deployed by Argo CD.
+
+**Tests:** unit tests for our own parsing logic, `preview` on every PR, and a script of the done-when access tests against the real dev.
+
+**Done when:** everything exists, start and destroy work, and the access tests show:
+- app developers can change nothing;
+- developers and every Claude can read but not write;
+- the database isn't reachable from outside;
+- the roles map to the groups.
+
+Is that our shared understanding? If so, I'll write it into PLAN as decisions (D82 onwards) in a PR for you to approve.
+
+One thing for you: sign Claude's agent in again (in your own terminal, `AZURE_CONFIG_DIR=~/.azure-agent az login --tenant <tenant-id>`), so I can confirm Norway East and Kubernetes 1.37 with `az` before the PLAN entries go in.
