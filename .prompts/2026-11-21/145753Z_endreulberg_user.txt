@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T14:57:53Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I just want to note something. In your style guide or process thing, you should document that simple is good. Like when you make the exclusion list you are listing .claude.com many times, because you are trying to be as strict as possible. But if you instead med the allow list shorter and more permissive it would allow for Antrophic to change URLs to their services in the backend wihtout breaking our sandbox environemtn. In addition you often inline large text blobs instead of making them into seperate files, that you then import into the place.

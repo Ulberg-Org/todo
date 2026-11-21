@@ -2,7 +2,7 @@
 # in Azure. The CLI is a public image (D63), pinned by digest, which runs only after cosign has checked that the
 # platform repo's release workflow signed it. Bump the pin with each platform release (its summary lists it).
 # Developing the platform itself: PLATFORM=../platform/cli/platform make up (runs it from that checkout).
-PLATFORM_IMAGE := ghcr.io/ulberg-org/platform-cli:v0.2.2@sha256:751016e27fae34a4f905f1fffc12da4cd38c2825661ef86cad1e3beddcceb288
+PLATFORM_IMAGE := ghcr.io/ulberg-org/platform-cli:v0.2.3@sha256:048d5558e580c63a7bc31ed83262f7b2a80882a4bf1b361b647650745233b46a
 COSIGN ?= cosign
 # The machine's proxy, if it has one (Claude's sandbox, D81): empty variables pass nothing.
 PROXY := -e HTTP_PROXY -e HTTPS_PROXY -e NO_PROXY -e http_proxy -e https_proxy -e no_proxy

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T14:53:38Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, but did you not need to test the Grafana MCP inside of the VM? Even though you have fixed it, have you tested it?

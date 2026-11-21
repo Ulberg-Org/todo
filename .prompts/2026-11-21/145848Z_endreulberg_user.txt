@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T14:58:48Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+ALso do you even remember to have a short TOC? Just to explain what the platform contains and how it is structured? in case we want to refactor in the future it is worth having

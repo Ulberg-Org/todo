@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:48:11Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The app profile's end-to-end test passed, apart from the Grafana MCP. Claude in the sandbox found both reasons for that, and both are now fixed and verified in the VM:
+
+| | |
+|---|---|
+| Code, `make up`, `make test-platform` (12/12), tests (6/6) | ok |
+| Postgres MCP (EXPLAIN ANALYZE as `todo_readonly`) | ok |
+| PR as `ulberg-claude[bot]` with a verified commit | ok: **todo #28** |
+| Proxy | nothing wrongly refused |
+| Grafana MCP | was broken on Linux, now fixed: from inside the VM it sees Loki, Prometheus and Tempo |
+
+**The fixes:**
+- **platform #53 (CLI):** hands the kubeconfigs and Grafana's token to the repo's owner. Docker Engine on Linux showed them as root's, while Docker Desktop had hidden that.
+- **todo #29:** the Grafana MCP joins kind's network, like the Postgres MCP. Tested on your Mac and in the VM. It also adds a PLAN TODO for `dotnet test` reporting success without running anything, the third problem Claude found.
+
+**Next:**
+1. **You approve #53, #29 and #28.** #28 is the sandboxed Claude's README change. Read it as you would any PR: its README section and the test table in its description.
+2. **I merge them,** release CLI v0.2.3, and pin it in todo.
+3. **The platform profile's test:** first `limactl stop endre-agent-todo`, then `~/Github/Private/platform/sandbox/sandbox platform --app todo`, with `/login` once in the new VM, and a small platform task. After that, Phase 2.5 is done.
