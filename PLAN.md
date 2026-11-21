@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v23 (2026-11-21, D81: Claude's sandbox is a Lima VM confined by `srt`, replacing D80).** Phase 2 done; Phase 2.5, the sandbox for Claude, in progress. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
+> **Status: v24 (2026-11-21, Phase 2.5 done).** Phases 0–2.5 done; next, grilling Phase 3 (Azure foundation). Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -423,7 +423,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - Network deny by default with the allowlist (D78), enforced on the host (D81); none of the developer's ports. Docker and the cluster inside the VM.
 - **TODO:** `dotnet test` exits 0 without running anything (Expecto has no test adapter; CI and the README use `dotnet run --project backend/test/TodoBackend.Test`). Add the adapter (`YoloDev.Expecto.TestSdk`, after the supply-chain check) or make `dotnet test` fail loudly. Found by Claude in the sandbox's end-to-end test.
 - **TODO (every quarter, or on each Docker Sandboxes release note):** check whether Docker Sandboxes now fits (its kernel runs Cilium: policy routing, `NET_CLS_BPF`; test: `ip rule` works and `make up` passes inside). If so, move back: it adds credentials on the way out and filters by host name, which our setup gives up (D81).
-- **Done when** Claude completes one task end to end inside the sandbox (code, `make up`, tests, reading its effect through its MCPs, a PR) in each profile, and from inside these fail, even as root: reading the developer's home folder or `~/.ssh`, `curl` to a host not on the allowlist or to the developer's machine or LAN, pushing with the developer's GitHub account, and asking for the platform profile without being in `infra-developers`.
+- **Done when** Claude completes one task end to end inside the sandbox (code, `make up`, tests, reading its effect through its MCPs, a PR) in each profile, and from inside these fail, even as root: reading the developer's home folder or `~/.ssh`, `curl` to a host not on the allowlist or to the developer's machine or LAN, pushing with the developer's GitHub account, and asking for the platform profile without being in `infra-developers`. **Done 2026-11-21:** the app profile's task is todo #28 (README; `make up`, tests, the Grafana and Postgres MCPs, a verified PR), the platform profile's is platform #56 (a memory limit found and checked through the Kubernetes MCP), and `sandbox/test` passes 10/10.
 
 ### Phase 3: Azure foundation (Pulumi F#, applied only by CI after approval)
 - Agents (D41) get AKS RBAC Reader and the DB read-only role as those resources appear.

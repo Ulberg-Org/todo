@@ -1,0 +1,10 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T15:38:09Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+That's fixed. The Kubernetes MCP is started with `npx`, which needs Node.js, and the VM didn't have it.
+- **Now:** Node.js 24 is installed in the running platform VM (`npx` is there).
+- **Permanently:** Node.js is in the platform flake's sandbox tools, so every new platform VM gets it. That's on platform #55, together with a corrected comment.
+
+In the sandbox's `/mcp` screen, choose **Reconnect** for `kubernetes`. It should now show as connected, and Claude can carry on with step 3. If it still fails, paste the screen again.

@@ -1,0 +1,29 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T15:34:56Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Paste this task into it:
+
+```
+This is the Phase 2.5 end-to-end test of the platform profile (PLAN.md, D81). Do one small real platform task end to end:
+
+1. In ~/platform: git checkout main && git pull, then create a branch `footprint-limits`.
+2. Start the platform from this checkout with the app: cd ~/todo && PLATFORM=../platform/cli/platform make up
+   (then make test-platform).
+3. Reconnect the MCP servers (/mcp). Through the Kubernetes MCP (read-only, from the platform repo's .mcp.json),
+   find which pods in the cluster run without a memory limit.
+4. Pick one platform component among them and give it a memory limit in its components/<name>/values-local.yaml
+   (footprint, AGENTS §6), sized from what it uses now (check through the Grafana MCP or the Kubernetes MCP).
+5. Apply it with PLATFORM=../platform/cli/platform make sync, and confirm through the Kubernetes MCP that the pod
+   has the limit and is Running.
+6. Commit, publish with ~/platform/scripts/claude-push.sh, and open a PR in the platform repo with gh.
+
+Report each step's result, and anything that was refused or failed.
+```
+
+Two things you'll need to do along the way:
+1. **After `make up` (5 to 7 minutes):** run `/mcp` and reconnect `kubernetes`, and approve it if asked. The Kubernetes MCP is in the platform repo's `.mcp.json`. Claude is attached in `~/platform`, so that's the one it loads.
+2. **Permission prompts:** approve them as you normally would.
+
+I'm watching from here and will tell you when its PR is up or if it stalls.

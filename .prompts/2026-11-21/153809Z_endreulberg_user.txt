@@ -1,0 +1,24 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T15:38:09Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+
+
+<pasted_content id="3c6e">
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+  kubernetes
+  MCP server
+
+  Status:           ✘ failed
+  Issue:            npx isn't installed, or isn't on your PATH
+  Log:              ~/.cache/claude-cli-nodejs/-home-endreulberg-guest-platform/mcp-logs-kubernetes/2026-11-21T15-35-10-927Z.jsonl
+  Command:          npx -y kubernetes-mcp-server@0.1.3 --config .claude/kubernetes-mcp.toml
+  Config location:  /home/endreulberg.guest/platform/components/.mcp.json
+
+  ❯ Reconnect
+    Disable in this project
+    Back
+
+  ↑/↓ to navigate · Enter to select · Esc to go back
+</pasted_content id="3c6e">
