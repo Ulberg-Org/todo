@@ -30,6 +30,20 @@ make down     # remove everything
 Code changes reach the running instances by themselves (hot reload). Claude reads the same data through its own
 read-only Grafana account (see AGENTS.md §5).
 
+## Claude's sandbox
+
+Claude works in a sandbox of its own. From your platform checkout next to this one:
+
+```
+../platform/sandbox/sandbox todo   # the app profile for this repo
+```
+
+It's a Lima VM with no host mounts: none of your folders, keys or logins. Claude clones the repo from GitHub inside,
+runs `make up` and its MCP servers against its own cluster, and its work leaves only as a pull request. Its only way
+out is an allowlisting proxy on the host; refused hosts are logged in `~/.lima/<vm>/confine.log` on your machine.
+`limactl stop <vm>` frees the memory. The details are in [PLAN.md](PLAN.md) (D81) and the platform repo's
+`sandbox/`.
+
 ## Tests
 
 ```

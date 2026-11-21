@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T14:32:53Z
+session: 9fc0313d-8ff9-4edb-b587-9400a40e77b7
+
+Run exactly: gh api /installation/repositories --jq .total_count -- and reply with only its output, or the exact error.
