@@ -1,0 +1,51 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T11:18:39Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, it's a well-known risk, and Docker documents it itself. People use sbx anyway because it addresses a different main threat, and there's a mode that avoids the risk. The Thoughtworks Radar doesn't name a most common setup at all.
+
+## Docker knows about it
+
+Docker's [workspace trust](https://docs.docker.com/ai/sandboxes/security/workspace/) page describes exactly this. In the default mode (the repo folder mounted), the agent can change files that run on your Mac later. It lists Git hooks, Makefiles, `package.json` scripts, CI files and IDE task configs, which run "when triggered by normal development actions such as committing, building, or opening the project in an IDE". It also warns that Git hooks don't show up in `git diff`.
+
+Docker's answer is one of two:
+- **Review before you run:** look at the diff and `.git/hooks/` before running anything the agent changed.
+- **Clone mode:** the agent works in a private copy, your repo is read-only, and changes come back as a branch ([Docker's blog](https://www.docker.com/blog/docker-sandbox-code-checkout-workflows/)).
+
+## Why people use it anyway
+
+The main thing a sandbox protects against is direct damage while the agent runs: deleting files, reading `~/.ssh` and your credentials, sending them out over the network. sbx stops all of that. The mount risk is the same as with a PR from anyone: you review it before you run it. Most people accept that, and the careful ones use clone mode.
+
+Our case is unusual because we want something neither mode gives: Claude running its own changes against the full platform before anyone reviews them. A direct mount is out, because your Mac would run them. Clone mode only works if the cluster runs inside the sandbox, and sbx's kernel can't run Cilium. That's why we got stuck. The problem isn't sbx's security.
+
+## What the Radar says
+
+- **Agent sandboxing, Adopt (Vol. 35, November 2026):** "a sensible default for all agents". Its advice is "a risk-based approach to sandboxing, informed by threat modeling", least privilege, and "no one-size-fits-all solution". It names no tools.
+- **Sandboxed execution for coding agents, Trial (April 2026), the earlier version:** it names Dev Containers, coding agents' built-in sandbox modes, Shuru (microVMs reset on every run), Sprites (persistent, with checkpoints), Bubblewrap and macOS `sandbox-exec`. Ephemeral or persistent is "a design decision" for each team.
+- **The pattern it highlights repeatedly is credentials added at the network edge, so the agent never sees them:** Claude Managed Agents, Omnigent and Varlock. That's what sbx's proxy does for our GitHub token, and it's the main thing we'd lose with Lima.
+- **What it doesn't cover:** there's no entry for Docker Sandboxes or Lima, and nothing on workspace mounts or on reviewing agent changes before running them on your machine.
+
+## What this means for our choice
+
+Taking the Radar's advice to threat-model, the real choice is:
+- **Claude inside a Lima VM:**
+  - Fits the Radar: a VM boundary, least privilege, persistent so it's fast, with no mounts.
+  - It costs credential injection: the 1-hour GitHub app token sits in the VM.
+- **sbx in clone mode without a cluster:**
+  - Keeps credential injection and host-name filtering.
+  - Claude can't test its changes end to end.
+
+I still recommend Lima, because seeing changes end to end is what you need from Claude. The token risk is bounded: it lasts an hour, holds only the app's rights, and can't approve or merge. If you want, I can look into whether the VM's GitHub traffic can go through a small proxy on your Mac that adds the token. That would keep the Radar's "credentials at the edge" pattern too.
+
+Sources:
+- [Thoughtworks: Agent sandboxing](https://www.thoughtworks.com/radar/techniques/agent-sandboxing)
+- [Thoughtworks: Sandboxed execution for coding agents](https://www.thoughtworks.com/radar/techniques/sandboxed-execution-for-coding-agents)
+- [Thoughtworks: Dev Containers](https://www.thoughtworks.com/radar/tools/dev-containers)
+- [Thoughtworks: Sprites](https://www.thoughtworks.com/radar/platforms/sprites)
+- [Thoughtworks: Platforms](https://www.thoughtworks.com/radar/platforms)
+- [Thoughtworks: Tools](https://www.thoughtworks.com/radar/tools)
+- [Docker: Workspace trust](https://docs.docker.com/ai/sandboxes/security/workspace/)
+- [Docker: Where should your code live in a Docker Sandbox?](https://www.docker.com/blog/docker-sandbox-code-checkout-workflows/)
+- [Docker: Security model](https://docs.docker.com/ai/sandboxes/security/)
+- [freeCodeCamp: Claude Code in a Docker sandbox](https://freecodecamp.org/news/claude-code-in-a-docker-sandbox)

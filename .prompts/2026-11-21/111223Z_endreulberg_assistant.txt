@@ -1,0 +1,32 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T11:12:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+No, not with a clone on its own. You've put your finger on what's wrong with option 2. With a clone, Claude has its own copy of the repo but no cluster to run it in. Here's what each option allows:
+
+| | Clone only (option 2) | Clone + Claude's own VM (option 1) |
+|---|---|---|
+| Build, unit tests | yes | yes |
+| Backend + Postgres in plain Docker (the sandbox has its own Docker; only kind/Cilium fails) | yes, but that's not our platform | yes |
+| `make up`: the real platform (kind, Cilium, Argo CD, the gateway, the telemetry stack) | **no** | **yes**, from Claude's clone |
+| End to end FE → gateway → backend → DB as one trace in Grafana | **no** | **yes** |
+| Grafana MCP (logs, traces, metrics), Postgres MCP with EXPLAIN ANALYZE, `pg_stat_statements` | **no** (only against your cluster, which runs your code, not Claude's) | **yes**, against its own cluster running its own changes |
+| Network policies, `make test-platform` | **no** | **yes** |
+| Your Mac runs code Claude wrote | never | never |
+
+So option 2 loses exactly what you describe: researching a feature against the real system and finding performance problems from its traces, metrics and query plans.
+
+Option 1 keeps all of that because the cluster moves with Claude:
+- `make up` from inside the sandbox drives the VM's Docker instead of your Mac's.
+- Claude's own clone gets built and deployed.
+- Its MCPs read its own Grafana and Postgres.
+- The VM can't see your files, so anything Claude plants stays contained in the sandbox or the VM.
+
+Your cluster and Claude's are separate, so you can each test without stepping on the other.
+
+The tradeoffs of option 1:
+- **Memory:** a second cluster uses about 8 GB while Claude's is running. You'd want to shut one down when it's idle.
+- **Research first:** which VM tool to use (Lima is the obvious candidate, a CNCF project) and how the sandbox reaches the VM's Docker API safely. That's the only extra door, and I'd allow exactly that port and the VM's Grafana and gateway, nothing else.
+
+So I'd go with option 1, starting with that research. Should I?

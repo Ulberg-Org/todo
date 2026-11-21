@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T12:17:29Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The spike is still running. Your Mac is free in the meantime: `make up` runs entirely inside the VM.
+
+**Part 1, our platform in a Lima VM:**
+- **Works so far:** the VM starts in 2.4 minutes with no mounts. Its kernel runs Cilium, which sbx's couldn't. The cluster, Postgres and all 12 platform applications in Argo CD came up synced and healthy.
+- **Failed first time, now fixed:** only the app failed, and the cause was a bug in our platform CLI, not in Lima. In the VM the clone belongs to your user while the CLI runs as root. Git then refuses the repo, and the CLI copied the clone's `.git` into Argo CD's snapshot, which lost its `main`. Docker Desktop had hidden this on your Mac. The fix is on #52: git trusts only the two repos the CLI is given, and a snapshot never copies `.git`.
+- **Running now:** the second run with the fix, currently at the Argo CD step. The VM is slower than your Mac for now: the first run took 16 minutes including 10 minutes of waiting, against 5.5 minutes on your Mac. I'll measure the second run before drawing conclusions.
+
+**Part 2, the network block:** `srt` can't do it on its own.
+- **Why:** the only way to let Lima listen on its SSH port also lets it connect to every port on your Mac (`localhost:*` in its profile).
+- **The design instead:** `srt`'s library (official) runs the allowlisting proxy, including its checks that refuse your Mac's and LAN addresses. Lima runs under a few lines of Seatbelt profile of our own that denies all outbound connections except the proxy port and the VM's SSH port. Inside the VM, Docker and kind go through the proxy.
+- **Caveat:** DNS lookups still go through macOS, which leaves a small, slow channel out. I'll check whether that can be closed too.
+
+**Recorded:** D81 and the TODO to check Docker Sandboxes every quarter are in PLAN v23 on todo #27.
+
+I'll test part 2 once part 1 has finished.

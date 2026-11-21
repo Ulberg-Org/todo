@@ -4,11 +4,14 @@
 # Developing the platform itself: PLATFORM=../platform/cli/platform make up (runs it from that checkout).
 PLATFORM_IMAGE := ghcr.io/ulberg-org/platform-cli:v0.2.1@sha256:a82011b80d9920fb35ee80563c5daac8784b52370f1cdbab2f0c44b2b842cd8a
 COSIGN ?= cosign
+# The machine's proxy, if it has one (Claude's sandbox, D81): empty variables pass nothing.
+PROXY := -e HTTP_PROXY -e HTTPS_PROXY -e NO_PROXY -e http_proxy -e https_proxy -e no_proxy
 SIGNED_BY := --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   --certificate-identity-regexp '^https://github\.com/Ulberg-Org/platform/\.github/workflows/release\.yml@refs/tags/v'
 PLATFORM ?= $(COSIGN) verify $(PLATFORM_IMAGE) $(SIGNED_BY) >/dev/null 2>&1 \
   || { echo "The platform CLI image isn't signed by Ulberg-Org/platform's release (is cosign installed?)" >&2; exit 1; }; \
-  docker run --rm -i -v /var/run/docker.sock:/var/run/docker.sock -v "$(CURDIR):$(CURDIR)" -w "$(CURDIR)" $(PLATFORM_IMAGE)
+  docker run --rm -i $(PROXY) -v /var/run/docker.sock:/var/run/docker.sock -v "$(CURDIR):$(CURDIR)" -w "$(CURDIR)" \
+  $(PLATFORM_IMAGE)
 KUBECTL := kubectl --kubeconfig .local/kubeconfig
 .PHONY: up sync test-platform down status
 

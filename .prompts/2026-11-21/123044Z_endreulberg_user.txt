@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T12:30:44Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+but first try to get it fully working, and then start reducing it down. Like a form of red, green refactor :)

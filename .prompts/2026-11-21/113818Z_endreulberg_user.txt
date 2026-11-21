@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T11:38:18Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) Sounds like the only way it can be then. Q2) Sounds fair enough, the simplest safe enough solution should be used. Q3) Yes! Q4) Uncertain about if the Platform VM should contain the todo app, that should maybe be optional? Q5) Sure. Q6) Ok, that is fine. Q7) Yes, that is ok. Q8) Yes

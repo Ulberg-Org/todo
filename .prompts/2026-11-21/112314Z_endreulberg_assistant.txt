@@ -1,0 +1,70 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T11:23:14Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Lima it is. Per the grill-before-building rule, one round first: switching to Lima opens new decisions. The biggest is in Q1: inside the VM Claude needs Docker, and Docker access means root in the VM. So a firewall *inside* the VM is only advisory, and the network limit has to sit outside it.
+
+❓ **Q1 - Where the network limit sits**:
+- In the VM Claude can do anything, including changing iptables through a privileged container (kind needs those). So egress must be enforced on your Mac.
+- The VM gets its own network (Lima's `vzNAT`). macOS's firewall (`pf`) lets it reach only one place, a small proxy on your Mac. The proxy allows the host names on the D78 allowlist (it checks the host each HTTPS connection asks for) and blocks the rest.
+- Claude can't touch either one. Setting up `pf` needs `sudo` on your Mac once.
+
+➡️ Yes: `vzNAT` + `pf` + an allowlisting proxy on your Mac. Before building I'd research which proxy, under the supply-chain rule.
+
+---
+
+❓ **Q2 - The GitHub token**:
+- Adding the token on the way out, as sbx does, means decrypting the traffic in the proxy (a CA certificate trusted by the VM). That's building our own sbx.
+- Instead, your Mac mints the app's 1-hour token and copies it into the VM, renewing it while the VM runs. It can push branches and open PRs, never approve or merge.
+
+➡️ Yes: the token inside the VM, and no decrypting proxy for now.
+
+---
+
+❓ **Q3 - The repo and the way out**:
+- None of your folders are mounted.
+- Claude clones the repo from GitHub inside the VM and runs `make up` there from its own clone. Its work leaves only as a PR (`claude-push`), which you review before anything of it runs on your Mac.
+
+➡️ Yes.
+
+---
+
+❓ **Q4 - One persistent VM per profile**:
+- An app VM (clones todo) and a platform VM (clones platform and todo, since it needs todo for `make up`).
+- Each keeps its cluster between sessions, so the 5-minute fresh `make up` is rare. About 4 CPUs, 10 GB and 60 GB of disk while running; `limactl stop` when idle frees the memory.
+
+➡️ Yes.
+
+---
+
+❓ **Q5 - Tools in the VM**:
+- Ubuntu (Lima's template, image pinned by digest).
+- Docker from Docker's official apt repo, and Nix with the repo's flake `packages.tools` (D79), so the tools are the same as yours.
+- Claude runs as a user in the `docker` group; there's no point withholding `sudo`, see Q1.
+
+➡️ Yes.
+
+---
+
+❓ **Q6 - Claude Code sign-in**:
+- `/login` once per VM. It persists, because the VM does.
+
+➡️ Yes.
+
+---
+
+❓ **Q7 - Azure in the platform profile**:
+- Claude's agent account needs a passkey sign-in, which won't work inside a VM.
+- There's nothing in Azure for it to read locally until Phase 3.
+
+➡️ Yes: defer it to Phase 3, recorded as a TODO.
+
+---
+
+❓ **Q8 - What happens to the sbx work**:
+- The sbx files on #52 (`setup.sh`, `Dockerfile`, `github-token`, the launcher) are replaced on the same branch.
+- The escape tests stay, rewritten for the VM, and add one more check: "the VM can't reach the internet except through the proxy".
+- I'd keep the fixed API port 9877, which is useful anyway.
+
+➡️ Yes.

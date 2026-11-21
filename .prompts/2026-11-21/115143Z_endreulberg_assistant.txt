@@ -1,0 +1,32 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T11:51:43Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+No. Anthropic's docs have no suggested setup for our combination: Claude cut off from your Mac, a network allowlist, and its own Docker for a kind cluster. Their [sandbox environments](https://code.claude.com/docs/en/sandbox-environments) page lists the options, and each falls short for us in one place:
+
+| Anthropic's option | Cut off from your Mac | Allowlist | Its own Docker for kind | Gap for us |
+|---|---|---|---|---|
+| **`/sandbox`** (built into Claude Code) | partly: shell commands only, and it can read `~/.ssh` | yes | no: "`docker` is incompatible", it must be excluded and then runs "with your full access" | Docker |
+| **`srt claude`** (sandbox runtime, "a beta research preview") | yes, but on your Mac's own kernel | yes | not addressed; it could only use your Docker Desktop, which is full access to your Mac | Docker |
+| **Dev container** (reference config in `anthropics/claude-code`) | yes | yes (`init-firewall.sh`) | not mentioned; kind would need a privileged container, which lifts the firewall | Docker |
+| **Docker Sandboxes** (they name it as the VM option) | yes, a microVM | yes | **yes**: "a microVM with its own Docker daemon" | the kernel can't run Cilium (what we hit) |
+| **Cloud sessions** (Claude Code on the web) | entirely: Anthropic's VM, nothing on your Mac | yes | Docker is installed; kind and Cilium aren't mentioned | a fresh VM every session (a full `make up` each time); their GitHub app, not ours |
+
+So Anthropic's own answer to "a VM with its own Docker" is Docker Sandboxes, which is where we started. Its only problem for us is the kernel. Their secure-deployment guide says the same in general terms: "if you need kernel-level isolation, use gVisor or a separate VM", and "Claude Code … runs inside the isolation boundary".
+
+That leaves two paths:
+1. **Lima plus `srt` (my recommendation):** our own VM with a kernel that runs Cilium, which is the "separate VM" Anthropic points to. `srt` then limits that VM's network. Both are recognised building blocks, but the combination is ours, hence the spike.
+2. **Docker Sandboxes, if Docker fixes the kernel:** I'd report the missing kernel options to Docker either way. If they add them, we can switch back with little loss, since the launcher, tests and allowlist carry over.
+
+Cloud sessions are tempting because they use nothing on your Mac. But a fresh VM every session means a 5-minute `make up` each time, and they push as Anthropic's GitHub app instead of `ulberg-claude[bot]`, which breaks D52. Not worth it now.
+
+Shall I run the Lima plus `srt` spike? Q4 is still open as well: does `sandbox platform --app todo` work for you?
+
+Sources:
+- [Claude Code: sandbox environments](https://code.claude.com/docs/en/sandbox-environments)
+- [Claude Code: sandboxing](https://code.claude.com/docs/en/sandboxing)
+- [Claude Code: dev container](https://code.claude.com/docs/en/devcontainer)
+- [Claude Code: secure deployment](https://code.claude.com/docs/en/agent-sdk/secure-deployment)
+- [Claude Code on the web](https://code.claude.com/docs/en/claude-code-on-the-web)
+- [Claude Code: cloud environments](https://code.claude.com/docs/en/cloud-environments)
