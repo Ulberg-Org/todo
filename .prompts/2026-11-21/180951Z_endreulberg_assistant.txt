@@ -1,0 +1,18 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T18:09:51Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+No. They're two layers, and Phase 4 connects them:
+
+| | `start` (Pulumi, Phase 3) | Argo CD (Phase 4) |
+|---|---|---|
+| Builds | the **Azure infrastructure**: network, AKS (the cluster itself), Postgres, identities and access | **what runs in the cluster**: the platform's components (gateway, telemetry, …) and the apps (todo's backend) |
+| From | `stacks/environment` (F#) | the git repos: `platform.yaml`, `components/` and the environment files, through the renderer |
+| When | once per start, behind your approval; `destroy` removes it after 4 hours | all the time while the cluster runs: it keeps the cluster in sync with git |
+
+It's the same split as locally (D67):
+- **Locally:** `make up` creates kind, installs Cilium and **Argo CD with the root application**. Argo CD then deploys everything else from git.
+- **In Azure:** `start` creates AKS, which brings Cilium. In Phase 4, `start` also installs **Argo CD with the same root application**, and Argo CD does the rest, as locally.
+
+So after Phase 3, `start` gives you an empty but complete cluster with its database. After Phase 4, a single `start` gives you dev running the app, and every merge to `main` reaches the cluster through Argo CD, with nobody touching the cluster.

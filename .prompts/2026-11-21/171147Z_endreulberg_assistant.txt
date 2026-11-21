@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T17:11:47Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Increment 2a is ready for your review: **platform #59, the dev environment stack.** It was developed in the sandbox: the build, format and style checks and all tests (Environment 8/8, Access 58, Shared 6, Renderer 20) ran in the VM. CI's preview is green with 23 resources:
+
+| Part | What |
+|---|---|
+| Network | VNet `10.20.0.0/16`. The database subnet accepts only 5432 from the nodes and denies the rest; the nodes accept only 80/443 from the internet. Private DNS for Postgres |
+| AKS | Free, Kubernetes 1.37, 2 × `D2ps_v5` (ARM), no public node IPs, Cilium overlay, Entra RBAC, no local accounts, workload identity |
+| Access (Entra groups) | `platform-read` and `platform-agents`: Cluster User and RBAC Reader. `platform-write` (PIM): Cluster Admin. App developers: nothing |
+| Postgres | 18 on B1ms, private only, Entra only. Its admin is the managed identity `id-db-admin-dev` |
+| CI | its own preview job for environments, part of the required gate, never applied by `pulumi.yml` |
+
+Merging #59 creates nothing in Azure: environments come only through `start`.
+
+**Next, in order:**
+- **Increment 3:** the `start` workflow (behind your approval) and the scheduled `destroy` (after 4 hours). With those, dev can actually be built and torn down.
+- **Increment 2b:** the database roles Job in AKS, the same `database.sql` with Entra principals.
+- **Then:** the sandbox's read-only Azure token, and the done-when access tests.

@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T18:16:53Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+`start` is running, and I'll report when it's done. In the meantime, two things for you:
+- **Delete the manual budget**, `Ulberg_Platform_Bugdet` (PIM `platform-write`, then Cost Management → Budgets), so the one in code (500) is the only one.
+- **Promote #61's apply**, which makes `workflow guard` a required check: <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml>

@@ -1,0 +1,24 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T18:42:12Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The screenshot shows both budgets still there. **`Ulberg_Platform_Bugdet` (200) still has to be deleted**: tick it in that list, then "Delete" (you'll see the button with `platform-write` active in PIM). It does confirm ours works: `platform-monthly`, NOK 500.
+
+**Why `start` hangs:** our subscription has a vCPU quota of **0** for the ARM family we chose (`DPSv5`), so Azure won't create the nodes, and AKS keeps retrying. The quotas in Sweden Central:
+
+| ARM family | Quota | Price (2 vCPU) | Note |
+|---|---|---|---|
+| `DPSv5` (D2ps_v5, chosen) | **0** | 0.082 USD/h | blocked |
+| `Dpsv6` | 10 | — | the size isn't offered to us here |
+| **`dpsv7`** (D2ps_v7) | **10** | 0.127 USD/h | offered **and** has quota |
+
+**Options:**
+- **(a) Switch to `D2ps_v7` now:** it works right away. About 220 NOK a month instead of 140, still within the 500 budget. It's also newer and faster.
+- **(b) Keep `D2ps_v5` and request quota:** a portal request for 4 vCPUs in the DPSv5 family, often approved within minutes, but sometimes a manual case.
+
+I'd take **(a)**: one line in `Pulumi.dev.yaml`, no waiting for Microsoft, and the difference is about 80 NOK a month. Shall I?
+
+**Cleaning up the stuck run (your steps, since I can't cancel or start runs):**
+1. **Cancel the `start` run:** <https://github.com/Ulberg-Org/platform/actions/runs/44933967937> → "Cancel workflow".
+2. **Destroy what was half built.** Postgres is running, and costs a little. Either run **destroy** by hand (input `dev`, no approval needed): <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>. Or let the scheduled `destroy` remove it on its own around 22:16, 4 hours after the start.

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T18:11:19Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+No, i mean like for the application, not for the platform, sorry, I think you are right, promotion for infra can for now stay as a click. But the apps is merge to main via ArgoCD

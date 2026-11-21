@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T18:05:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I opened **platform #61**: the guard that only lets `destroy.yml` use the `teardown` door. It's built to be hard to get around:
+
+| Way around it | Why it doesn't work |
+|---|---|
+| The PR edits the check so it passes | `guard.yml` runs on `pull_request_target`, so it always uses **`main`'s** copy of the workflow and the script. The PR's files are only read as data, never run. The job has no secrets and only read rights, which is what makes `pull_request_target` safe here. |
+| The PR removes the check or skips it | `workflow guard` becomes a **required check** in the ruleset. Changing the ruleset itself takes an `access` apply, which needs your approval. |
+| The PR hides the name (`{ name: teardown }`, `${{ … }}`) | It parses YAML instead of searching text. The map form is caught, and any environment named by an expression is refused outright. |
+| Another workflow calls `destroy.yml` | Refused: `destroy.yml` may not have `workflow_call`. |
+| A file the check can't read | Fails the check instead of being skipped. |
+
+All six cases are tested in CI, and the tests ran in the sandbox. Our real workflows pass.
+
+**Order:** this PR doesn't get the guard itself, because `main` doesn't have `guard.yml` yet. After it's merged and the `access` apply has run, every later PR needs it.
+
+**For you, in order:**
+1. **Promote the apply waiting for #59 and #60** (the budget's recipients, the `teardown` environment and its federation): <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml>
+2. **Approve #61.** After I merge it, promote its apply too, which makes the guard required.
+3. **Then run `start` (`dev`) and approve it:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>. That's the first real build of dev.
