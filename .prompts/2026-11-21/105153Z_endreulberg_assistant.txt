@@ -1,0 +1,30 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T10:51:53Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I took "keep going" as a yes to option A, so the cluster stays on your Mac (recorded as D80 in PLAN v22). Claude's Azure session has expired, so I can't publish anything until you sign in again. Run this in your own terminal and sign in as the agent with its passkey:
+
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant <tenant-id>
+```
+
+**Your cluster** is back after the full disk: a fresh `make up` (4.5 minutes) and the network checks pass. It has a new Grafana token for Claude, so reconnect the MCP servers with `/mcp`.
+
+**What changes with option A:**
+- **Repo:** the sandbox mounts your repo folder instead of a private clone, so your cluster reloads Claude's edits. Without the cluster it needs only 2 CPUs and 4 GiB instead of 4 and 10.
+- **Your Mac:** the sandbox can reach only Grafana (9876) and the gateway (9875). The launcher adds these two rules for each sandbox. Postgres, the Kubernetes API and SSH get a 403.
+- **Grafana MCP:** it works from inside the sandbox with the checked-in `.mcp.json` and signs in as the `claude` service account. The only change to `.mcp.json` passes the sandbox's proxy settings, which are empty on your Mac.
+- **Image build:** it now gets only `flake.nix` and `flake.lock`, no longer the whole repo with `.local`.
+- **Escape tests:** all 9 pass, including the two new ones for your Mac's other ports.
+
+**Waiting to be published (committed locally):**
+- platform branch `sandbox`: the launcher, image and tests. After your sign-in I'll publish it, open its PR, and rerun the launcher fully. The run stopped at the token step, and `sandbox/test` still needs a real token to check the GitHub access.
+- todo `flake` (#27): PLAN v22 and `.mcp.json`.
+
+Still waiting for your approval: todo #26 and #27, platform #49, #50 and #51.
+
+**Left before Phase 2.5 is done:**
+- **Opening PRs from the app sandbox:** Claude can't do it yet. `claude-push.sh` (the signed commit through the API) is in the platform repo, and only todo is mounted there. I'd add it to the image.
+- **The platform profile:** read-only Kubernetes for Claude and Azure through a proxy on your Mac.
+- **One real task done end to end** in each profile.

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T11:02:36Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+You need to make a way for Claude to access as the bot itself, not as me

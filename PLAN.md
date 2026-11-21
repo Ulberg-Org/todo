@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v21 (2026-11-21, Phase 2.5 grilled: D76–D79).** Phase 2 done; next Phase 2.5, the sandbox for Claude. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
+> **Status: v22 (2026-11-21, D80: the cluster stays outside the sandbox).** Phase 2 done; Phase 2.5, the sandbox for Claude, in progress. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -187,6 +187,7 @@ Pulumi (F#) turns this into:
 | D77 | **Two sandbox profiles, picked by the repo the session opens in, allowed by `access/people.yaml`.** **App** (a session in an app repo): that repo only; `make up` runs the full app and platform locally (the CLI image); Claude reads Grafana (all telemetry) and the app's database read-only locally, and in the cloud the app telemetry the developer may see. **Platform** (a session in the platform repo, only for `infra-developers`): platform and apps; also the CLI from the checkout and the read-only Kubernetes MCP locally, and in the cloud what the developer's agent identity may read (D41). Anyone else asking for the platform profile is refused | msg 2026-11-21 |
 | D78 | **The sandbox is Claude's, not the developer's.** Nothing personal enters: not the home folder, keys, browser, or the developer's `gh`/`az`/git identity. It's named after Claude's identity (`<name>-agent`) and commits as `ulberg-claude[bot]`; tokens are minted on the developer's machine and passed in for one session (GitHub 1 h; Azure through a host-side proxy, platform profile only). Network is deny by default: GitHub, the image registries, NuGet, npm, the Helm repos, grafana.com and its storage, Anthropic's API (so Claude Code's web search works), and our own local and cloud environments. No other `curl` or page fetches | msg 2026-11-21 |
 | D79 | **Each repo defines its tools in a `flake.nix`**: todo's (Docker, cosign, .NET), the platform's (also kind, kubectl, helm, Pulumi, az). The sandbox image is built from it and developers can use the same (`nix develop`), so Claude and people have the same versions | msg 2026-11-21 |
+| D80 | **The local cluster runs on the developer's machine, not in the sandbox.** The sandbox's kernel (Docker's, not ours to change) lacks what Cilium needs (policy routing, `NET_CLS_BPF`), and swapping Cilium out would make local unlike AKS. So the developer runs `make up` and `make test-platform`; the sandbox mounts the repo folder (not a clone, so the cluster reloads Claude's edits) and reaches only the developer's Grafana (9876) and gateway (9875), per sandbox. Revisit when the sandbox kernel supports Cilium | msg 2026-11-21 |
 
 ## 4. Sign-off and bootstrap
 
@@ -418,8 +419,8 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 ### Phase 2.5: A sandbox for Claude (D76–D79)
 - `flake.nix` in todo and in the platform repo (D79); the sandbox images built from them.
 - Docker Sandboxes with the two profiles (D77): the repo picks the profile, `access/people.yaml` allows it. A host-side helper starts a session, mints Claude's tokens and passes them in (D78).
-- Network deny by default with the allowlist (D78); a private Docker inside the sandbox for `make up`.
-- **Done when** Claude completes one task end to end inside the sandbox (code, `make up`, tests, a PR) in each profile, and from inside these fail: reading the developer's home folder or `~/.ssh`, `curl` to a host not on the allowlist, pushing with the developer's GitHub account, and asking for the platform profile without being in `infra-developers`.
+- Network deny by default with the allowlist (D78); of the developer's machine only Grafana and the gateway (D80). A private Docker inside the sandbox for builds and the MCP servers.
+- **Done when** Claude completes one task end to end inside the sandbox (code, tests, reading its effect in Grafana from the developer's `make up` (D80), a PR) in each profile, and from inside these fail: reading the developer's home folder or `~/.ssh`, `curl` to a host not on the allowlist, pushing with the developer's GitHub account, and asking for the platform profile without being in `infra-developers`.
 
 ### Phase 3: Azure foundation (Pulumi F#, applied only by CI after approval)
 - Agents (D41) get AKS RBAC Reader and the DB read-only role as those resources appear.
