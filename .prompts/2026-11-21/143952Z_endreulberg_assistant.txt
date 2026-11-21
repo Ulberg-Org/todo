@@ -1,0 +1,14 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:39:52Z
+session: 340099c1-7e8c-4bf6-8e3e-021dcb83738a
+
+Status so far:
+
+1. **Branch:** done. `main` pulled up to `3948b41`, and `sandbox-readme` is created.
+2. **README:** the "Claude's sandbox" section is written. It covers the start command, that the VM has no host mounts, that the proxy is its only way out with refused hosts in `~/.lima/<vm>/confine.log`, and that the details are in PLAN D81.
+3. **Tests:**
+   - **Backend:** `dotnet test` in `backend/` exits 0 but runs no tests. The test project is a plain Expecto program with no test adapter, so `dotnet test` finds nothing to run. Running it the way CI and the README do (`dotnet run --project backend/test/TodoBackend.Test`) passed all 6 tests. Because `dotnet test` can look green while testing nothing, I'll flag this in the PR. I won't fix it on this branch.
+   - **`make up`:** still running in the background. I'll be notified when it finishes, then run `make test-platform`.
+
+Steps 4 and 5 come after `make up`. One thing to know for step 4: the Postgres MCP server had already timed out at session start. That's expected before the cluster and database exist; after `make up` you'll need to reconnect both MCP servers with `/mcp`.

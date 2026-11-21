@@ -1,0 +1,21 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T14:39:52Z
+session: 340099c1-7e8c-4bf6-8e3e-021dcb83738a
+
+
+
+<pasted_content id="6047">
+  This is the Phase 2.5 end-to-end test of your sandbox (PLAN.md, D81). Do one small real task end to end:                                                                             │
+                                                                                                                                                                                       │
+  1. git checkout main && git pull, then create a branch `sandbox-readme`.                                                                                                             │
+  2. Add a short section "Claude's sandbox" to README.md: how a developer starts it                                                                                                    │
+     (../platform/sandbox/sandbox <app repo>), that it's a Lima VM with no host mounts whose only way out is                                                                           │
+     an allowlisting proxy (refused hosts in ~/.lima/<vm>/confine.log on the host), and where the details live (PLAN D81).                                                             │
+  3. Run `make up`, then `make test-platform`, and the backend tests (`dotnet test` in backend/).                                                                                      │
+  4. Reconnect the MCP servers (/mcp), then through the Grafana MCP confirm the backend's logs and traces arrive,                                                                      │
+     and through the Postgres MCP run one EXPLAIN ANALYZE on a query against the todo database.                                                                                        │
+  5. Commit, publish with ../platform/scripts/claude-push.sh, and open a PR with gh.                                                                                                   │
+                                                                                                                                                                                       │
+  Report each step's result, and anything that was refused or failed.                                                                                                                  │
+</pasted_content id="6047">
