@@ -1,0 +1,77 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T15:59:51Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Facts gathered from PLAN and the repos:
+- **What exists:** the `access` and `shared` stacks are in Sweden Central. `shared` holds ACR so far, and Key Vault `kv-platform-…` exists, holding the GitHub app's key. `environments/dev.yaml` exists.
+- **What's decided:**
+  - **D45:** environments run on demand, are destroyed after 4 hours, and the persistent parts live in `shared`.
+  - **D53:** stack order.
+  - **D56:** ARM nodes and Postgres 18.
+  - **D67:** Pulumi bootstraps Argo CD in Phase 4.
+  - **D69:** the database credentials come from Entra.
+  - **D70:** the VNet is 10.20.0.0/16, with the database subnet at 10.20.2.0/24.
+  - **D75:** who reaches the database.
+
+Phase 3 as written in PLAN is large, so the first round is mostly about doing less, per "Be lazy".
+
+❓ **Q1 - Scope: dev only, auth apps later**: PLAN's Phase 3 lists a lot: workforce groups, External ID app registrations, workload identities, VNet, DNS, Key Vault, AKS, Postgres, on-demand start/destroy and the persistent parts. Should Phase 3 build only what **dev** needs to run the app (network, AKS, Postgres, the identities those need, start/destroy)? `prod` would wait for Phase 6b, and the External ID app registrations for Phase 6 (auth), where they're actually used.
+
+➡️ Yes: dev only. External ID moves to Phase 6, prod to 6b.
+
+---
+
+❓ **Q2 - On demand from the start**: D45 has environments start through a workflow (your approval) and get destroyed automatically after 4 hours. Should Phase 3 build that right away, so dev never runs (or costs) longer than 4 hours, and every start proves it rebuilds from code?
+
+➡️ Yes: `start` and the scheduled `destroy` workflows are part of Phase 3.
+
+---
+
+❓ **Q3 - AKS: plain and cheap**: AKS on the **Free** tier (no fee for the control plane), with **one node pool of 2 ARM nodes** (`Standard_D2ps_v6`, D56), so the backend's two instances sit on different nodes (D57). Plus Azure CNI overlay with Cilium (managed by Azure, the same network as locally), workload identity, Entra RBAC and no local accounts.
+
+The alternative, AKS Automatic, manages nodes and upgrades for us ("a level up"). But it requires the paid Standard tier and at least 3 system nodes, which is more cost than this project needs, and upgrades matter less for an environment that's rebuilt every time.
+
+➡️ Yes: plain AKS, Free tier, 2 × `D2ps_v6`.
+
+---
+
+❓ **Q4 - Postgres: smallest, private, per environment**: Postgres Flexible Server 18 on **Burstable B1ms**, private access only (a delegated subnet in the VNet, D70), Entra-only authentication (D69) with the migrator, app and read-only identities. It's created and destroyed with the environment, so the data is seed data (D45). Creating it takes about 5 to 10 minutes per start.
+
+➡️ Yes: B1ms, private, Entra-only, rebuilt each start.
+
+---
+
+❓ **Q5 - Region**: Should everything go in **Sweden Central**, where `shared` and ACR already are, rather than Norway East? Keeping it to one region keeps it simple, and Sweden Central offers the ARM sizes.
+
+➡️ Yes: Sweden Central.
+
+---
+
+❓ **Q6 - Public entry: address now, TLS in Phase 4**: D45's static IP and DNS label per environment (persistent, in `shared`) are created in Phase 3. The gateway (Envoy Gateway, as locally) gets that IP when Argo CD deploys it in Phase 4. HTTPS (cert-manager with Let's Encrypt on the DNS label) also comes with Phase 4, since the app has no public endpoints yet (D73).
+
+➡️ Yes: IP and label now, TLS in Phase 4.
+
+---
+
+❓ **Q7 - No new Key Vault until a secret needs one**: With Entra workload identities, dev needs no secrets: the database token comes from Entra, and images come from ACR with the cluster's identity. The existing Key Vault stays for the GitHub app's key. Should we skip a per-environment Key Vault until something actually needs a secret?
+
+➡️ Yes: no new Key Vault in Phase 3.
+
+---
+
+❓ **Q8 - Telemetry storage waits for Phase 5**: D45 lists telemetry storage as persistent, but nothing writes to it until Phase 5 (Loki, Tempo and Prometheus on Azure). Should it wait until then?
+
+➡️ Yes: Phase 5.
+
+---
+
+❓ **Q9 - A cost guard**: Besides the 4-hour destroy, a monthly **budget alert** in Cost Management (in `shared`), mailing the platform alert list (D40) at 50%, 80% and 100%. What amount, roughly? I'd suggest about 500 NOK per month for 4-hour dev runs.
+
+➡️ Yes: a budget alert, 500 NOK per month (or your amount).
+
+---
+
+❓ **Q10 - Claude and Azure in the sandbox**: D81 deferred Azure for the platform sandbox to Phase 3. Claude's agent account needs a passkey sign-in, which won't work in the VM. The lazy option, as for GitHub: the launcher fetches a 1-hour Azure token on your Mac (`az account get-access-token` as the agent, Reader rights only) and copies it into the VM, renewing it like the GitHub token. Claude then reads Azure's API with it. Should we do that, rather than keeping Azure out of the sandbox?
+
+➡️ Yes: a 1-hour read-only token copied in and renewed, like GitHub's.

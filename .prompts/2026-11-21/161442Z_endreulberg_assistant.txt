@@ -1,0 +1,47 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T16:14:42Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Round 3. Q15's answer opens a new branch, and Q14 needs a clearer explanation.
+
+❓ **Q20 - Database roles (Q14 again, with the alternatives)**: the database is private, so whatever creates its roles has to run inside the VNet. The options:
+- **(a) A Kubernetes Job in AKS** (my recommendation). Pulumi starts it as part of the bootstrap, as the server's Entra admin (a managed identity). It runs the same `database.sql` as locally, with Entra principals instead of passwords. It's the same as locally, where the CLI also creates the roles itself.
+- **(b) An Azure "deployment script":** a container that Azure starts in the VNet for us. It's native to Azure, but it's another Azure service with its own storage account and identity.
+- **(c) Open the database's public access during each apply** to CI's IP. That's brittle (runner IPs change) and weaker, since the database is briefly public.
+
+➡️ Yes: (a), since it's the least machinery and the same SQL and roles as locally.
+
+---
+
+❓ **Q21 - Database access from your Mac without Bastion (nvim DBUI)**: a small proxy pod in AKS (`db-proxy`, plain TCP to the database) and a command `platform db dev`:
+1. It opens `kubectl port-forward` to that pod on `localhost:5432`.
+2. It fetches your Entra token for Postgres (`az account get-access-token --resource-type oss-rdbms`), which lasts an hour.
+3. It prints the URL for DBUI: `postgres://<you>@localhost:5432/todo?sslmode=require`, with the token as the password.
+
+Run it in another pane and DBUI connects through it.
+
+**All controlled through Entra:**
+- The port-forward is allowed by an Azure RBAC role on that one pod, given to the Entra groups.
+- The database role follows the group: developers read-only, platform leads read-write (D75).
+- Nothing in it is public, and there are no passwords.
+
+➡️ Yes.
+
+---
+
+❓ **Q22 - Claude and the cloud database**: Locally, Claude has the Postgres MCP. In Azure the same path (port-forward plus token) would work from your Mac, but not from the sandbox, which has no way into AKS. Should Claude's cloud database access wait for Phase 5, when Azure is plugged into the same MCP contract (D58)? Until then, Claude reads the cloud database's metrics and query statistics through telemetry.
+
+➡️ Yes: Phase 5.
+
+---
+
+❓ **Q23 - The strictest feasible network (Q13)**: concretely:
+- no public IPs on nodes, outbound only through AKS's load balancer;
+- NSGs on both subnets: the database subnet accepts only 5432 from the node subnet, and the node subnet accepts nothing from the internet except the gateway's ports (80/443) to its static IP;
+- inside the cluster, the same default-deny Cilium policies as locally (the baseline, the per-app rules);
+- the database without public access, at a private DNS name.
+
+Not included: Azure Firewall for filtering outbound traffic (about 9,000 NOK a month, against our 500 NOK budget). Outbound traffic is limited by Cilium's policies inside the cluster instead (world:443 only, per component).
+
+➡️ Yes: this is the strictest we can do within the budget.

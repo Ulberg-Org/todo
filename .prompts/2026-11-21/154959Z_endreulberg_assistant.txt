@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T15:49:59Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Phase 2.5 is done. The sandbox passed its final test in both profiles:
+
+| Profile | Task, done by Claude inside the sandbox | Result |
+|---|---|---|
+| **App** (`sandbox todo`) | README section; `make up`, `make test-platform`, tests; Grafana MCP (1,076 log lines, 501 traces) and Postgres MCP (EXPLAIN ANALYZE); verified PR | todo #28, merged |
+| **Platform** (`sandbox platform --app todo`) | Kubernetes MCP: pods without a memory limit; Grafana sized from its real use and limited; `make sync`; checked Running; verified PR | **platform #56** |
+| Escape tests | nothing mounted; no way out even as root; your Mac, the LAN and non-allowlisted hosts refused; GitHub only as the app; platform profile refused to non-infra developers | 10/10 |
+
+PLAN v24 marks Phase 2.5 done (on todo #30).
+
+**Waiting for your approval:**
+- **platform #55**, the fixes this test turned up:
+  - nothing in the sandbox asks you anything anymore;
+  - the Nix tools clash is fixed;
+  - Node.js is in the platform tools, for the Kubernetes MCP;
+  - the Grafana and Postgres MCPs for platform work;
+  - you're the commit author in the VM.
+- **platform #56:** the sandboxed Claude's Grafana memory limit.
+- **todo #30:** the AGENTS rules ("Be lazy", "Text in files"), CLI v0.2.4, and PLAN v24.
+
+Once they're merged, the next step is grilling Phase 3 (Azure foundation). To free memory in the meantime: `limactl stop endre-agent-platform`.

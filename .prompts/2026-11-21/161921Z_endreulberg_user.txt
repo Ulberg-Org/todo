@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T16:19:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q20) A) Q21) Ok, that sounds good, since it is almost like Teleport. Q22) Yes, but remember that Sandbox Claude is only for development. But non-sandbox Claude on my computer should be able to get into Azure and databases via the fact that I am in the infra group or the app developer group. Q23 Ok
