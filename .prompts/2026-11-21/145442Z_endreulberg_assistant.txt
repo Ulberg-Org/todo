@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:54:42Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+You were right to ask. The full test passes now: Claude Code inside the VM, using the new `.mcp.json`, queried the backend's real logs and traces through the Grafana MCP.
+
+| Check | Result |
+|---|---|
+| **Loki** (`service_name="backend"`, last 30 min) | 1,076 log lines. Example: `GET …:8081/health/ready - 200 … 5.09ms`, carrying trace ID `7381df01…` |
+| **Tempo** (`resource.service.name="backend"`) | 501 traces. Example `58575c2c…`, root span `GET /health/live` |
+
+All of those traces are the health probes. The public API has no endpoints yet (D73), so the only traffic is the probes on the management port.
+
+So the app profile passes its end-to-end test in full, Grafana MCP included, with the fixes from platform #53 and todo #29. The VM's test worktree is removed again.
+
+The next steps are unchanged:
+1. You approve #53, #29 and #28.
+2. I merge them and release CLI v0.2.3.
+3. Then the platform profile's test.

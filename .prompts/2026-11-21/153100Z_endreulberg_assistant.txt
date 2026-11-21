@@ -1,0 +1,14 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T15:31:00Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Fixed. Both repos' tool sets include .NET, and Nix refused to install the same files twice. The platform's tools already contain todo's (.NET and cosign), so the launcher now installs only the profile's own repo's tools. Run with a clean environment, the launcher gets through to the end. The fix is on platform #55.
+
+Run it again; it attaches Claude this time:
+
+```
+~/Github/Private/platform/sandbox/sandbox platform --app todo
+```
+
+Then `/login` once, and paste the task prompt from before (the `footprint-limits` one). My watch on the VM is still running.

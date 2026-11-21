@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T15:48:03Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Seems like you need the grafana mcp? is there other mcps that should be there for platform work?

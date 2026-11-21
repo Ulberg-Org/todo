@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T15:24:49Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Two prompts appeared at your launch, and neither left the VM unconfined:
+
+- **"Do you want to start the instance now?"**: that question came from Lima. The VM was still started confined: Lima's host process runs under `confine.mjs`, and even as root a direct connection out is refused.
+- **"Username for 'https://github.com':"**: the launcher was cloning `Ulberg-Org/todo.`, with a trailing dot. GitHub answers a missing repo by asking for a login.
+
+**Both fixed in platform #55:**
+- Lima gets no terminal to ask in.
+- git never prompts. An unknown repo now fails at once with "Ulberg-Org/… isn't a repo Claude's GitHub app can read", which I tested.
+
+**What to do now:** press Ctrl-C in your terminal, then run it again without the dot:
+
+```
+~/Github/Private/platform/sandbox/sandbox platform --app todo
+```
+
+It reuses the running VM, clones todo, and attaches Claude. Run `/login` there once, then paste the task prompt from before. My watch on the VM is still running, so I'll see its progress.
+
+Waiting for your approval: **todo #30** (the AGENTS rules and CLI v0.2.4) and **platform #55**.

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T15:03:25Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+but the simple thing is important, less code means less to maintain. oftentimes it is ideal to lift the problem one level up, backend -> infra f.ex and make a simpler solution on the level above

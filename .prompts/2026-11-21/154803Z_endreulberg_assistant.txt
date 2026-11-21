@@ -1,0 +1,10 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T15:48:03Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Added to platform #55. Claude's platform sessions now get Grafana and Postgres as well, read-only, against the local cluster, just as in todo.
+
+The running test won't see that yet: its checkout of the platform repo is from `main`, and I'm leaving its working tree alone. It doesn't need it for this task. The Kubernetes MCP shows each pod's resource use, which is enough to size the limit. Judging by its working tree, it has already chosen Grafana (`components/grafana/values-local.yaml` is modified).
+
+Once `make up` is done, reconnect `kubernetes` in `/mcp`. Waiting for your approval: platform #55 (no prompts, the tools clash, Node.js, and these MCPs) and todo #30.

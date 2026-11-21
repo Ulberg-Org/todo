@@ -1,0 +1,31 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T15:31:00Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+
+
+<pasted_content id="3c6e">
+~ >  ~/Github/Private/platform/sandbox/sandbox platform --app todo                                                       INT 16:26:33
+error: An existing package already provides the following file:
+
+         "/nix/store/fz5342srkrdvxz78f5k7vqhsqf4bwi55-platform-sandbox-tools/bin/dnx"
+
+       This is the conflicting file from the new package:
+
+         "/nix/store/8d9n8xmp2jlx3v97slcsvy15v2vqjxma-todo-sandbox-tools/bin/dnx"
+
+       To remove the existing package:
+
+         nix profile remove tools
+
+       The new package can also be added next to the existing one by assigning a different priority.
+       The conflicting packages have a priority of 5.
+       To prioritise the new package:
+
+         nix profile add git+file:///home/endreulberg.guest/todo#packages.aarch64-linux.tools --priority 4
+
+       To prioritise the existing package:
+
+         nix profile add git+file:///home/endreulberg.guest/todo#packages.aarch64-linux.tools --priority 6
+</pasted_content id="3c6e">
