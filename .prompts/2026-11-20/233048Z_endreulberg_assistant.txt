@@ -1,0 +1,28 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T23:30:48Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Phase 2.5 has started. Done so far:
+- **Plan:** merged (todo #25: Phase 2 done, Phase 2.5 grilled).
+- **`sbx` on your Mac:** Docker Sandboxes v0.54.0, installed through your flake.
+- **One-time setup** (`sandbox/setup.sh`, on the platform branch `sandbox`): every sandbox is deny-all with D78's allowlist (26 hosts), and SSH forwarding is off.
+- **Both flakes** are written. The todo one is still downloading its tools in the background for its first test.
+
+**What I can't do myself:** start the first sandbox. `sbx run` opens an interactive Claude inside the sandbox, and signing Claude in is a browser step. If you try it (signed in as you, in your own terminal), we'll learn whether the base setup works before I build the profiles:
+
+```
+cd ~/Github/Private/todo && sbx run --name endre-agent-app claude .
+```
+
+Inside, Claude asks you to `/login`; the login stays on your Mac. Then ask that Claude to try these three escapes, which should all fail:
+- `ls ~/.ssh` (your home folder isn't there);
+- `curl https://example.com` (not on the allowlist);
+- `docker ps` (it sees only its own Docker, not your Mac's cluster).
+
+**Next, while you try that:**
+1. **The launcher** (`sandbox app` / `sandbox platform`). It checks the profile against `access/people.yaml` and names the sandbox after Claude's identity. It mints the GitHub app token on your Mac and hands it to `sbx` as a secret, so the sandbox only sees a placeholder.
+2. **The tools from the flakes,** as a kit on top of Docker's Claude image.
+3. **The escape tests from the plan,** as a script.
+
+One caution for the test: this first run mounts your todo checkout read-write, as `sbx run` does by default. The launcher will give the sandbox its own clone instead (`--clone`), so it never writes into your working copy.

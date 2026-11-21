@@ -1,0 +1,31 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T13:46:13Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+It works from a fresh VM: `make up` took 4.8 minutes and all 12 network checks pass, with everything going through the allowlisting proxy. The escape tests also pass 10/10.
+
+## Usable state, and what's left
+
+**Working (#52, checks green):**
+- `sandbox/sandbox todo` creates the VM (about 2 minutes the first time, seconds after that).
+- It clones the repo as `ulberg-claude[bot]` and keeps the GitHub token fresh.
+- The proxy allowlist reloads live, and the escape tests pass.
+
+**Two fixes the fresh VM found** (the spike's cache had hidden them):
+- **Image builds:** they didn't get the proxy, and now do.
+- **The proxy's network policy:** it cut Argo CD's setup job off from the cluster's API, and now it only adds the proxy.
+
+**Still needed before plain `make up` works in the VM**, rather than my CLI-from-a-clone trick:
+1. Merge #52, then release CLI v0.2.2 and pin it in todo #27. That's the CLI with the proxy support, the fixed API port and the git fix.
+2. You `/login` once in the new VM: `limactl shell endre-agent-todo`, then `claude`.
+
+**Then Phase 2.5's done-when:**
+- one real task end to end per profile;
+- the platform VM, which isn't started yet. It needs about 10 GB more memory, so I'd stop the app VM first.
+
+**A question about the order.** You wanted Phase 2.5 finished before merging, but the release workflow only runs from `main`, so step 1 needs #52 merged. Two options:
+- **(a, my preference):** approve the six PRs now (todo #26, #27; platform #49, #50, #51, #52). I merge them in order, release v0.2.2, and then do the end-to-end tasks from inside the sandbox. Any follow-up fixes would themselves be the first task.
+- **(b):** I tag a pre-release from the branch. Its signature would still pass `make`'s check, since that accepts any `v*` tag, but it's an unusual step.
+
+Which do you prefer?

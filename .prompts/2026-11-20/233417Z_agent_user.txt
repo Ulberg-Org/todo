@@ -1,0 +1,6 @@
+author: agent
+role: user
+timestamp: 2026-11-20T23:34:17Z
+session: 1d917d1e-e347-449c-ba37-617f0c016420
+
+curl https://example.com

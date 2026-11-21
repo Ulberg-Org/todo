@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-20T23:16:26Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+You've moved the flake test to the background; the first `nix develop` downloads the .NET SDK and the other tools, which takes a while. Here's where things stand.
+
+**Done since your last message:**
+- **Q7:** the repo the session opens in picks the profile, and `access/people.yaml` must allow it. Written into the plan with the rest of Phase 2.5 (D76–D79), on **todo #25**.
+- **`sbx` added to your flake** (Docker's own tap, `docker/tap/sbx`), not committed, as before.
+- **Both flakes written:** todo's (.NET 11, Docker CLI, cosign, make, git, gh, jq) and the platform's (also Pulumi, az, kind, kubectl, helm, yq). The todo one is being tested now. They go into PRs once #25 is merged.
+
+**What the Docker Sandboxes docs settle:**
+- **Docker inside:** each sandbox has its own Docker engine, with no path to your Mac's, so `make up` with kind runs inside it.
+- **Credentials:** tokens stay in your Mac's keychain, and a proxy on your Mac adds them to outgoing requests. The sandbox only ever sees a placeholder, which fits D78.
+- **Network:** a "deny-all" mode where every destination needs an explicit allow rule.
+- **Against D78:** SSH agent forwarding is **on** by default, which would let the sandbox use your SSH keys. Our setup will turn it off.
+- **Not personal-free:** `sbx` needs a sign-in with a Docker account (`sbx login`). That's the developer's account, used only by the tool on your Mac; nothing of it enters the sandbox.
+
+**Still to check in the docs:** CPU and memory limits (`make up` needs about 6 GiB) and how custom images are built. I'll look those up before building the profiles.
+
+**What you need to do:**
+1. Approve **todo #25** (the v0.2.1 pin and PLAN v21): https://github.com/Ulberg-Org/todo/pull/25
+2. Activate the flake change: `sudo darwin-rebuild switch --flake $(readlink -f ~/.config/nix)#mbp`
+3. Run `sbx login` (it opens a browser to sign in with your Docker account).

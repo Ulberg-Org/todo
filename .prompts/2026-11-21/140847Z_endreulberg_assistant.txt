@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:08:47Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#52 no longer conflicts. Its only blocker now is the dismissed approval, and its checks are running. Where things stand:
+
+| PR | State |
+|---|---|
+| platform #49 (footprint), #50 (AGENTS §6), #51 (flake) | merged |
+| todo #26 (AGENTS §6) | merged |
+| **platform #52** (sandbox) | needs **your approval again**: resolving the conflict with #49 dismissed it |
+| todo #27 (flake, PLAN v23, Makefile) | needs your approval again later; I'll add the v0.2.2 pin first, so you approve it once |
+
+**What changed in #52 since your approval:**
+- **The Argo CD values:** they keep both #49's memory limits and #52's proxy reference.
+- **`scripts/claude-push.sh`:** when I merge `main` into a branch locally, the published commit now records `main` as a second parent. Without that, every PR that needs `main` merged in would conflict again like this one did.
+
+**Next, once you've approved #52:**
+1. I merge it once its checks are green.
+2. I release CLI v0.2.2 and pin it in todo #27.
+3. You approve #27 and I merge it.
+4. You promote the final platform apply to dev.
+
+After that, `make up` works as is inside the sandbox, and we do the end-to-end task.
