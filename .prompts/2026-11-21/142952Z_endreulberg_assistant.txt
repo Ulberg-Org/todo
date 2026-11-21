@@ -1,0 +1,28 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:29:52Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, we're ready for the final test of Phase 2.5. Everything is merged: the platform PRs #49–#52, todo #26 and #27, and CLI v0.2.2. Your dev apply has also finished.
+
+**Verified so far in the sandbox VM:**
+- plain `make up` from todo (6.8 minutes) and `make test-platform` (12/12);
+- the escape tests (10/10);
+- Claude Code signed in, and using `gh` as the app with the repo's identity hook active.
+
+**One small follow-up PR to approve first: platform #53.** It sets up Claude's identity in the VM the same way as on your Mac, so the hook and `claude-push` (opening PRs) work inside. It also switches Nix flakes on. Its checks are running.
+
+**The final test (Phase 2.5's "done when"):** one real task end to end in each profile, run by Claude inside the sandbox: code, `make up`, tests, reading the result through its MCPs, and a PR. You start it from your own terminal so you can watch:
+
+1. **App profile:**
+   ```
+   ~/Github/Private/platform/sandbox/sandbox todo
+   ```
+   That attaches Claude Code in the VM. A task I'd suggest: *"Add a short section to README.md on how to start Claude's sandbox; run make up and make test-platform, check through the Grafana MCP that the backend's logs and traces arrive, then open a PR with ../platform/scripts/claude-push.sh."*
+2. **Platform profile:** first free the memory with `limactl stop endre-agent-todo`, then:
+   ```
+   ~/Github/Private/platform/sandbox/sandbox platform --app todo
+   ```
+   A task there: one small platform change, tried in the VM's cluster, as a PR.
+
+The platform VM is new, so it will need `/login` once. If something is refused, the launcher shows where the log of refused hosts is, and an allowlist edit applies at once.

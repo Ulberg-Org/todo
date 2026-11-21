@@ -4,7 +4,7 @@
       "command": "sh",
       "args": [
         "-c",
-        "GRAFANA_SERVICE_ACCOUNT_TOKEN=$(cat .local/grafana-claude-token) exec docker run --rm -i --add-host host.docker.internal:host-gateway -e GRAFANA_URL=http://host.docker.internal:9876 -e GRAFANA_SERVICE_ACCOUNT_TOKEN --entrypoint /app/mcp-grafana grafana/mcp-grafana:2.3.0 -t stdio -disable-write -disable-admin"
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN=$(cat .local/grafana-claude-token) exec docker run --rm -i --network kind -e GRAFANA_URL=http://todo-control-plane:30876 -e GRAFANA_SERVICE_ACCOUNT_TOKEN --entrypoint /app/mcp-grafana grafana/mcp-grafana:2.3.0 -t stdio -disable-write -disable-admin"
       ]
     },
     "postgres": {

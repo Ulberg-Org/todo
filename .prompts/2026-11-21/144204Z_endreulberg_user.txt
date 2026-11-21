@@ -1,0 +1,39 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T14:42:04Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+
+
+<pasted_content id="3c6e">
+  Searched for 1 pattern
+
+● Step 3: make up in the background (slow path).
+
+  Ran 2 shell commands
+
+● Backend tests can run in parallel with make up:
+
+  Ran 1 shell command
+
+● dotnet test stopped after restore with no test output. Checking why:
+
+  Ran 1 shell command
+
+● dotnet test exits 0 without running anything: the test project is a plain Expecto executable with no test adapter, so dotnet test finds no tests. The README and CI use dotnet run:
+
+  Ran 1 shell command
+
+● Backend tests: 6/6 passed via dotnet run (the way CI runs them). Waiting for make up.
+
+● Status so far:
+
+  1. Branch: done. main pulled up to 3948b41, and sandbox-readme is created.
+  2. README: the "Claude's sandbox" section is written. It covers the start command, that the VM has no host mounts, that the proxy is its only way out with refused hosts in ~/.lima/<vm>/confine.log, and that the details are in PLAN D81.
+  3. Tests:
+     - Backend: dotnet test in backend/ exits 0 but runs no tests. The test project is a plain Expecto program with no test adapter, so dotnet test finds nothing to run. Running it the way CI and the README do (dotnet run --project backend/test/TodoBackend.Test) passed all
+       6 tests. Because dotnet test can look green while testing nothing, I'll flag this in the PR. I won't fix it on this branch.
+     - make up: still running in the background. I'll be notified when it finishes, then run make test-platform.
+
+  Steps 4 and 5 come after make up. One thing to know for step 4: the Postgres MCP server had already timed out at session start. That's expected before the cluster and database exist; after make up you'll need to reconnect both MCP servers with /mcp.
+</pasted_content id="3c6e">

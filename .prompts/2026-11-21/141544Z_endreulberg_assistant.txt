@@ -1,0 +1,15 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:15:44Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+My part is done, apart from merging todo #27 once you've re-approved it:
+- **Merged:** platform #49, #50, #51, #52 and todo #26.
+- **CLI v0.2.2:** released and signed (the signature checks out).
+- **todo #27:** has `main` merged in and v0.2.2 pinned. My push dismissed your approval, so it needs approving once more, and then I'll merge it.
+
+Two things for you:
+1. **Approve todo #27:** <https://github.com/Ulberg-Org/todo/pull/27>
+2. **Promote the platform apply to dev:** the `pulumi` run for `d588cc0` (#52's merge) is waiting for you: <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml>
+
+Meanwhile, plain `make up` from #27's branch is running inside the sandbox VM, using the released CLI, the `Makefile`'s cosign check and the flake's tools. I'll report the result. If it passes, the sandbox can be used as is, and the only Phase 2.5 item left is the end-to-end task in each profile.

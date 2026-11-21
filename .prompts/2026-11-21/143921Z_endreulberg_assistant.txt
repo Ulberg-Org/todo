@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:39:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Paste this into Claude in the sandbox:
+
+```
+This is the Phase 2.5 end-to-end test of your sandbox (PLAN.md, D81). Do one small real task end to end:
+
+1. git checkout main && git pull, then create a branch `sandbox-readme`.
+2. Add a short section "Claude's sandbox" to README.md: how a developer starts it
+   (../platform/sandbox/sandbox <app repo>), that it's a Lima VM with no host mounts whose only way out is
+   an allowlisting proxy (refused hosts in ~/.lima/<vm>/confine.log on the host), and where the details live (PLAN D81).
+3. Run `make up`, then `make test-platform`, and the backend tests (`dotnet test` in backend/).
+4. Reconnect the MCP servers (/mcp), then through the Grafana MCP confirm the backend's logs and traces arrive,
+   and through the Postgres MCP run one EXPLAIN ANALYZE on a query against the todo database.
+5. Commit, publish with ../platform/scripts/claude-push.sh, and open a PR with gh.
+
+Report each step's result, and anything that was refused or failed.
+```
+
+What to expect:
+- **Step 3:** `make up` takes about 5 to 7 minutes the first time. This VM already has a cluster from my test, so it may be faster.
+- **Step 4:** Claude Code asks you to approve the project's MCP servers the first time. Say yes. The Grafana MCP needs the `/mcp` reconnect after `make up`, because `make up` writes Grafana's token for it.
+- **If something is refused:** tell me the host, and I'll check the log on your Mac and add it to the allowlist if it should be there.

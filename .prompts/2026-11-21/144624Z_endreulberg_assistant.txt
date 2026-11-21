@@ -1,0 +1,15 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T14:46:24Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I'm watching it now. I'll get a signal when its PR (`sandbox-readme`) appears on GitHub, or if it sits idle for 5 minutes, which could mean it's waiting for you or stuck.
+
+When that happens, I'll check that it did what was asked:
+- `make test-platform` passed;
+- the backend's logs and traces were confirmed through the Grafana MCP;
+- an EXPLAIN ANALYZE ran through the Postgres MCP;
+- the PR was published as a verified commit by `ulberg-claude[bot]`;
+- the proxy refused nothing that should have been allowed.
+
+Then I'll tell you whether the app profile's end-to-end test passed.

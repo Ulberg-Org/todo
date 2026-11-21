@@ -1,0 +1,7 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T14:37:50Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+~ > ~/Github/Private/platform/sandbox/sandbox todo                                                                       INT 15:37:37
+GH_CONFIG_DIR must be /Users/endreulberg/.config/gh-claude (Claude's profile), not ''. See AGENTS.md.
