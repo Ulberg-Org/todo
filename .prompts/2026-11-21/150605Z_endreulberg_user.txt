@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T15:06:05Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+No, it does not always mean in form backend to infra, it was a fuckin example. You could also move something from a BFF to the core system, from a core system to the expert system, from auth -> infra. do you get it? From a feature into a core utility / reusable service
