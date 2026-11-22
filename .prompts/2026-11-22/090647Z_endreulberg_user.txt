@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T09:06:47Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) Maybe it is better that all CIs are owned by platform, in platform it is platform-lead, and in apps it is platform/platform-leads. I also think that as a rule of thumb platform is all app-leads+platform employees + platform leads. Q2) Yes, We might loosen it a bit in the future, but yes I think that tooling and infra is an ok place to start

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T09:03:19Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Why are you able to run with the CI identity, is that not a security risk that you can send arbitrary things to that env?

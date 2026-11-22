@@ -1,0 +1,11 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T19:12:33Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Fixed in #63. The fake `pulumi` and `az` and all the workflow cases for the guard are now files in `.github/scripts/tests/`, for this test and the two from before (`due_environments`, `check_teardown_use`). The tests only point at them. All 13 cases pass in the sandbox, and I've noted in my memory that test fakes and fixtures count too.
+
+**For you, in order:**
+1. **Approve #63** (its checks are running). I'll merge it.
+2. **Run `destroy` (`dev`):** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>. It releases the old lock, refreshes and removes the half-built dev.
+3. **Then `start` (`dev`)**, with `D2ps_v7`.

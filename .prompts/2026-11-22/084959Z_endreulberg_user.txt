@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T08:49:59Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Also, somewhere we need a todo to store the database backups somewhere. It should at the very least be written down somewhere how we would handle that. Including read replicas setup we would have, and multi-region, and HA. And any other common DB setup things. We are doing it simple now, but we should write down how we would have done it. Approved!

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T19:52:14Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, do it one by one. Yes look up best practices and then start, also if there is any part where an app dev or infra dev is supposed to be able to do something I want you to instruct me to test it, f.ex connecting to the database via kube-port-fwd of whatever it was called

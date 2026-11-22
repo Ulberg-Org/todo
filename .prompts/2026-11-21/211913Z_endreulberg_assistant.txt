@@ -1,0 +1,12 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T21:19:13Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#64 is merged. Your steps:
+1. **Promote the apply:** <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml>
+2. **Then `start` (`dev`)**, and approve it: <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>
+
+When `start` is running, I'll watch the roles Job and check the result in Azure: the `todo` database, the Entra principals, and which role each group got.
+
+One small blemish I saw in the merged workflows: in `start.yml` and `destroy.yml`, the comment "Only installs the CLI (no command)" now sits above the `kubelogin` step, not above the Pulumi step it describes. I'll fix that in the next PR rather than dismiss your approval again.

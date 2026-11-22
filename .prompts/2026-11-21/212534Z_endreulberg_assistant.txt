@@ -1,0 +1,6 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T21:25:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The comment fix waits locally, in case `start` turns up more fixes that belong with it. `start` is still running, and I'll report the roles Job's result as soon as it finishes.

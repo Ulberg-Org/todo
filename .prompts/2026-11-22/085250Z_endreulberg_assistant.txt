@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T08:52:50Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Both are done: monitoring, alerts and security are now planned work in the document (platform #67) and in PLAN as **D93** (todo #33).
+- **Security now, in Phase 3:**
+  - `pgaudit` logs role and privilege changes, DDL and failed sign-ins, and connections are logged too;
+  - **Microsoft Defender for open-source relational databases**, about 15 USD a month per server, billed by the hour, so a few kroner for dev's 4-hour runs.
+  - Customer-managed keys only if compliance ever requires them: Azure already encrypts at rest with its own keys.
+- **Monitoring and alerts, fixed scope in Phase 5:** the server's metrics, logs and Defender's findings go into Grafana, with alerts on:
+  - storage, connections, long queries and failed sign-ins;
+  - replication lag, failed backups and drills;
+  - every Defender alert.
+
+I'll build `pgaudit` and Defender into the dev stack as part of Phase 3, after the simplification.
+
+**Your steps, with direct links:**
+1. **Activate `platform-write` in PIM** (your own account): <https://portal.azure.com/#view/Microsoft_Azure_PIMCommon/ActivationMenuBlade/~/aadgroup>, then "Activate" on the `platform-write` row.
+2. **Delete `rg-dev`:** <https://portal.azure.com/#@e17ac17e-d8cd-4280-a4e5-94ad2bb85549/resource/subscriptions/21784576-1957-4336-89d8-a6ab6b571930/resourceGroups/rg-dev/overview>, then "Delete resource group", type `rg-dev`, and "Delete".
+3. **When it's gone, run `destroy`:** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>, then "Run workflow", environment `dev`, and "Run workflow".
+4. **Approve #67:** <https://github.com/Ulberg-Org/platform/pull/67/files>, then "Review changes", "Approve", "Submit review".
+5. **Approve todo #33:** <https://github.com/Ulberg-Org/todo/pull/33/files>, then the same.
+
+After step 3, I'll merge #66 (already approved) once its preview is green, and #67 and #33 when you've approved them.

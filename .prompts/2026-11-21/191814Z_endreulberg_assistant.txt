@@ -1,0 +1,10 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T19:18:14Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#63 is merged. Your next steps:
+1. **Run `destroy` (`dev`):** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>. No approval needed, and no apply first, since #63 only changed workflows.
+2. **Once it's done, run `start` (`dev`)** and approve it: <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>
+
+Tell me when `destroy` is running and I'll watch it: whether the lock is released, and whether `rg-dev` disappears.

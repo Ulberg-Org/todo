@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T21:49:38Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I found the cause, read from the pod's log as Claude's agent, and the fix is up as **platform #65**.
+
+**What went wrong:** Azure's Entra functions (`pgaadauth_create_principal` and friends) only exist in the server's **`postgres`** database, and the Job ran everything in the `todo` database. The shared `roles.sql` had gone through: schema, roles and privileges were fine.
+
+**The fix:**
+- **Two steps:** `roles.sql` runs in the app's database, then `azure.sql` in `postgres`, where Azure's functions are. Roles are server-wide anyway.
+- **One transaction each:** a failure leaves nothing half-done, so a retry starts clean. Before, the first pod had already committed `roles.sql`, so its retries would have failed with "role already exists" instead of showing the real error.
+- **The misplaced workflow comment** is fixed in the same PR.
+
+Checked in the sandbox: style, build, Environment tests 12/12.
+
+**For you, in order:**
+1. **Approve #65:** <https://github.com/Ulberg-Org/platform/pull/65>. I'll merge it once its checks are green. It needs no apply (only workflows, scripts and the dev stack).
+2. **`destroy` (`dev`):** the running server has the half-created roles from the failed run.
+3. **`start` (`dev`)**, and approve it ("Review deployments").

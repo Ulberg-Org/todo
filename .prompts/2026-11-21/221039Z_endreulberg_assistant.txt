@@ -1,0 +1,6 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T22:10:39Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+`start` is running, building dev from scratch: `destroy` finished at 22:00. I'll get a signal when it's done, then I'll read the roles Job's log and check the roles in Azure.

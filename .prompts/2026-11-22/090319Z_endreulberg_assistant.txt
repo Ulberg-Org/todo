@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:03:19Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I can't run anything as CI's identity. I only write code that CI runs after you've approved it. The fallback is a few lines in `destroy.yml`, and `destroy.yml` on `main` is what runs as the apply identity, never me.
+
+**What stands between me and the apply identity:**
+
+| Way I could try | Why it doesn't work |
+|---|---|
+| Sign in as the identity myself | It has no password or key. Azure only issues it a token in exchange for a GitHub OIDC token whose subject is `…:environment:dev` or `…:environment:teardown`. Only GitHub Actions jobs in those environments get such tokens. |
+| Run a changed workflow on my branch or PR | Both environments accept **`main` only** (their branch policy), so GitHub refuses a job from a branch or a PR before it gets a token. A PR's workflows run with the read-only preview identity. |
+| Get my change onto `main` | Only through a PR that **you** approve, with all checks green. The app can't approve, and can't change rulesets or settings. |
+| Hide a `teardown` use in another workflow | The guard (#61) runs `main`'s copy, so it can't be changed by the PR itself, and it's a required check: only `destroy.yml` may use `teardown`. |
+| Use `dev`'s door | `dev` also needs your click on "Review deployments" for every run. |
+
+**The real risk, which we accepted with #59:** code I write in `destroy.yml` runs with the apply identity without a second click, once you've approved and merged it. If I slipped something malicious into such a PR and you missed it, it would run. The guard narrows that to one file, but **your review of `destroy.yml` changes is the gate.** That's why I describe exactly what changes in every PR that touches it, as in #68: one fallback step (`az group delete --name rg-<env>`) and a second `pulumi destroy`, nothing else.
+
+If you'd rather have an extra layer: CODEOWNERS could require your review specifically for `.github/workflows/` and `.github/scripts/`. Today you own the whole repo, so it changes nothing until more people join, but then it matters.

@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T21:26:57Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+For making every dev have their own Claude with access to app things we should probably make it derived from the people thing. Since I wont be making a Claude org/team I cannot directly intergrate it at a org to org level, i.e. tie it directly to entra users for the people. So we need to allow for BYOC

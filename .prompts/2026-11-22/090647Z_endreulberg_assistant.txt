@@ -1,0 +1,19 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:06:47Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+That's simpler: in CODEOWNERS the last matching line wins, so no extra ruleset rule is needed. My understanding:
+
+**D94 (new):**
+1. **Tooling and infrastructure belong to the platform, in every repo.** In app repos, CODEOWNERS gets lines after `* @Ulberg-Org/todo-leads` that give these paths to `@Ulberg-Org/platform-leads` alone:
+   - `.github/`, `.claude/`, `.mcp.json`, `Makefile`, `flake.nix`
+
+   In the platform repo, `platform-leads` already own everything, including `scripts/`, `sandbox/` and `cli/`. Starting strict, loosened later if needed.
+2. **Who works in the platform repo:** the app leads, the platform's people (`infra-developers`) and the platform leads may contribute: branches and PRs. **Only `platform-leads` approve.**
+
+It's all generated and checked by `access` (CODEOWNERS from `Codeowners.fs`, repo rights from `people.yaml`).
+
+Is that what you meant by "platform employees", meaning `infra-developers`? If so, I'll put D94 into PLAN on todo #33 (not approved yet, so nothing gets dismissed) and build it in `access` after the simplification.
+
+#66 is still waiting for the re-run of its failed jobs: <https://github.com/Ulberg-Org/platform/actions/runs/45004507750>, then "Re-run jobs", "Re-run failed jobs".

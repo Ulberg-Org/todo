@@ -1,0 +1,6 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T19:25:59Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+It isn't stuck. `destroy` released the old lock, then removed the database, the network and the identities. AKS is the last thing left, and it's being deleted now (5 to 15 minutes). I'm watching the run, and I'll tell you when `rg-dev` is gone, so you can run `start` with the new node size.

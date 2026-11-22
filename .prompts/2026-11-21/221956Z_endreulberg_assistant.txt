@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T22:19:56Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Item 1 is done and verified in Azure:
+- **The Job:** applied the roles in one go: "roles applied to todo", ending with `Created role for "app-developers"`, the last line of `azure.sql`.
+- **Claude's agent on the cluster, checked as the agent:**
+  - it can read the Job's pods and logs;
+  - it can **not** read Secrets ("no");
+  - it can **not** create pods ("no").
+
+  That's D88's "read, never write".
+
+You can't test the database yourself yet: it's private, and the way in from your Mac (`db-proxy` and `platform db`, the port-forward) is Phase 4. When that's built, I'll give you the exact steps to connect with nvim DBUI.
+
+dev runs until about 02:10, when the scheduled `destroy` takes it down.
+
+**Next, item 2: every developer's Claude (D91), plus D92 in PLAN:**
+1. **PLAN (todo):** D91 (agents derived from `people.yaml` for every person, `platform-agents` and `app-agents`, BYOC) and D92 (the database's line between platform and app, with the migrator identity in Phase 4). That's a short PR to approve.
+2. **`access`:** one agent per person instead of the `agents:` list. Agents of app developers go into a new `app-agents` group, which `azure.sql` gives read-only. The agent access check learns `app-agents`.
+
+Shall I start?
