@@ -81,7 +81,7 @@ Use what F# itself offers before constructs every language has. `reference/` doe
   ```
 
 - **Lambdas as short as they can be:**
-  - `_.Name` (F# 8) when a lambda only reads a property, calls a method or indexes its argument: `List.map _.name`, `.Apply _.PrincipalId`. Not `fun x -> x.name`.
+  - `_.Name` (F# 8) when a lambda only reads a property, calls a method or indexes its argument: `List.map _.name`, `.Apply(_.PrincipalId)`. Not `fun x -> x.name`.
   - `fun _ ->` when the argument isn't used, including `()`. Not `fun () ->`.
   - A function by name instead of a lambda that only calls it: `List.map Email.value`, `Deployment.RunAsync run`.
 
