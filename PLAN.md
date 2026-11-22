@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v26 (2026-11-22, D91–D92: every developer's Claude, the database's line between platform and app).** Phases 0–2.5 done; Phase 3 (Azure foundation for dev) next. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
+> **Status: v26 (2026-11-22, D91–D93: every developer's Claude, the database's line between platform and app, its security and monitoring).** Phases 0–2.5 done; Phase 3 (Azure foundation for dev) next. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -200,6 +200,7 @@ Pulumi (F#) turns this into:
 | D90 | **Pulumi tests, lazily**: unit tests for our own logic (what `people.yaml`, `platform.yaml` and the environment files turn into), not mocks of every Azure resource; `preview` on every PR; the done-when access tests as a script against the real dev | msg 2026-11-21 |
 | D91 | **Every developer gets a Claude agent, derived from `access/people.yaml`, and brings their own Claude (BYOC)** (refines D41, D88): one `<name>-agent` Entra account per person, no separate list. Agents of `infra-developers` are in `platform-agents` (Azure and the cluster read-only, the database read-only); agents of `app-developers` in a new `app-agents` (the database read-only and telemetry; no Azure or cluster beyond `db-proxy`). The Claude subscription is each developer's own and isn't tied to Entra: a Claude's rights come only from its agent identity and the shared `ulberg-claude` app | msg 2026-11-22 |
 | D92 | **The database's line between the platform and the app.** The platform (`database/`, the same locally and in Azure) owns: the database, the roles and who signs in as them, an empty schema owned by the migrator with default privileges (what the migrator creates, the app may read and write, readers may read), access rules and observability. The app owns everything in its schema through migrations run as `<db>_migrator`: tables, indexes, seed data, per-app tuning. In Azure a migrator identity and a migration Job (Argo CD, before each deployment) come with Phase 4. How we'd run the database once data matters (backups, HA, replicas, multi-region): the platform repo's `docs/database-operations.md` | msg 2026-11-22 |
+| D93 | **The database's security and monitoring are planned work, not "later if required".** Security now (Phase 3): `pgaudit` (role and privilege changes, DDL, failed sign-ins) and connection logging, and Microsoft Defender for open-source relational databases on the server (about 15 USD/month per server, by the hour). Monitoring and alerts with Phase 5: the server's metrics, logs and Defender's findings in Grafana, with alerts on storage, connections, long queries, failed sign-ins, replication lag, failed backups or drills, and every Defender alert. Customer-managed keys only if compliance requires them | msg 2026-11-22 |
 
 ## 4. Sign-off and bootstrap
 
@@ -444,6 +445,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - Network (D86): VNet `10.20.0.0/16`, node subnet `/23`, database subnet `10.20.2.0/24` (D70), NSGs, private DNS for Postgres.
 - AKS (D84) and Postgres with its roles (D85). Access, all through Entra groups: `platform-read` and the agents AKS RBAC Reader, `platform-write` (PIM) AKS RBAC Cluster Admin, app developers nothing in the cluster; the database roles follow the groups (D75). Every developer's Claude agent mirrors its developer, read-only (D88).
 - The sandbox's read-only Azure token (D88).
+- The database's security (D93): `pgaudit` and connection logging, Microsoft Defender for open-source relational databases.
 - Tests per D90.
 - **Done when** everything exists, `start` and `destroy` work, and the access tests show: app developers can change nothing; developers and every Claude can read but not write; the database isn't reachable from outside the VNet; its roles map to the Entra groups.
 
@@ -460,6 +462,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - Infra signals: the same as locally (Phase 2 TODOs), from Azure's sources where they differ: kube-state-metrics, node metrics, AKS audit logs, Postgres metrics/logs and Query Store, Envoy access logs, Argo CD, network flows (if ACNS).
 - Dashboards + alerts as code; `mcp-grafana` setup documented for both groups.
 - Entra sign-in and audit logs → alerts (D40): any emergency-account sign-in, role or group-membership changes not made by the apply identity, changes to PIM policies or Conditional Access.
+- The database's monitoring and alerts (D93): its metrics, logs (slow queries, pgaudit, connections) and Defender's findings in Grafana, with the alerts in the platform repo's `docs/database-operations.md`.
 - **Done when** each group's Claude sees exactly its column of §5.1, proven by tests.
 
 ### Phase 6: Edge + application security
