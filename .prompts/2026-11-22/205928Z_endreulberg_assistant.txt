@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T20:59:28Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+A lot already exists from Phase 2:
+- `environments/dev.yaml` lists `argocd`, `baseline` and `gateway` for dev;
+- the renderer is published as an image to GitHub's registry (`release.yml`);
+- `components/argocd` pins the chart with a digest;
+- the local values show the plugin as a sidecar.
+
+So Phase 4's first step is mostly wiring. Four decisions about it:
+
+❓ **Q1 - Who installs Argo CD in Azure, and who manages it afterwards?**
+➡️ **The environment stack installs it once** (from `components/argocd`: the same pinned chart, its digest checked, `values.yaml` + a new `values-dev.yaml`) and creates the **same root Application as locally**, pointing at GitHub with `ENVIRONMENT=dev`. After that, **Argo CD manages itself** from the repo, as locally (D67). Pulumi ignores later changes to it, so the two never fight.
+
+❓ **Q2 - Where does the plugin get the renderer from?**
+➡️ **The image `release.yml` already publishes to GitHub's registry, pinned by digest** in `values-dev.yaml`, read publicly with no credentials. That keeps a single image for local, CI and Azure.
+
+❓ **Q3 - What runs in dev in this first step?**
+➡️ **What `dev.yaml` already says: `argocd`, `baseline` (default-deny network policies, etc.) and `gateway`** (Envoy Gateway on dev's static address). Then the todo app via its `platform.yaml`. Telemetry is Phase 5.
+
+❓ **Q4 - Argo CD's UI with Entra SSO: now, or as the next PR?**
+➡️ **The next PR.** First Argo CD has to work and sync dev from `main`, and its status can be read without the UI (by me, read-only, and in `start`'s log). Then the UI with SSO through the gateway. That keeps each PR small enough to verify before a run (D98).
+
+The final approval for #41 (Phase 3 done) is also waiting: <https://github.com/Ulberg-Org/todo/pull/41/files>.

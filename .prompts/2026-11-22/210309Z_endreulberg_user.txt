@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T21:03:09Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) That sounds ok. That is as close to how local does it, and there is no obvious downsides right? Check if this is best practice or common practice. Q2) Are you asking which container registery to use? I would prefer a Azure native one instead of Github. Q3) That sounds right. But in the end everything should be local, dev and prod. Q4) Yes
