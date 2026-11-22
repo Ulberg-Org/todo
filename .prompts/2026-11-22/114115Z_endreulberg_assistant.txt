@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T11:41:15Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+This start failed on the database server's Entra admin. Azure said the server was "not in an accessible state".
+
+**The cause, from the run's timeline:** the server-setting changes ran from 11:39:29 to 11:40:28. Azure refused the admin at 11:40:20, in the middle of them. A Postgres flexible server only accepts one operation at a time. #74 lined the settings up one after another, but nothing made them wait for the admin, or the app's databases wait for them.
+
+**The fix is platform #78:** every operation on the server now runs in one chain, in this order:
+1. the server's Entra admin;
+2. the settings, one by one;
+3. the restart;
+4. the app's databases;
+5. the roles Job.
+
+That's slower than running them in parallel, but it's the only order Azure accepts. In the sandbox, the environment tests pass 12/12, there are no warnings, and formatting is clean.
+
+Its CI is running now, and I'll tell you when it's green.
+
+**Your steps after that:**
+1. **Approve #78:** <https://github.com/Ulberg-Org/platform/pull/78/files>, then "Review changes", "Approve", "Submit review". I'll merge it straight away.
+2. **Start dev again:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then "Review deployments", tick `dev`, "Approve and deploy". It continues from the 17 resources already created.

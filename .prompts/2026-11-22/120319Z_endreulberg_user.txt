@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T12:03:19Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+destroy is running, but for now you can use my Github cli to start it yourself, just act like me for a while

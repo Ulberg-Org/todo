@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T13:50:46Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Sounds like the preview check you suggest is reasonsable. The checklist can be resonable. But I think the most important one is evidence. WE should introduce smaller changes, but not untill we get to the point where there is less clicking for me. So after ArgoCD promotoes to cloud itself. All of the proosals are ok

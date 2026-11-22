@@ -1,0 +1,16 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T11:20:15Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Option (a) is built: **platform #77**. The Event Hub denies everything by default and now admits only two sources:
+- **the cluster nodes' subnet**, through a service endpoint for Event Hubs on that subnet. That's the path Alloy will read from in Phase 5;
+- **Azure's trusted services**, which is how Azure Monitor gets the server's logs and the Activity Log in.
+
+In the sandbox the environment tests pass 12/12, with no warnings and clean formatting. The PR description includes the research and the sources.
+
+Its CI is running. This time I'll check that the environment preview shows the half-started dev being updated rather than replaced.
+
+**Your steps:**
+1. **Approve #77** once I report the previews are green: <https://github.com/Ulberg-Org/platform/pull/77/files>, then "Review changes", "Approve", "Submit review".
+2. **Then start dev again:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then on the run "Review deployments", tick `dev`, "Approve and deploy". It continues from what's already created.

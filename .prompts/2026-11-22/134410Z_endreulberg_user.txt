@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T13:44:10Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Is there any lesson we can take from this LONG debugging session, to learn how to avoid getting there, and is the solution we landed on in-line with the decisions we made before or have we violated any principals we agreed on earlier

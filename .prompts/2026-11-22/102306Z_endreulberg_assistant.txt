@@ -1,0 +1,34 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:23:06Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+D93 and D97 are built: **platform #74**. The PLAN entry D97 is in **todo #38**, where I recorded Q3 the way I recommended (sources now, reading in Phase 5). Correct it there if you meant otherwise.
+
+**What #74 does:**
+- **pgaudit and connection logging:**
+  - the server settings: pgaudit allowed and preloaded, audit classes `ROLE,DDL`, connections and disconnections logged;
+  - a restart, since preloading only takes effect after one and Pulumi can't do it, so a small step runs `az postgres flexible-server restart`;
+  - the roles Job then creates the extension in the app's database.
+- **Defender for open-source databases** as the subscription's plan, in `shared`.
+- **Towards our telemetry:**
+  - an Event Hub in the environment, closed to everything except Azure's own services;
+  - the server's diagnostic setting sends all its logs there: pgaudit, connections, slow queries, errors;
+  - the subscription's Activity Log, including Defender's alerts, goes there too. No connection string in our code.
+  - Alloy reads the hub into Loki in Phase 5.
+
+**Checked in the sandbox:**
+- both stacks build without warnings;
+- the tests pass: environment 12/12, shared 6/6;
+- formatting, the F# style check and a locked restore are clean;
+- `Pulumi.Command` 1.3.0 is the package `shared` already uses, with the same hash.
+
+The real proof is a `start` of dev. #74's CI is running now, and I'm checking its previews.
+
+**Your steps:**
+1. **Approve the apply from #73** if you haven't yet: <https://github.com/Ulberg-Org/platform/actions/runs/45011834756>, then "Review deployments", tick `dev`, "Approve and deploy".
+2. **Approve todo #38 (D97):** <https://github.com/Ulberg-Org/todo/pull/38/files>, then "Review changes", "Approve", "Submit review".
+3. **Approve platform #74** once I report its previews are green: <https://github.com/Ulberg-Org/platform/pull/74/files>, the same way.
+4. **After the merge and its apply, start dev:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then on the run "Review deployments", tick `dev`, "Approve and deploy".
+
+While it runs, I'll check that the server restarted once, that the Job created the extension, that `azure-read` shows the settings, and that the hub receives logs.

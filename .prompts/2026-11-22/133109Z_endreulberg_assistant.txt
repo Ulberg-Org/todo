@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T13:31:09Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Checked against Azure. Here is each risk and what I found:
+
+| Risk | Found in Azure | Verdict |
+|---|---|---|
+| The `todo` database already exists | the new server (12:27) only has Azure's own databases | ✅ no clash |
+| The diagnostic setting `telemetry` | the leftover exists | ✅ the new delete step removes it first; CI's identity is Contributor and may do it |
+| The subscription's setting `telemetry-dev` | exists, already in Pulumi's state (not in the list above) | ✅ and it confirms #79 works: Azure Monitor created its own hub `insights-activity-logs` |
+| The server's admin | `id-db-admin-dev` exists and is in state | ✅ |
+| The roles Job needs the Entra groups | `app-agents`, `platform-agents`, `app-developers`, `platform-read`, `platform-write` all exist | ✅ |
+| `CREATE EXTENSION pgaudit` | allowed on the server; the preload takes effect with the restart, which the Job waits for | ✅ as Microsoft documents it; this is the only part I can't test before the run |
+
+The remaining 5 server settings always exist on a server and were set without problems in earlier runs.
+
+**Your steps:**
+1. **Approve #80:** <https://github.com/Ulberg-Org/platform/pull/80/files>, then "Review changes", "Approve", "Submit review". I'll merge it as soon as its checks are green.
+2. **Start dev:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then "Review deployments", tick `dev`, "Approve and deploy".

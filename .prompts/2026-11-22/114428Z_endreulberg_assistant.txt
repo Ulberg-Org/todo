@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T11:44:28Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#78 is merged. Start dev when you're ready: <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then "Review deployments", tick `dev`, "Approve and deploy".
+
+I'll catch the new run and follow it to the end, then report the result and run the checks.

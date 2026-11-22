@@ -1,0 +1,62 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T13:44:10Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Everything is verified in Azure:
+- **The server's logs** now arrive in their own hub, `insights-logs-postgresqllogs`, which Azure Monitor created, as planned.
+- **The roles Job** succeeded: "Created role for app-agents … roles applied to todo". That means pgaudit's extension is created and `app-agents` has its read-only sign-in.
+
+D93 and D97 are done.
+
+## What we can learn from it
+
+Seven runs failed, each on a different Azure behaviour that the preview can't see:
+
+| Failure | The behaviour behind it |
+|---|---|
+| Defender (`Subscription Not Registered`) | each Azure service must be registered once per subscription |
+| Defender (`already existing`) | every Defender plan always exists, at the Free tier until switched on |
+| The hub's network rule | Azure refuses "deny everything" without a single allowed network |
+| The server's admin | a server accepts only one operation at a time |
+| The refresh after that | a failed create leaves an entry in Pulumi's state that blocks the next refresh |
+| The hub `azure-logs` | Azure created the hub itself, before Pulumi got to it |
+| The diagnostic setting | diagnostic settings outlive their resource and reattach to a new one |
+
+**Where I went wrong:**
+1. **I researched how to switch things on, not how they behave.** For a new resource type, the important questions are:
+   - does it already exist?
+   - does Azure create parts of it itself?
+   - does it outlive its resource?
+   - can it run in parallel?
+
+   I only researched those after something failed.
+2. **The PR was too big:** six new Azure features in one go, so every run found the next problem, one at a time.
+3. **I proposed fixes before I had evidence,** and you caught me twice. The verification we did at the end (the preview's list checked against Azure) should have happened before every request for a run.
+4. **My own `destroy` fallback created orphans:** it deleted the server without its diagnostic setting, which Microsoft explicitly warns against.
+
+**What would prevent it, in order of value:**
+1. **An automatic leftovers check in the PR's preview:** for everything the preview will create, ask Azure whether it already exists, with the preview identity's read access. "Already exists" would then fail in the PR, in a minute, not in a `start`.
+2. **A four-question checklist per new Azure resource type** (the questions above), answered in the PR.
+3. **Smaller increments:** one new resource type per PR when it's something we haven't used before.
+4. **`start` with `--continue-on-error`,** so one run shows every independent error.
+
+## Did we break anything we agreed?
+
+| Principle | Assessment |
+|---|---|
+| D97 (Azure's signals through the environment's Event Hub) | ✅ the namespace is the environment's own. ⚠️ PLAN says "an Event Hub"; it's now one per category. The wording needs updating. |
+| D95 ("the environment stack creates only what's in the group") | ❌ **broken.** The subscription's diagnostic setting is created by the environment stack. So was the registry pull role from earlier, so the wording was already imprecise. Either the wording becomes "…and whatever only exists while the environment runs", or the setting moves. I suggest the first. |
+| D86 (strict network) | ✅ the hub admits only the nodes' subnet and Azure's own services. |
+| Least privilege, no new identities | ✅ all four `az` steps run as the existing apply identity. ⚠️ the hub keeps local key auth (accepted, written down in #74). |
+| Be lazy / less code | ✅ Azure creates the hubs itself. ⚠️ four `az` commands in the IaC (registration, Defender, restart, removing leftovers): necessary, but imperative exceptions. |
+| No broken windows | ❌ two remain: the orphaned `azure-logs` hub (it goes with dev), and `empty_group.sh`, which still deletes resources without their diagnostic settings. |
+| Find the real cause | ⚠️ the hub's race was routed around, not proven. |
+| Red-green-refactor | ⚠️ the fixes are Azure behaviour without unit tests; the leftovers check in point 1 would be the test. |
+
+**My proposal for the next PR:**
+1. **`empty_group.sh` removes each resource's diagnostic settings first,** with a test.
+2. **PLAN:** D95's wording, D97's hubs, and D98 for the leftovers check plus the checklist.
+3. **The leftovers check itself** in the PR's preview job.
+
+Then open-code-review.

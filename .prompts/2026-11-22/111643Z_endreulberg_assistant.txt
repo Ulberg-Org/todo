@@ -1,0 +1,31 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T11:16:43Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Here's what the research shows. I've checked it against Microsoft's own pages.
+
+**Why it failed:**
+- A hub that denies all public traffic but lists no allowed network or IP is only accepted with public access **off** (private endpoints only). That's why Azure refused it.
+- "Azure's trusted services" alone doesn't count as a rule ([GitHub #18616](https://github.com/hashicorp/terraform-provider-azurerm/issues/18616), [Event Hubs firewall](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-ip-filtering)).
+
+**What streaming into a closed hub needs:**
+- Azure Monitor (diagnostic settings) is on Event Hubs' **trusted services** list, so it gets through the firewall when "allow trusted Microsoft services" is on, within the same tenant. Microsoft says exactly this for our case: "Diagnostic settings can't access event hubs when virtual networks are enabled. You must enable *Allow trusted Microsoft services*…" ([Diagnostic settings](https://learn.microsoft.com/en-us/azure/azure-monitor/platform/diagnostic-settings), [Event Hubs network security](https://learn.microsoft.com/en-us/azure/event-hubs/network-security)).
+- The streaming rule needs Manage, Send and Listen. We use the namespace's root rule, which has all three.
+- Network rules and private endpoints work on every tier except Basic. Our Standard tier is fine.
+
+**Two ways to close the hub:**
+
+| | (a) Allow the nodes' subnet | (b) Public access off, private endpoint |
+|---|---|---|
+| Configuration | deny by default, plus one network rule for the node subnet (service endpoint `Microsoft.EventHub`), plus trusted services | public access disabled, plus trusted services, plus (Phase 5) a private endpoint and a private DNS zone |
+| Azure Monitor gets in | yes, the documented case above | Microsoft says trusted services get in "even when private endpoints are enabled", but never states the "public access off" combination in one sentence |
+| Alloy in AKS (Phase 5) | reaches it directly over the service endpoint, Kafka included | through the private endpoint; Microsoft's pages don't say whether Kafka works through one |
+| Cost | free | private endpoint hourly cost plus traffic |
+| Code | a service endpoint on the node subnet and one rule | an endpoint, a DNS zone and a VNet link |
+
+➡️ **My recommendation: (a).** It's the case Microsoft documents directly, it costs nothing, it's less code, and it's exactly the path Alloy will use in Phase 5. Only the cluster's nodes and Azure's trusted services can reach the hub. (b) is stricter on paper, but has two undocumented points (the "public access off" combination and Kafka) for no gain in our setup.
+
+**dev right now:** the start got far, with 16 resources created, then stopped at the hub. The scheduled `destroy` removes it after 4 hours. Once the fix is merged, a new `start` simply continues on top of what's there.
+
+Shall I build (a)?

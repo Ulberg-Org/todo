@@ -1,0 +1,18 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T12:03:24Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Here are the commands. Type them with `!` in front, so they run as you, in this session, and I see their output at once.
+
+**1. When the `destroy` is done, start dev:**
+```
+! gh workflow run start.yml --repo Ulberg-Org/platform -f environment=dev
+```
+
+**2. Approve the run.** It fetches the newest `start` run itself:
+```
+! gh api -X POST repos/Ulberg-Org/platform/actions/runs/$(gh run list --repo Ulberg-Org/platform --workflow start.yml --limit 1 --json databaseId --jq '.[0].databaseId')/pending_deployments -F 'environment_ids[]=26656203533' -f state=approved -f comment="approved from the terminal"
+```
+
+That's a few seconds per round for you, and it stays your approval. My watcher picks up the `start` automatically and reports what happens.
