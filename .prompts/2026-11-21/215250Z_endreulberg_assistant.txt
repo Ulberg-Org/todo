@@ -1,0 +1,14 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T21:52:50Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#65 is merged. On the way I found one more bug in my own check: the agent access check failed while dev ran, because Azure writes `resourcegroups` in lowercase in resource IDs. It now compares ignoring case, as Azure itself does, and the checks were green with dev running. You'd already approved that commit too.
+
+**Your steps now:**
+1. **`destroy` (`dev`):** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>. The running server still has the half-created roles from the failed run.
+2. **Then `start` (`dev`)**, and approve it under "Review deployments": <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>
+
+No apply to promote: #65 only changed workflows, scripts and the dev stack.
+
+When `start` has run, I'll read the roles Job's result and check the roles in Azure as Claude's agent.

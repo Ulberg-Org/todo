@@ -1,0 +1,15 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T19:09:48Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+`destroy` failed for the reason I suspected: the cancelled `start` left a lock on the stack's state (from 18:17).
+
+The fix is in **platform #63**. Before acting, `start` and `destroy` now release a lock left by a cancelled run. That's safe, because the two never run at the same time for the same environment, so a lock they find is always stale. They also refresh first, so state a cancelled run left half-written is reconciled with what's actually in Azure.
+
+**For you, in order:**
+1. **Approve #63** (its checks are running). I'll merge it right away. No apply is needed, since it only changes workflows.
+2. **Run `destroy` (`dev`) again:** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>. It should now remove the lock and the half-built dev.
+3. **Then `start` (`dev`)**, with `D2ps_v7`.
+
+I'll watch `destroy` once it's running.

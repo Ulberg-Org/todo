@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T08:46:05Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+÷Great, let us move on then, but the destroy should now have run and removed the azure environment

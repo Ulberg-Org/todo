@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v25 (2026-11-21, Phase 3 grilled: D82–D90).** Phases 0–2.5 done; Phase 3 (Azure foundation for dev) next. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
+> **Status: v26 (2026-11-22, D91–D92: every developer's Claude, the database's line between platform and app).** Phases 0–2.5 done; Phase 3 (Azure foundation for dev) next. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -198,6 +198,8 @@ Pulumi (F#) turns this into:
 | D88 | **Every developer gets a Claude agent, and it mirrors its developer's reach, read-only** (amends D41; AGENTS.md §3): an infra developer's Claude gets Azure Reader, AKS RBAC Reader and the database read-only; an app developer's Claude the database read-only (through `platform db`) and telemetry. Claude in the sandbox is for development only: the local cluster, and read-only Azure through a 1 h token copied in and renewed like GitHub's (D81). Claude's cloud database MCP comes with Phase 5 (D58) | msg 2026-11-21 |
 | D89 | **`shared` also holds** the telemetry storage now (one account, containers for Loki and Tempo, 14-day lifecycle, no public access; Phase 5 adds the identities that write to it) and a **budget alert** of 500 NOK a month (50 %, 80 %, 100 %, to the alert list, D40). No new Key Vault until a secret needs one (dev needs none: Entra workload identities) | msg 2026-11-21 |
 | D90 | **Pulumi tests, lazily**: unit tests for our own logic (what `people.yaml`, `platform.yaml` and the environment files turn into), not mocks of every Azure resource; `preview` on every PR; the done-when access tests as a script against the real dev | msg 2026-11-21 |
+| D91 | **Every developer gets a Claude agent, derived from `access/people.yaml`, and brings their own Claude (BYOC)** (refines D41, D88): one `<name>-agent` Entra account per person, no separate list. Agents of `infra-developers` are in `platform-agents` (Azure and the cluster read-only, the database read-only); agents of `app-developers` in a new `app-agents` (the database read-only and telemetry; no Azure or cluster beyond `db-proxy`). The Claude subscription is each developer's own and isn't tied to Entra: a Claude's rights come only from its agent identity and the shared `ulberg-claude` app | msg 2026-11-22 |
+| D92 | **The database's line between the platform and the app.** The platform (`database/`, the same locally and in Azure) owns: the database, the roles and who signs in as them, an empty schema owned by the migrator with default privileges (what the migrator creates, the app may read and write, readers may read), access rules and observability. The app owns everything in its schema through migrations run as `<db>_migrator`: tables, indexes, seed data, per-app tuning. In Azure a migrator identity and a migration Job (Argo CD, before each deployment) come with Phase 4. How we'd run the database once data matters (backups, HA, replicas, multi-region): the platform repo's `docs/database-operations.md` | msg 2026-11-22 |
 
 ## 4. Sign-off and bootstrap
 
@@ -430,6 +432,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - `flake.nix` in todo and in the platform repo (D79); the sandbox images built from them.
 - A Lima VM per profile (D77, D81), confined by `srt`: the repo picks the profile, `access/people.yaml` allows it. A host-side launcher starts it, mints Claude's tokens and copies them in (D78). First a spike: `make up` and `make test-platform` in the VM, and the confinement holds on the developer's macOS.
 - Network deny by default with the allowlist (D78), enforced on the host (D81); none of the developer's ports. Docker and the cluster inside the VM.
+- **TODO (prod, Phase 6b):** the database's operations as written in the platform repo's `docs/database-operations.md`: geo-redundant backups and long-term ones outside the server's life, restore drills, zone-redundant HA, read replicas and multi-region when needed, PgBouncer, maintenance window, alerts.
 - **TODO:** Postgres 19, locally and in Azure together (D56), once Azure Database for PostgreSQL offers it (it offers up to 18 on 2026-11-21).
 - **TODO:** `dotnet test` exits 0 without running anything (Expecto has no test adapter; CI and the README use `dotnet run --project backend/test/TodoBackend.Test`). Add the adapter (`YoloDev.Expecto.TestSdk`, after the supply-chain check) or make `dotnet test` fail loudly. Found by Claude in the sandbox's end-to-end test.
 - **TODO (every quarter, or on each Docker Sandboxes release note):** check whether Docker Sandboxes now fits (its kernel runs Cilium: policy routing, `NET_CLS_BPF`; test: `ip rule` works and `make up` passes inside). If so, move back: it adds credentials on the way out and filters by host name, which our setup gives up (D81).
@@ -446,6 +449,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 
 ### Phase 4: GitOps + cluster baseline on Azure
 - `db-proxy` and `platform db <env>` (D87).
+- The app's database migrations in Azure (D92): a migrator workload identity mapped to `<db>_migrator`, and a migration Job Argo CD runs before each deployment.
 - ArgoCD installed by Pulumi with the same root Application as locally (D67), the renderer image published for its plugin (D68), Entra SSO, admin login disabled; Argo CD's GitHub access; release image tags per environment in `apps/<app>.yaml`; the `platform.yaml` PR flow (§2.1 steps 1–3), signed images + admission policy.
 - The release-PR flow (§2.1 step 4): the pr-bot opens it, the policy check runs, and the path-based `CODEOWNERS` (app leads own `apps/<app>/prod/`) is generated and checked by the `access` stack. Until prod exists (Phase 6b), nothing syncs `apps/<app>/prod/`.
 - Backend ≥2 replicas, HPA, PDB, topology spread; default-deny network policies (identical to tier 2).

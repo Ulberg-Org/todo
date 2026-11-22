@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T21:29:42Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+`start` hasn't started yet. Since 21:24 it has been **waiting for your approval** in the `dev` environment (starting the run and approving it are two separate clicks). Approve it here: <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml> → the newest run → "Review deployments" → tick `dev` → "Approve and deploy".
+
+I'm still watching it, and I'll report the roles Job as soon as it has run.

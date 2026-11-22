@@ -1,0 +1,24 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T21:29:01Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Exactly that, and it's already where the line runs. The platform only does what isn't about the app's data model:
+
+| Platform (`database/`, same locally and in Azure) | App repo (migrations, run as `todo_migrator`) |
+|---|---|
+| The database exists | Tables, columns, indexes, constraints |
+| The roles and who signs in as them (passwords locally, Entra in Azure) | Seed or reference data |
+| An **empty** schema `todo`, owned by `todo_migrator`, and the default privileges: what the migrator creates, `todo_app` may read and write, `todo_readonly` may read | Per-app tuning: indexes for its queries, statistics targets, table storage settings |
+| Access rules: read-only by default, 30-second limit, no `CREATE` in `public` | Anything the app's code depends on |
+| Observability: `pg_stat_statements` and the monitor role | — |
+
+The default privileges are what make the split work. The app's migrations never grant anything: every table the migrator creates automatically gets the right rights for the app and for readers. Today the todo database is still empty, so nothing has moved yet.
+
+**What's missing for migrations in Azure:** nobody can sign in as `todo_migrator` there yet. That calls for a migrator identity (workload identity) and a migration Job that Argo CD runs before each deployment, mapped to `todo_migrator` in `azure.sql`. It belongs in Phase 4, where the app is deployed, so I'll put it in its grilling. Locally the migrator already signs in with its password.
+
+I'll write both down when I do item 2:
+- **D91:** agents derived from `people.yaml` for every developer, in two agent groups, and BYOC: everyone brings their own Claude, and rights come from their agent.
+- **D92:** the database's line between platform and app, as above.
+
+`start` is still running, and the roles Job's result comes when it finishes.

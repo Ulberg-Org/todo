@@ -1,0 +1,36 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T20:04:06Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Your usage limit has been reached, so I'm stopping here. Item 1 of Phase 3's remaining work, the database roles, is written and up for review as **platform #64**. Its CI checks haven't finished yet; I haven't seen their results.
+
+**What #64 does:**
+- **One SQL file shared by local and Azure (D85):**
+  - `database/roles.sql` holds the roles and privileges;
+  - `local.sql` adds the passwords and statistics, as before;
+  - `azure.sql` adds the Entra sign-ins: the backend and `platform-write` read and write; `platform-read`, `platform-agents` and `app-developers` read only.
+- **The dev stack now also creates:**
+  - the `todo` database and the backend's workload identity;
+  - CI's own access to the cluster, with `kubelogin` in CI to sign in to it;
+  - a Job in AKS that applies the roles as `db-admin`, once per new server.
+- **A CLI fix, found while testing locally:** it now trusts its own snapshot repos.
+
+**Tested in the sandbox:**
+- the build, style check and all tests (Access 58, Shared 6, Renderer 20, Environment 12, and the script tests);
+- a fresh local `make up` with the split SQL: the roles are there, and the read-only role really is read-only.
+
+The Azure half (the Job against the real database) hasn't run yet.
+
+**For you, in order:**
+1. **Destroy dev first** (`destroy`, `dev`, no approval needed). While dev runs, #64's environment preview will probably fail, because the preview identity only gets its cluster access from #64 itself.
+2. **Approve #64** once its checks are green, then promote its apply.
+3. **`start` (`dev`)** to run the Job for real. If it fails right after the cluster is created, it may be that Azure needs a few minutes before CI's new cluster access applies. Running `start` again would then work.
+
+**What's left of Phase 3:**
+- every developer's Claude agent (D88);
+- the sandbox's read-only Azure token;
+- the access tests, with steps for you to try yourself (as you asked);
+- marking Phase 3 done in PLAN.
+
+Connecting to the database through `kubectl port-forward` (`platform db`) is Phase 4. That's when I'll give you the steps to try it.

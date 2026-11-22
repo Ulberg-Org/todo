@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-21T21:29:01Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) Yes all devs code with Claude. Q2) Yes, that is correct. Q3) Correct However, this reminds me that we need to make sure that the database runs based on migrations in the app, so the initial database setups should maybe not live in the platform, unless you are only placing the permissions / settings of the DB there, and have all "tuning" and other per application settings as migrations in the app repos?

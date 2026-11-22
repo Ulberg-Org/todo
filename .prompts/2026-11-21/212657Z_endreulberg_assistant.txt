@@ -1,0 +1,31 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T21:26:57Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, that fits how it already works. A Claude's rights never come from its Claude account. They come from the identities it acts as: its own Entra agent account (`<name>-agent`) and the shared `ulberg-claude` GitHub app. So which Claude subscription drives it doesn't matter, and "bring your own Claude" works without an Anthropic organization. Three decisions to settle before I build D88:
+
+❓ **Q1 - Agents derived from `people.yaml`**: Today `agents:` is a separate list (only `endre`). Should **every person** in `people.yaml` get an agent account automatically, with no separate list? Someone without an agent then simply never signs it in, at no cost, since there are no licences or passwords.
+
+➡️ Yes: one agent per person, derived.
+
+---
+
+❓ **Q2 - Rights derived from the developer's groups, in two agent groups**:
+- **`platform-agents`** (agents of `infra-developers`): as today: Azure Reader and friends, the cluster read-only, the database read-only.
+- **`app-agents`** (new, agents of `app-developers`): the database read-only (through `platform db` in Phase 4) and telemetry. No Azure, no cluster beyond the `db-proxy` port-forward.
+
+Someone in both groups gets an agent in both groups. `azure.sql` then gives `app-agents` read-only as well, and the agent access check covers both groups.
+
+➡️ Yes.
+
+---
+
+❓ **Q3 - BYOC: what each developer brings, and what the repo provides**:
+- **The developer brings:** their own Claude subscription and their own `/login`, on the Mac and in the sandbox. Nothing about it is in our code or tied to Entra.
+- **The repo provides:** the agent account (set up once per developer: Temporary Access Pass and passkey, AGENTS §4), the shared GitHub app, and the sandbox.
+- **AGENTS §4** says this plainly: "Claude subscription: your own; rights: your agent's".
+
+➡️ Yes.
+
+I'll take this as D91 into the same Phase 3 work as item 2 (every developer's Claude). Meanwhile `start` is running, and I'll report the roles Job when it's done.

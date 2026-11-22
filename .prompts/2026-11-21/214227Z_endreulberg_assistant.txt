@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T21:42:27Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Claude's Azure session has expired again (the 4-hour limit for Azure tools), so I can't read the pod's log right now. Please sign the agent in again, in your own terminal:
+
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+```
+
+**What I know so far:**
+- **Worked:** AKS, Postgres, the `todo` database, the identities and CI's cluster access. The Job's pod started, got its Entra token and reached the database. Exit code 3 means psql connected and a statement failed.
+- **Two suspects, both because Azure's admin isn't a superuser:**
+  1. `REVOKE CREATE ON SCHEMA public FROM PUBLIC`: only the `public` schema's owner may do that, and in a database created through Azure's API, the owner is likely not our admin.
+  2. `ALTER ROLE "platform-read" SET …`: Azure's own function creates those Entra roles, so our admin may not be allowed to change them.
+
+The log will tell which, and then I fix the cause rather than guess. Locally both work, because there the CLI runs as `postgres`, a superuser.
+
+dev keeps running in the meantime (the scheduled `destroy` takes it down 4 hours after the start), so the failed pods are there to read once you've signed in.

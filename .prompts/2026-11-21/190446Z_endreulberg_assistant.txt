@@ -1,0 +1,13 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T19:04:46Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Both are merged: platform #62 (`D2ps_v7`, and the client ID for `teardown`) and todo #32 (D84 in PLAN).
+
+Your steps, in this order. Each waits for the one before:
+1. **Promote the apply** for #62: <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml>. That sets the client ID that `destroy` needs.
+2. **Run `destroy` (`dev`)** once the apply is done: <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>. It removes the half-built dev. No approval needed.
+3. **Then `start` (`dev`)** and approve it: <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>
+
+Tell me when you've started `destroy`. I'll watch it, in case the cancelled `start` left the stack locked.

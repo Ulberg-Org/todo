@@ -1,0 +1,33 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T19:47:40Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+dev is running as decided:
+
+| Check | Result |
+|---|---|
+| AKS | Free, Kubernetes 1.37, Cilium (dataplane and policy), Azure RBAC, local accounts off, workload identity |
+| Nodes | 2 × `Standard_D2ps_v7`, no public IPs |
+| Postgres | 18, Ready, **public access off**, Entra on, passwords off |
+| Cluster access | `platform-read` and `platform-agents`: Cluster User and RBAC Reader. `platform-write`: also Cluster Admin. No app groups |
+| The database's name | doesn't resolve from the internet |
+
+The scheduled `destroy` removes it around **23:30** (4 hours after the start).
+
+## Phase 3: what's left
+
+1. **The database roles (increment 2b):**
+   - a Kubernetes Job in AKS, run as `db-admin`, applies the same `database.sql` as locally, with Entra principals instead of passwords (D85);
+   - the backend gets its own workload identity as the app role (D69);
+   - `platform-read`, the agents and the app developers get read-only, and the platform leads read-write (D75).
+2. **Every developer's Claude agent (D88):** `access` creates an agent for app developers too (today it's infra developers only). They get the database read-only, and nothing else in Azure or the cluster.
+3. **The sandbox's read-only Azure token (D88):** the launcher fetches a 1-hour token as Claude's agent and renews it, like GitHub's.
+4. **The done-when access tests:** a script against the real dev that shows:
+   - app developers can change nothing;
+   - developers and every Claude can read but not write;
+   - the database isn't reachable from outside;
+   - the roles match the groups.
+5. **PLAN:** Phase 3 marked done, then grilling Phase 4 (Argo CD in Azure, `db-proxy`, `platform db`, the app flow on merge to `main`).
+
+I'd take them in that order, since 1 is the largest and 4 checks the others. One practical point for item 1: CI needs `kubelogin` to sign in to AKS through Entra when Pulumi runs the Job. I'll look up current best practice for that before building it. Shall I start?

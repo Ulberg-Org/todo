@@ -1,0 +1,16 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T20:41:28Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I couldn't merge #64 yet: it needs your approval once more. dev's `destroy` had already finished (at 20:08), but #64's checks had failed, and fixing them took two commits that dismissed your approval:
+
+1. **The agent access check (D41) failed:** it saw Claude's agent with AKS Cluster User and RBAC Reader on `aks-dev`, the rights D84 and D88 give it. The check didn't know about them yet. It now expects exactly those two on each environment's own cluster, and still fails on anything more (tested: Cluster Admin, or a read on another cluster, is caught).
+2. **The environment preview failed:** I'd guessed the CI identities' resource group (`rg-identity`) instead of reading it from `access`'s config, which says `rg-platform-state`. My mistake; it's fixed.
+
+All checks are green now, and the environment preview shows 36 resources.
+
+**For you, in order:**
+1. **Approve #64 again:** <https://github.com/Ulberg-Org/platform/pull/64>. I'll merge it straight away.
+2. **Promote its apply** (`access` and `shared`; the dev stack is only applied by `start`).
+3. **`start` (`dev`)**: the first real run of the roles Job against Azure's Postgres. If it fails right after the cluster is created, it may be that Azure needs a few minutes before CI's new cluster rights apply. Running `start` again would then work.

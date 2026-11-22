@@ -1,0 +1,15 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T08:47:58Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The fix is up as **platform #66**. Your steps to get dev torn down:
+1. **Approve #66:** <https://github.com/Ulberg-Org/platform/pull/66>. I'll merge it once its checks are green.
+2. **`start` (`dev`)**, and approve it. It only records the new delete rules on the running dev, which takes a minute or two and changes nothing in Azure.
+3. **`destroy` (`dev`).** This time it deletes the server and the cluster together with what's in them.
+
+Until then, dev keeps running (since 22:10 yesterday) and costs a little: AKS nodes and Postgres, roughly 2 to 3 NOK an hour. And Claude's Azure session has expired again, so I can't check Azure until you sign it in again.
+
+**Next, in this order:**
+- the simplification of the environment stack;
+- item 2: every developer's Claude (D91), plus D92 in PLAN.

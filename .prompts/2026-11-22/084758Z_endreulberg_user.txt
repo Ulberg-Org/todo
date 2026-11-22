@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T08:47:58Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+If you see that the code is hard to work with refactor it to be *simpler*

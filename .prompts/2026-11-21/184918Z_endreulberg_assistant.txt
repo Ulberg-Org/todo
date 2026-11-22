@@ -1,0 +1,18 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-21T18:49:18Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Your `destroy` couldn't run, so the half-built dev is still there: AKS without nodes, Postgres and the network. Postgres costs a little while it runs.
+
+**Why `destroy` failed:** it couldn't sign in to Azure at all. The apply identity's client ID was set only as a variable of the `dev` environment (by `bootstrap.sh`), so `teardown` had none.
+
+**The fix is on platform #62**, together with the switch to `D2ps_v7`. `access` now sets the client ID as a repo variable, read straight from the identity in Azure, so both environments see it. It's an identifier, not a credential: the federations still decide who may sign in. Checks ran in the sandbox: build, style, access tests 58/58.
+
+**For you, in order:**
+1. **Approve platform #62** and **todo #32** (D84 in PLAN). I'll merge them.
+2. **Promote the apply**, which sets the variable.
+3. **Run `destroy` (`dev`) again** to clean up. Otherwise the scheduled one does it around 22:16.
+4. **Then `start` (`dev`)** with the new node size.
+
+One risk for step 3: the cancelled `start` may have left the stack's state locked or with "pending operations". If so, `destroy` reports it, and I'll fix that in the workflow so it handles it by itself.
