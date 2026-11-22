@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T14:10:43Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) Whatever makes it so that I can stop having to click as much in Github Actions. I want to accept a PR and things should go automaitcally from there. Q2) Publically. Q3) Yes. But i want a seperate promote to prod. Q4) a) Q5) I only want to have a single approval from me to get things into dev, and a second one for promoting to prod.

@@ -1,0 +1,37 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T13:50:46Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The follow-up work from the lessons is done, as two PRs:
+
+**todo #39 (PLAN and AGENTS.md):**
+- **D98, evidence before every run:**
+  - the leftovers check;
+  - the four-question checklist for new Azure resource types;
+  - `destroy`'s fallback deletes diagnostic settings first;
+  - `start --continue-on-error`;
+  - smaller increments once Argo CD promotes to the cloud by itself.
+- **D95's wording:** the environment stack also creates what only exists while it runs.
+- **D97's wording:** Azure Monitor creates the hubs.
+- **AGENTS.md §6 in both repos:** "Evidence before every run".
+
+**platform #81 (the code):**
+- **The leftovers check** in every PR's environment preview: anything in Azure that the state doesn't know about fails the PR within a minute, instead of in a `start`. It already ran for real on today's dev: "No leftovers for dev".
+- **`destroy`'s fallback** deletes each resource's diagnostic settings first. The test was red before the fix.
+- **`start`** shows every independent failure in one run.
+- **Tests:** leftovers 5/5, fallback 5/5.
+
+I just pushed a small cleanup to #81: some resource types don't have diagnostic settings, and asking for them only filled the log with errors. Its CI is running again.
+
+I've also saved "evidence first" as a rule for myself.
+
+**Your steps:**
+1. **Approve todo #39:** <https://github.com/Ulberg-Org/todo/pull/39/files>, then "Review changes", "Approve", "Submit review".
+2. **Approve platform #81** once its CI is green again: <https://github.com/Ulberg-Org/platform/pull/81/files>, the same way.
+
+I'll merge both. Neither needs an apply or a new `start`: the changes only take effect in the next preview, `start` or `destroy`.
+
+**Next:** open-code-review. I have the research ready: Alibaba's official GitHub Action, Anthropic supported directly, an API secret and `pull-requests: write`. Two decisions are yours, and I'll ask them as soon as you're ready:
+- whose API key, given BYOC;
+- `pull_request_target` versus `pull_request`.

@@ -1,0 +1,19 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T14:00:57Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Understood: no open-code-review for now. When we take it up again, the research is ready, along with my recommendations for Q2–Q4. I'll add it to PLAN as a TODO with the reason ("needs an Anthropic API key, paid per token") in the next PLAN PR, so it doesn't get lost. I won't open a PR just for that.
+
+**Still waiting for you:** re-approve #81 (my cleanup push dismissed your approval): <https://github.com/Ulberg-Org/platform/pull/81/files>, then "Review changes", "Approve", "Submit review".
+
+**What's left of Phase 3:**
+1. **Simplify the environment stack.** `Program.fs` has grown to about 770 lines. I'd split it into modules for network, cluster, database and telemetry, and move the roles Job into a YAML template file. It's a pure refactor with no change in Azure: the preview must show 0 changes, which is the evidence.
+2. **The access tests for "done when":** a script, run against dev, that proves:
+   - app developers can change nothing;
+   - developers and every Claude can read but not write;
+   - the database isn't reachable from outside the VNet;
+   - its roles map to the Entra groups.
+3. **Mark Phase 3 as done in PLAN,** then grill Phase 4 (Argo CD in Azure, `db-proxy`, `platform db`, the app flow on merge to `main`).
+
+I'll start on 1 while #81 waits, unless you'd rather take something else first.

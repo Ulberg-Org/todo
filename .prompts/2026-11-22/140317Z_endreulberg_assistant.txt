@@ -1,0 +1,38 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T14:03:17Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Both repos are public, so Argo CD can read them without credentials. Here's the first grilling round for **Phase 4**. The aim, as you asked, is for an app change to reach the cloud with as few clicks from you as possible.
+
+❓ **Q1 - What comes first?** Phase 4 has five parts:
+- Argo CD in AKS;
+- the app's migrations;
+- `db-proxy` and `platform db`;
+- the release-PR flow with signed images;
+- the cluster baseline (replicas, HPA, network policies).
+
+➡️ **Argo CD in AKS first.** `start` installs it with the same root Application as locally, and from then on a merge to `main` reaches dev without anyone clicking. Then the migrations (the app needs its schema), then `db-proxy`, then the baseline, then the release flow.
+
+---
+
+❓ **Q2 - How does Argo CD read GitHub?**
+➡️ **Without credentials, while the repos are public** (both are). That's nothing to store and nothing to leak. A read-only GitHub App comes in the day a repo becomes private.
+
+---
+
+❓ **Q3 - App changes to dev: automatic on merge?**
+➡️ **Yes:** Argo CD auto-syncs dev from `main`, the same as locally. Your approval is the PR review, nothing after it. (Prod, Phase 6b, gets the release-PR flow.)
+
+---
+
+❓ **Q4 - How do people reach Argo CD's UI?**
+- **(a)** Through the gateway on dev's static address, with Entra SSO and the same Conditional Access as Azure (passkey). Groups decide the role: `platform-read` views, `platform-write` (PIM) administers, and the admin login is turned off.
+- **(b)** Only through a port-forward. That needs a right in the cluster that readers don't have today.
+
+➡️ **(a):** sign-in is the same as everywhere else, and readers need no extra cluster rights.
+
+---
+
+❓ **Q5 - Fewer clicks for infrastructure too?** Today every infra change costs you: the PR approval, then a second approval of the apply after the merge, then a `start`.
+➡️ **Drop the second approval for `shared` and the environment stack:** your PR approval of the reviewed code is the gate, and the preview is already in the PR. **Keep it for `access`,** which decides who can do what. The risk: a merged change to `shared` applies at once, but only code you've approved, with its preview in front of you.
