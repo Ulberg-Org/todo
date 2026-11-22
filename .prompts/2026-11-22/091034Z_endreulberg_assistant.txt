@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:10:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+<https://github.com/Ulberg-Org/platform/actions/runs/45004944019>, then "Re-run jobs", "Re-run failed jobs". I'll merge #67 once it's green.
+
+Tell me when `destroy` is running, and I'll check that it worked: whether the fallback kicked in, that `rg-dev` is gone, and that the state is clean.

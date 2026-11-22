@@ -1,0 +1,13 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:08:39Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#66 is merged. Two runs left from you to take dev down properly:
+
+1. **`start` (`dev`):** records the new delete rules on the running dev. Its roles Job will fail again (the roles already exist on the server), which is fine for this purpose.
+   <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow". Open the new run, then "Review deployments", tick `dev`, "Approve and deploy".
+2. **When `start` is done, `destroy` (`dev`):** this time it deletes the server and the cluster with everything in them.
+   <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>, then "Run workflow", `dev`, "Run workflow".
+
+Once #68 (the fallback) is merged too, a failed `destroy` will clean up by itself, and this two-step recovery won't be needed again.

@@ -1,0 +1,10 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:16:08Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The only failure is the roles Job, as expected: the roles were left on the server from the earlier failed run. Everything else is in place, and the new delete rules are recorded too.
+
+So now just **`destroy` (`dev`):** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>, then "Run workflow", `dev`, "Run workflow". It deletes the server and the cluster with everything in them, and if anything still fails, #68's fallback deletes `rg-dev`.
+
+When it's done, re-run #67's failed jobs: <https://github.com/Ulberg-Org/platform/actions/runs/45004944019>, then "Re-run jobs", "Re-run failed jobs".

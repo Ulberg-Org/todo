@@ -1,0 +1,19 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:20:34Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Yes, `destroy` is gone, and that's my fault. **Merging #68 deleted `destroy.yml`** instead of changing it. The commit my push script made through GitHub's API had no `destroy.yml` at all. Most likely the file's upload returned nothing, and GitHub treated the empty entry as a delete. The script never compared what it published with my local commit, so the PR showed "98 deletions" and neither of us caught it.
+
+**Effects:**
+- There's been no `destroy` workflow since the merge, so no scheduled teardowns.
+- **dev is still running** (about 2–3 NOK an hour).
+- Nothing else was lost: #67's merge only added the document.
+
+**The fix is platform #69:**
+- **It restores `destroy.yml`** with #68's fallback, as intended. I checked the published diff this time: 117 lines added to `destroy.yml`, nothing deleted.
+- **`claude-push.sh` now stops** if an upload returns nothing, and if the published tree differs from the local commit. It shows the difference and keeps the local branch, so this kind of error can't go unnoticed again.
+
+**Your steps:**
+1. **Approve #69:** <https://github.com/Ulberg-Org/platform/pull/69/files>, then "Review changes", "Approve", "Submit review". Please check that `destroy.yml` shows as added, not deleted. I'll merge it when the checks are green.
+2. **Then run `destroy` (`dev`):** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>, then "Run workflow", `dev`, "Run workflow". That link only works again once #69 is merged.
