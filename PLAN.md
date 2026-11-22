@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v26 (2026-11-22, D91–D99: every developer's Claude, the database's line between platform and app, its security and monitoring, tooling owned by the platform, access that outlives the environment, the sandbox's Azure tokens, Azure's signals into our telemetry, evidence before runs, one approval into dev).** Phases 0–2.5 done; Phase 3 (Azure foundation for dev) next. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
+> **Status: v27 (2026-11-22, Phase 3 done; Phase 4 next, starting with D99: one approval into dev).** Phases 0–3 done; Phase 4 (GitOps + cluster baseline on Azure) next. Phase 2's remaining TODOs (infrastructure signals) are open.
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -446,7 +446,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - **TODO (every quarter, or on each Docker Sandboxes release note):** check whether Docker Sandboxes now fits (its kernel runs Cilium: policy routing, `NET_CLS_BPF`; test: `ip rule` works and `make up` passes inside). If so, move back: it adds credentials on the way out and filters by host name, which our setup gives up (D81).
 - **Done when** Claude completes one task end to end inside the sandbox (code, `make up`, tests, reading its effect through its MCPs, a PR) in each profile, and from inside these fail, even as root: reading the developer's home folder or `~/.ssh`, `curl` to a host not on the allowlist or to the developer's machine or LAN, pushing with the developer's GitHub account, and asking for the platform profile without being in `infra-developers`. **Done 2026-11-21:** the app profile's task is todo #28 (README; `make up`, tests, the Grafana and Postgres MCPs, a verified PR), the platform profile's is platform #56 (a memory limit found and checked through the Kubernetes MCP), and `sandbox/test` passes 10/10.
 
-### Phase 3: Azure foundation for dev (Pulumi F#, applied only by CI after approval; D82–D90)
+### Phase 3: Azure foundation for dev (Pulumi F#, applied only by CI; D82–D99)
 - `shared` (persistent, Sweden Central, D83): ACR, a static IP and DNS label per environment, telemetry storage, the budget alert (D89).
 - dev, on demand (D45): a `start` workflow (approval) runs `pulumi up`; a `destroy` workflow every 15 minutes removes anything started more than 4 hours ago. Its own resource group; CI's apply identity gets what it needs scoped to it and `shared`.
 - Network (D86): VNet `10.20.0.0/16`, node subnet `/23`, database subnet `10.20.2.0/24` (D70), NSGs, private DNS for Postgres.
@@ -457,7 +457,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - Evidence before runs (D98): the leftovers check in the environment preview, diagnostic settings removed by `destroy`'s fallback, `start --continue-on-error`.
 - Ownership (D94): CODEOWNERS gives tooling and infrastructure paths to `platform-leads` in app repos; app leads and platform engineers may contribute to the platform repo.
 - Tests per D90.
-- **Done when** everything exists, `start` and `destroy` work, and the access tests show: app developers can change nothing; developers and every Claude can read but not write; the database isn't reachable from outside the VNet; its roles map to the Entra groups.
+- **Done when** everything exists, `start` and `destroy` work, and the access tests show: app developers can change nothing; developers and every Claude can read but not write; the database isn't reachable from outside the VNet; its roles map to the Entra groups. **Done 2026-11-22** (platform #57–#83): `shared`, `access` and dev from code; `start` and `destroy` (with the fallback that empties the group) work, and a merge now reaches dev with the PR's approval only (D99). The access tests are the checks that already run, not a new script (less is less): the agent and standing-access checks on every PR, `main` and nightly (people and every Claude only read; app developers have nothing in Azure or the cluster), `sandbox/test` (Azure refuses Claude's writes: HTTP 403), the server's public access off in code and in Azure, the roles Job's log mapping the roles to the Entra groups (`roles applied`), and the leftovers check (D98) on every environment preview. Lesson (D98): evidence before every run.
 
 ### Phase 4: GitOps + cluster baseline on Azure
 - First (D99): a merge to `main` applies the stacks and starts or updates dev with no approval in GitHub Actions; then Argo CD in AKS, auto-syncing dev from `main`.

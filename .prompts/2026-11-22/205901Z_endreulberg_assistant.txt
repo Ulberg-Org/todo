@@ -1,0 +1,15 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T20:59:01Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+You won't have to any more. That approval of `pulumi up` was the **last one**, needed only because that merge itself is what removed the reviewer from `dev`. Azure confirms it now: the `dev` environment has **0 required reviewers**.
+
+From now on it's like this:
+1. You approve the PR.
+2. I merge it once its checks are green.
+3. `pulumi up` and then `start dev` run by themselves, with no "Review deployments" in GitHub Actions.
+
+The next merge to the platform repo is the proof. I'll check that its run goes all the way through without waiting for anyone, and tell you if it doesn't.
+
+The only exception left, by your decision: **prod** (Phase 6b) gets its own approval, the second click.

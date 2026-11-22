@@ -1,0 +1,12 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T14:16:19Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Approve it once: <https://github.com/Ulberg-Org/platform/actions/runs/45031957736>, then "Review deployments", tick `dev`, "Approve and deploy".
+
+**After that, everything should run by itself:**
+1. **`pulumi up`** applies `access`, which removes dev's reviewer, and `shared`.
+2. **`start dev`** in the same run updates dev, without a new approval.
+
+I'm following the run. When it's done, I'll check that dev no longer has a reviewer and that the run only needed your one approval. That's the proof that the next merge goes all the way into dev on your PR approval alone.
