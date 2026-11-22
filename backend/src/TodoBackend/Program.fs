@@ -66,7 +66,7 @@ let create (args: string array) : WebApplication =
         builder.Configuration["Database:ConnectionString"]
         |> Option.ofObj
         |> Option.filter (String.IsNullOrWhiteSpace >> not)
-        |> Option.defaultWith (fun () -> failwith "Database:ConnectionString is not configured")
+        |> Option.defaultWith (fun _ -> failwith "Database:ConnectionString is not configured")
 
     // 2. Setup
     builder.WebHost.UseUrls($"http://+:{ports.``public``}", $"http://+:{ports.management}")

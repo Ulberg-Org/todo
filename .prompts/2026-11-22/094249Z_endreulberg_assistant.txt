@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:42:49Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Next is **the sandbox's read-only Azure token (D88)**: Claude in the VM gets read-only Azure as its agent, renewed like GitHub's. Before I build it, one decision with a security trade-off:
+
+❓ **Q1 - How Claude in the VM uses Azure.** The VM has `az`, but `az` can't sign in with a bare access token. Two ways:
+- **(a) Access tokens only.** Every 45 minutes the launcher fetches 1-hour access tokens for exactly two APIs, Azure Resource Manager and Log Analytics, and copies them in. Claude reads Azure through a small `azure-read` helper: `curl` with the token, e.g. `azure-read /subscriptions/…/resourceGroups/rg-dev/resources`. The proxy only adds `management.azure.com` and `api.loganalytics.io`. Nothing in the VM can get any other token, and a stolen one dies within the hour.
+- **(b) Copy the agent's `az` profile into the VM.** All of `az` works unchanged, but the profile holds a **refresh token**. With it the VM can mint tokens for anything the agent may touch, for hours, including Key Vault signing with the Claude GitHub App's key (D52). That would let the VM mint its own GitHub tokens without the launcher. The proxy would also have to allow `login.microsoftonline.com`.
+
+➡️ **(a):** it's the GitHub pattern again (a short-lived token copied in, nothing that can renew itself), and the helper is a few lines. (b) is less code but hands the VM a long-lived credential, which is exactly what D81 avoids.
+
+---
+
+❓ **Q2 - Who gets it**: only the **platform profile** (`sandbox platform`, infra developers, whose agents have Azure Reader), not the app profile. App developers' agents have no Azure rights to pass on (D91: database and telemetry only).
+
+➡️ Yes, the platform profile only.
+
+Meanwhile I'll add `claude-push.sh`'s test to #70's branch (same PLAN bullet), and I'm watching #70's checks.

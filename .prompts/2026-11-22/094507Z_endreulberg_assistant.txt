@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:45:07Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+You were right, and it's fixed: `AzureEnvironment.parse` now turns the bool into a Result with `Result.requireTrue` and builds the value with `Result.map`:
+
+```fsharp
+found.Success
+|> Result.requireTrue $"stacks/environment/{fileName}: azure-native:location is missing"
+|> Result.map (fun () -> { name = …; location = found.Groups[1].Value })
+```
+
+I've saved this as a rule for my F#. The rest of the PR has no such `if/else`.
+
+**#70 now also has `claude-push.sh`'s test**, so it covers the whole D95 bullet:
+- A fake `gh` answers the script's GitHub calls from a local bare repository, using git's own plumbing.
+- Three cases: it publishes exactly the local tree; a failed upload publishes nothing; a published tree that differs stops it and keeps the local branch.
+- Against the script before the guards the test fails (it published despite the failed upload); against today's it passes. It runs in CI.
+- Access tests 63/63 and formatting are green in the sandbox. #70's CI is running again on the new commit.
+
+**Still open for the next item (the sandbox's read-only Azure token):**
+- **Q1, how Claude in the VM uses Azure:** I recommend (a), short-lived access tokens for only Azure Resource Manager and Log Analytics, used through a small `azure-read` helper. The alternative (b) copies the agent's `az` profile, with a refresh token, into the VM.
+- **Q2, who gets it:** I recommend only the platform profile.
+
+Approve #70 once its checks are green: <https://github.com/Ulberg-Org/platform/pull/70/files>, then "Review changes", "Approve", "Submit review".
