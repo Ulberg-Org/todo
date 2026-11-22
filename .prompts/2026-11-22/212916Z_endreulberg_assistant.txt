@@ -1,0 +1,14 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T21:29:16Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#85 is green, with exactly the expected preview against the running dev:
+- **+1 create:** the Argo CD bootstrap (`command:local:Command`);
+- **~1 update:** the `started` tag (D99);
+- **36 unchanged;**
+- **the leftovers check:** "No leftovers for dev".
+
+**Your one click:** approve #85: <https://github.com/Ulberg-Org/platform/pull/85/files>, then "Review changes", "Approve", "Submit review".
+
+After that I merge it, and everything runs by itself: the apply, then dev installs Argo CD with the root Application. I'll follow the run and check, read-only, that Argo CD is running and what its root Application shows. That's the starting point for step C (`baseline` and `gateway` healthy in dev).

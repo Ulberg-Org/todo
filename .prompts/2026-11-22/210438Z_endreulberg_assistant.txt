@@ -1,0 +1,29 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T21:04:38Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+My agent session has expired again (4-hour limit, signed in at 13:42). Sign it in again in your own terminal, with the agent's passkey:
+
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+```
+
+**What I'm doing in the meantime:**
+
+**PR A, "the cluster can pull from our ACR"** (the step before Argo CD):
+1. **The nodes' pull role becomes Container Registry Repository Reader** instead of `AcrPull`, which Azure ignores in our registry. This is the latent fault found above. It would have stopped every image pull from ACR, the todo app's included.
+2. **`shared` imports the renderer `v0.2.4`** (pinned by digest) from GitHub's registry into ACR as `platform/renderer`, with its signature. That's `az acr import`, run as CI's apply identity, so no new identity is needed.
+
+**Evidence before the PR, once you've signed the agent in:**
+- the role's ID and its rights, read from Azure;
+- that the registry really uses repository permissions;
+- which roles exist on it today.
+
+**After that:**
+- **PR B:** Argo CD's bootstrap with the root Application.
+- **PR C:** make `baseline` and `gateway` healthy in dev.
+
+Each PR takes one approval from you, and the rest runs by itself (D99).
+
+**Still waiting for your approval:** todo #41 (Phase 3 done) and todo #42 (D100).
