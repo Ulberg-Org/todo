@@ -1,0 +1,26 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:18:45Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The next step is **D93, the database's security.** What I found:
+
+**`pgaudit` and connection logging:** all of it can be done in our environment stack, following [Microsoft's steps](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-audit):
+- **Server settings:**
+  - `azure.extensions` gets `PGAUDIT`;
+  - `shared_preload_libraries` gets `pgaudit`, keeping `pg_stat_statements`;
+  - `pgaudit.log = 'ROLE,DDL'` (role and privilege changes and schema changes; the classes must be listed one by one);
+  - `log_connections` and `log_disconnections` turn on, and failed sign-ins appear in the log.
+- **A restart:** `shared_preload_libraries` only takes effect after one, and Pulumi can't restart a server. So a small command step in the stack restarts the server when that setting changes, and in practice only once at each `start`.
+- **The extension:** the roles Job runs `CREATE EXTENSION IF NOT EXISTS pgaudit` in the app's database, so schema changes there are audited.
+- **The logs:** they stay in the server's own log until Phase 5 brings them into Grafana.
+
+**Defender** needs one decision:
+
+❓ **Q1 - Per server, or the whole subscription?**
+- **(a) The subscription's Defender plan for open-source databases**, one setting in the `shared` stack. It covers every Postgres server in the subscription automatically: dev now, prod later. Billing is per server per hour while one exists, so dev's 4-hour runs cost only those hours.
+- **(b) Per server**, only on dev's server. Our provider version has no typed resource for Postgres Flexible's per-server setting, so it would need a workaround (a command step or a generic resource), with more code and less certainty that it works.
+
+➡️ **(a):** it's simpler, uses a typed and documented API (`security:Pricing`, `OpenSourceRelationalDatabases`), and protects prod automatically later. The cost is the same as (b), because billing is per protected server-hour.
+
+Once you've answered, I'll build both parts in one PR. I'll test it with a `start` of dev that you approve, and look for the audit lines in the server log.

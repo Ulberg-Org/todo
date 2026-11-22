@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T10:23:06Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q2) a, the extra code is worth it for standardisation

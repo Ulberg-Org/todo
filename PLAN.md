@@ -1,6 +1,6 @@
 # PLAN.md
 
-> **Status: v26 (2026-11-22, D91–D96: every developer's Claude, the database's line between platform and app, its security and monitoring, tooling owned by the platform, access that outlives the environment, the sandbox's Azure tokens).** Phases 0–2.5 done; Phase 3 (Azure foundation for dev) next. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
+> **Status: v26 (2026-11-22, D91–D97: every developer's Claude, the database's line between platform and app, its security and monitoring, tooling owned by the platform, access that outlives the environment, the sandbox's Azure tokens, Azure's signals into our telemetry).** Phases 0–2.5 done; Phase 3 (Azure foundation for dev) next. Phase 0, 0b and 1 done. Phase 2 in progress: the renderer, the platform CLI, Argo CD and the telemetry stack are done; next the infrastructure signals (Phase 2 TODOs).
 > Working rules live in `AGENTS.md`. History lives in `.prompts/`.
 
 ## 1. Goal
@@ -204,6 +204,7 @@ Pulumi (F#) turns this into:
 | D94 | **Tooling and infrastructure belong to the platform, in every repo; the platform repo is open to app leads.** In app repos, CODEOWNERS gives `.github/`, `.claude/`, `.mcp.json`, `Makefile` and `flake.nix` to `platform-leads` alone (after `*` for the app's leads; the last matching line wins). In the platform repo, `platform-leads` own everything (incl. `scripts/`, `sandbox/`, `cli/`). App leads, platform engineers (`infra-developers`) and platform leads may contribute to the platform repo (branches, PRs); only `platform-leads` approve. Generated and checked by the `access` stack; may be loosened later | msg 2026-11-22 |
 | D95 | **An environment's access outlives the environment.** Each environment's resource group (`rg-<env>`) is permanent and owned by the `access` stack, with every role assignment on it (people, agents and CI, the D88 cluster roles); a new cluster inherits them, so `start` and `destroy` never create or remove access. The environment stack creates only what's in the group. `destroy`'s fallback empties the group instead of deleting it. An empty group costs nothing. Not the whole subscription: that would also cover prod | msg 2026-11-22 |
 | D96 | **The sandbox's read-only Azure: short-lived access tokens, nothing that renews itself** (refines D81, D88). For the platform profile only (infra developers; app developers' agents have no Azure rights, D91): every 45 minutes the launcher fetches 1-hour access tokens as Claude's agent for Azure Resource Manager and Log Analytics, and copies them into the VM, like the GitHub token. Claude reads with `azure-read` (GET on ARM, Log Analytics queries); the proxy adds only `management.azure.com` and `api.loganalytics.io`. Not the agent's `az` profile: its refresh token would keep minting tokens for hours, Key Vault signing (D52) included. Accepted: `az` itself doesn't work in the VM | msg 2026-11-22 |
+| D97 | **Azure's own signals reach our telemetry the same way as everything else** (D58, D71; refines D93): into Loki and Prometheus, queried with the same LogQL and PromQL locally and in Azure, not a Log Analytics workspace. Resource logs (Postgres: pgaudit, connections, slow queries) go by diagnostic setting to an **Event Hub in the environment** (Standard, for the Kafka endpoint Alloy reads; created and deleted with it); Defender's alerts and the rest of the subscription's Activity Log by a subscription diagnostic setting to the same hub (no connection string in our code). Phase 5's Alloy reads the hub into Loki; Postgres metrics come from the in-cluster exporter (D64) and Azure's host metrics from Alloy's Azure Monitor exporter. Defender for open-source databases is the subscription's plan (`shared`), so prod is covered too. Now (Phase 3): the sources and the hub; Phase 5: the readers | msg 2026-11-22 |
 
 ## 4. Sign-off and bootstrap
 
@@ -448,7 +449,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - Network (D86): VNet `10.20.0.0/16`, node subnet `/23`, database subnet `10.20.2.0/24` (D70), NSGs, private DNS for Postgres.
 - AKS (D84) and Postgres with its roles (D85). Access, all through Entra groups: `platform-read` and the agents AKS RBAC Reader, `platform-write` (PIM) AKS RBAC Cluster Admin, app developers nothing in the cluster; the database roles follow the groups (D75). Every developer's Claude agent mirrors its developer, read-only (D88).
 - The sandbox's read-only Azure token (D88, D96): access tokens for ARM and Log Analytics, platform profile only, read with `azure-read`.
-- The database's security (D93): `pgaudit` and connection logging, Microsoft Defender for open-source relational databases.
+- The database's security (D93, D97): `pgaudit` and connection logging, Microsoft Defender for open-source relational databases (the subscription's plan); the environment's Event Hub with the server's logs and the subscription's Activity Log (Defender's alerts) sent to it.
 - Access on the environment's permanent resource group, in the `access` stack (D95); `claude-push.sh` gets a test that a failed upload or a differing published tree stops it.
 - Ownership (D94): CODEOWNERS gives tooling and infrastructure paths to `platform-leads` in app repos; app leads and platform engineers may contribute to the platform repo.
 - Tests per D90.
@@ -467,6 +468,7 @@ Savings levers: stop AKS + Postgres between demos (both environments). Trade-off
 - Infra signals: the same as locally (Phase 2 TODOs), from Azure's sources where they differ: kube-state-metrics, node metrics, AKS audit logs, Postgres metrics/logs and Query Store, Envoy access logs, Argo CD, network flows (if ACNS).
 - Dashboards + alerts as code; `mcp-grafana` setup documented for both groups.
 - Entra sign-in and audit logs → alerts (D40): any emergency-account sign-in, role or group-membership changes not made by the apply identity, changes to PIM policies or Conditional Access.
+- Alloy reads the environment's Event Hub (Azure's resource logs, the Activity Log, Defender's alerts) into Loki, and Azure Monitor's metrics into Prometheus (D97).
 - The database's monitoring and alerts (D93): its metrics, logs (slow queries, pgaudit, connections) and Defender's findings in Grafana, with the alerts in the platform repo's `docs/database-operations.md`.
 - **Done when** each group's Claude sees exactly its column of §5.1, proven by tests.
 

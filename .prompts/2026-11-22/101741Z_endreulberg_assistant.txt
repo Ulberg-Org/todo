@@ -1,0 +1,22 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:17:41Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I read #73's `access` preview. It makes exactly the 4 expected changes and leaves the other 86 resources alone:
+
+| Change | What |
+|---|---|
+| + create | the `app-agents` group |
+| + create | its role to sign with the Claude GitHub App's key |
+| ~ update | CA07 (the 12-hour sign-in) also covers `app-agents` |
+| ~ update | `platform-agents`' description ("Infra developers' Claude agents…") |
+
+No account is deleted or replaced, and the other stacks are unchanged. The environment preview's "26 to create" is just dev, which isn't running.
+
+**Your steps:**
+1. **Approve platform #73:** <https://github.com/Ulberg-Org/platform/pull/73/files>, then "Review changes", "Approve", "Submit review".
+2. **Approve todo #37:** <https://github.com/Ulberg-Org/todo/pull/37/files>, then the same.
+3. **After the merge, approve the apply:** open the newest run on <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml?query=branch%3Amain>, then "Review deployments", tick `dev`, "Approve and deploy".
+
+I'll merge both PRs once you've approved them, then start on D93 (`pgaudit` and Defender).
