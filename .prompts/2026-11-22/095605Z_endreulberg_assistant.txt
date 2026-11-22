@@ -1,0 +1,36 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:56:05Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+todo #35 and platform #70 are merged. I merged `main` into #71: the last long lambda went away with #70, and the build, formatting and style check pass. Its CI is running, and I'll merge it once it's green.
+
+Here are the two questions about the next Phase 3 item, written out in full.
+
+**The item:** Claude in the sandbox VM gets read-only Azure as its own agent identity, renewed like its GitHub token (D88). The VM already has `az`, but `az` can only sign in through a full login, not with a ready-made token.
+
+---
+
+❓ **Q1 - How does Claude in the VM use Azure?**
+
+**(a) Short-lived access tokens, nothing that can renew itself.**
+- On your machine, the launcher fetches two 1-hour access tokens as Claude's agent every 45 minutes: one for Azure Resource Manager (resources, role assignments, costs) and one for Log Analytics (logs). It copies them into the VM.
+- In the VM, Claude reads Azure with a small helper, `azure-read`, that calls the REST API with the token, e.g. `azure-read /subscriptions/…/resourceGroups/rg-dev/resources`. Plain `az` commands don't work there.
+- The VM's proxy only adds `management.azure.com` and `api.loganalytics.io`.
+- **Risk:** a stolen token gives read access to those two APIs for at most an hour. Nothing in the VM can get a new token, or a token for anything else.
+
+**(b) Copy the agent's whole `az` profile into the VM.**
+- Every `az` command works in the VM, exactly as on your machine, with less code.
+- But the profile holds a refresh token that keeps getting new tokens for hours (until Conditional Access requires a new sign-in), for everything the agent may use. That includes Key Vault, where the agent may sign with the Claude GitHub App's key (D52). So the VM could mint its own GitHub tokens, without the launcher.
+- The proxy must also allow `login.microsoftonline.com`.
+- **Risk:** a stolen profile works for hours, and also gives GitHub write access through the app.
+
+➡️ **My recommendation: (a).** It's the same pattern as the GitHub token (short-lived, copied in, the VM can't renew it), and the helper is a few lines. (b) would put a long-lived credential in the VM, which is exactly what D81 was designed to avoid.
+
+---
+
+❓ **Q2 - Who gets this?**
+
+Only the **platform profile** (`sandbox platform`), which only infra developers can start. Their agents are the ones with read rights in Azure (`platform-agents`). App developers' agents have no Azure rights to pass on (D91: only the database read-only and telemetry), so the app profile gets no Azure token.
+
+➡️ **My recommendation: yes, the platform profile only.**

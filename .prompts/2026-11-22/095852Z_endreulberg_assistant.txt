@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:58:52Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Platform #71 is merged as well, with all checks green. The new style rules (§9 "Native F# first") and the CI check for them now apply in both repos.
+
+I'm still waiting for your answers to Q1 and Q2 above before I build the sandbox's Azure token. My recommendation is (a) for Q1 and the platform profile only for Q2.
