@@ -1,0 +1,32 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T14:11:43Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Your decisions are written down and built:
+- **todo #40 (PLAN D99):**
+  - one approval into dev and a second into prod;
+  - Argo CD first in Phase 4, reading the public repos without credentials, auto-syncing dev, with its UI behind Entra SSO;
+  - open-code-review as a TODO.
+- **platform #83:**
+  - **No approval in GitHub Actions for dev.** The `dev` environment loses its required reviewer and keeps "`main` only".
+  - **A merge applies the stacks and then starts or updates dev,** with no click.
+  - **Dev lives 4 hours after the latest merge,** not the first start.
+
+**Evidence before you approve:**
+- No check expects dev's reviewer.
+- A called `start` keeps CI's Azure identity.
+- The workflows parse, and the guard holds.
+- The access tests pass 60/60.
+- #83's CI is running, and I'm checking its previews.
+
+**Two things to know:**
+- **This merge needs your click in GitHub Actions one last time.** The apply runs under the old rules, and it's what removes the reviewer. The `start dev` after it should run without a click, which is the first proof.
+- **Every merge to `main` (docs too) starts dev for 4 hours,** at 2–3 NOK an hour. I can limit it to merges that touch dev later, if the cost matters.
+
+**Approvals needed:**
+1. **platform #81** again (my cleanup push dismissed your approval): <https://github.com/Ulberg-Org/platform/pull/81/files>
+2. **todo #40:** <https://github.com/Ulberg-Org/todo/pull/40/files>
+3. **platform #83**, once I report that its CI is green: <https://github.com/Ulberg-Org/platform/pull/83/files>
+
+For each: "Review changes", "Approve", "Submit review". I'll merge them in that order. #82 (the refactor) is already merged.

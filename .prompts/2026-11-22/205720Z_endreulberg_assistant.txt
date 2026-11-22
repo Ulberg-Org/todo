@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T20:57:20Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+It works:
+- **The whole run succeeded:** checks, previews, `pulumi up`, then `start dev` in the same run.
+- **The `dev` environment has 0 reviewers now.**
+- **The run needed exactly 1 approval,** yours, for the apply. `start dev` ran straight after without asking.
+
+From the next merge on, your PR approval is the only click: merge, apply, dev, all by itself. Dev now lives 4 hours after the latest merge.
+
+**Next:**
+1. **Close Phase 3 in PLAN:**
+   - list what's done: D82–D99, `start`/`destroy` and the fallback have worked;
+   - say how "done when" is met by the checks we already have, without a new test script;
+   - then Phase 4 begins.
+2. **Argo CD in AKS (D99):**
+   - the environment stack installs it, with the same root Application as locally;
+   - it reads the public repos and auto-syncs dev from `main`;
+   - its UI goes through the gateway with Entra SSO.
+
+   Before I build it, I'll research current best practice (Argo CD on AKS with Entra and workload identity). I'll check against the cluster what can be checked, and then the preview will show what changes.
+
+I'll start with the PLAN PR and then the Argo CD research. As agreed, it'll take one approval from you per PR.
