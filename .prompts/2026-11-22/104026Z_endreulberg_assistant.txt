@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:40:26Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#75's checks are all green. `shared`'s preview creates 11 resources (the 10 service registrations and Defender's plan) and changes nothing else.
+
+It's waiting for your approval: <https://github.com/Ulberg-Org/platform/pull/75/files>, then "Review changes", "Approve", "Submit review". Tell me when you've approved, and I'll merge it and post the link to the apply.

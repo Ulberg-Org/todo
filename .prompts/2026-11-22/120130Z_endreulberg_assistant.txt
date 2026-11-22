@@ -1,0 +1,6 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T12:01:30Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I'm watching the `destroy`, and the `start` after it. Run `destroy` now; the links are above.

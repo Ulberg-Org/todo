@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T13:34:44Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Ok, I approved it, now mereg and give me the commands to test in Azure

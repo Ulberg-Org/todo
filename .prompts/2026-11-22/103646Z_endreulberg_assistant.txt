@@ -1,0 +1,19 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:36:46Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The apply failed because Azure refuses Defender until the subscription is registered for `Microsoft.Security`. `Microsoft.EventHub` isn't registered either, so dev's next `start` would have failed the same way.
+
+**Cause:** these service registrations were only ever done by hand, in `bootstrap/bootstrap.sh`, which runs once. So every new Azure service needed a manual step that nobody remembered.
+
+**Fix, in platform #75:**
+- `shared` registers every service the stacks use, as code, from one list with a test.
+- Each registration is a small command run by CI. It does nothing for services already registered, and never unregisters any.
+- Defender's plan waits for its registration. `shared` is applied before the environment, so Event Hubs is ready before dev starts.
+- Shared's tests pass 7/7, there are no warnings, and formatting is clean. Its CI is running.
+
+**Your steps:**
+1. **Approve #75** once CI is green: <https://github.com/Ulberg-Org/platform/pull/75/files>, then "Review changes", "Approve", "Submit review". I'll merge it.
+2. **Approve the apply after the merge:** I'll post the run's link. It registers the services and then adds Defender's plan.
+3. **Then start dev:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then "Review deployments", tick `dev`, "Approve and deploy".

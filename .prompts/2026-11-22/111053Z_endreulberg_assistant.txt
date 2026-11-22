@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T11:10:53Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I'm following the run in the background. A start usually takes about 15–20 minutes (the cluster and the server).
+
+When it's done, I'll check the server's settings, the restart, the pgaudit extension, the `app-agents` sign-in, and the Event Hub, then report back. Remember to approve the deployment on the run ("Review deployments", then `dev`, then "Approve and deploy") if you haven't already.

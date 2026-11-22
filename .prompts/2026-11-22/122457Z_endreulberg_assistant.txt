@@ -1,0 +1,10 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T12:24:57Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+#79 is merged, with all checks green.
+
+**Start dev:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then on the run "Review deployments", tick `dev`, "Approve and deploy".
+
+I'll pick up the run as soon as it appears. If it fails, I'll find the cause in Azure and come back with a fix that's already checked, not just a question.

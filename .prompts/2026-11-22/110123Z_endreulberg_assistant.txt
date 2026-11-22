@@ -1,0 +1,15 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T11:01:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The apply partly worked: all 10 Azure services are now registered, Security and Event Hubs included. It failed on turning on Defender's plan for open-source databases.
+
+**Why:** every Defender plan always exists in a subscription, set to "Free" until someone switches it on. Our Pulumi code tried to *create* the plan, and Azure refused because it already exists.
+
+**The fix is platform #76.** A small command switches the plan on (`az security pricing create … --tier standard`), the same way the services are registered. It's safe to run again. Shared's tests pass 7/7, with no warnings and clean formatting. Its CI is running.
+
+**Your steps:**
+1. **Approve #76** once its CI is green: <https://github.com/Ulberg-Org/platform/pull/76/files>, then "Review changes", "Approve", "Submit review". I'll merge it and post the apply's link.
+2. **You can start dev now, if you like.** Everything dev needs is in place: Event Hubs is registered, and #74's code is on `main`. Defender only adds the alerts, and it applies to the server as soon as its plan is on.
+   <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow". Then on the run: "Review deployments", tick `dev`, "Approve and deploy".

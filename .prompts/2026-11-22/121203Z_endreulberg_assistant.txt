@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T12:12:03Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The command ran, but as **Claude's GitHub app**, not as you. This session's environment points `gh` at Claude's profile (the `env` block from AGENTS.md §4), and the app isn't allowed to start workflows (HTTP 403). So the separation works, even for `!` commands.
+
+To run as yourself in this session, the command has to name your own `gh` profile (normally `~/.config/gh`):
+
+```
+! GH_CONFIG_DIR=~/.config/gh gh workflow run start.yml --repo Ulberg-Org/platform -f environment=dev
+```
+
+And the approval:
+```
+! GH_CONFIG_DIR=~/.config/gh gh api -X POST repos/Ulberg-Org/platform/actions/runs/$(gh run list --repo Ulberg-Org/platform --workflow start.yml --limit 1 --json databaseId --jq '.[0].databaseId')/pending_deployments -F 'environment_ids[]=26656203533' -f state=approved -f comment="approved from the terminal"
+```
+
+Or the two clicks in the browser, which is just as quick:
+- <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow";
+- then on the run, "Review deployments", tick `dev`, "Approve and deploy".
+
+But wait until the `destroy` is done. `start` and `destroy` share one queue per environment, so a `start` now would only wait behind it.

@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T11:53:38Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Your frustration is fair. Every fix has cost a full round: a PR, CI, your approval, the merge, the apply, and a `start` that takes 10–15 minutes. Each run also only showed us the next error, never all of them.
+
+**The current failure (I've read Azure):**
+- The admin that failed last time doesn't exist in Azure, but Pulumi's state still has an entry for it.
+- When refreshing, our Pulumi provider reads the admin, and Azure answers "not found" in a form the provider doesn't recognise as deleted, so the run stops before doing anything.
+- **Unblocking:** run `destroy` (`dev`). Its first `pulumi destroy` fails on the same refresh. Then #69's fallback empties `rg-dev`, and the second destroy finds the server gone and cleans the state. After that, a fresh `start` with #78's single chain.
+- <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>, then "Run workflow", `dev`, "Run workflow".
+
+**For faster iterations, three proposals:**
+
+❓ **Q1 - Try a fix before merging it.** `start` gets a `ref` input, so it can run a PR branch's code against dev. Your approval in "Review deployments" stays required for every run. A fix is then tested in a few minutes on the running dev, before the PR is merged and before any apply on `main`. That saves the merge, the apply and the waiting on main in every iteration. `teardown` and `destroy` stay `main`-only.
+➡️ Yes, for `dev` only. The risk: an approval then runs unmerged code as the apply identity. But you approve each run yourself, after seeing its PR, and the guard still allows only `destroy.yml` to use `teardown`.
+
+❓ **Q2 - One run shows every failure.** `start` runs `pulumi up --continue-on-error`: whatever doesn't depend on a failed resource still gets created, so one run reveals all independent problems at once, not one per run.
+➡️ Yes.
+
+❓ **Q3 - Keep dev running while we iterate.** Don't destroy between attempts. A new `start` on a running dev only applies what changed, usually 1–3 minutes instead of 15. Together with Q1, one iteration becomes: I push to the PR, you click approve, and a few minutes later we know.
+➡️ Yes. Today's 4-hour limit stays.
+
+If yes to all three, I'll put them in one PR (with the PLAN entry). Meanwhile, please run `destroy` to unblock dev.

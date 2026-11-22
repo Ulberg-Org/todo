@@ -1,0 +1,16 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T11:08:51Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The apply went through, and Defender for open-source databases now shows **Standard** in Azure.
+
+**Start dev now:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", choose `dev`, and "Run workflow". On the new run, click "Review deployments", tick `dev`, then "Approve and deploy".
+
+**I'll follow the run and check:**
+- that the server's settings are set and it restarts once;
+- that the roles Job creates the pgaudit extension;
+- that `app-agents` gets its read-only Postgres sign-in;
+- that the Event Hub receives the server's logs and the Activity Log.
+
+Tell me when it's running.

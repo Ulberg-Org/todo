@@ -1,0 +1,29 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T12:19:43Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+This `start` failed on the Event Hub. The `destroy` before it worked, and the fix is now **platform #79**.
+
+**What failed:** Pulumi tried to create the Event Hub, and Azure said it already existed.
+
+**What the evidence shows:**
+- Everything was cleaned up first: the `destroy` at 12:02 worked as intended (its first attempt failed on the refresh, then the fallback emptied `rg-dev` and the second attempt cleaned up).
+- The namespace and the hub were both created during this `start`.
+- The hub appeared at 12:14:29, while Azure was still provisioning the namespace. Pulumi's attempt then failed at 12:14:36 with "already exists".
+- Nobody wrote the hub through Azure's management API. No leftover diagnostic setting existed, and the new server didn't exist yet.
+
+**Most likely cause:** Pulumi's first create succeeded in Azure but returned an error, and its retry found the hub already there. I can't prove that from the logs.
+
+**The fix (#79), which works whatever the cause:**
+- Pulumi no longer creates the hub at all. Azure Monitor creates its own hubs in the namespace, one per log category, which Microsoft documents ([Create diagnostic settings](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/create-diagnostic-settings)).
+- No race, and less code. Alloy will read the namespace's hubs in Phase 5.
+- The leftover `azure-logs` hub isn't in Pulumi's state, so **the next `start` needs no `destroy`**.
+
+In the sandbox the environment tests pass 12/12, with no warnings and formatting clean. CI is running, and I'll tell you when it's green.
+
+**Your steps after that:**
+1. **Approve #79:** <https://github.com/Ulberg-Org/platform/pull/79/files>, then "Review changes", "Approve", "Submit review". I'll merge it.
+2. **Start dev:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then "Review deployments", tick `dev`, "Approve and deploy".
+
+I've done the research on open-code-review and will come back to it once dev is running.

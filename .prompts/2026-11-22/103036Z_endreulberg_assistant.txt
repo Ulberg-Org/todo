@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:30:36Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I merged platform #74 and todo #38, after fixing the one failing check: the environment tests' lock file was missing the new `Pulumi.Command` package. I then checked a locked restore of every project the way CI runs it, so the same kind of failure can't hide elsewhere.
+
+#73's apply (D91) has run. The apply for #74 is running and needs your approval.
+
+**Your steps:**
+1. **Approve the apply:** <https://github.com/Ulberg-Org/platform/actions/runs/45012973984>, then "Review deployments", tick `dev`, "Approve and deploy". It adds Defender's plan in `shared`.
+2. **When it has finished, start dev:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow". Then on the new run: "Review deployments", tick `dev`, "Approve and deploy".
+
+**While dev starts, I'll check:**
+- the server settings are set, and the server restarted once;
+- the roles Job created the pgaudit extension;
+- `app-agents` has its read-only Postgres sign-in (D91);
+- the Event Hub receives the server's logs and the Activity Log;
+- Defender's plan is on.
+
+Tell me when `start` is running.

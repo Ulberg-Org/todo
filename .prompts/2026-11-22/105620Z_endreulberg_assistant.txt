@@ -1,0 +1,6 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:56:20Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Waiting for your approval of the apply. As soon as it has run, I'll check that Security and Event Hubs show as registered, and tell you to start dev.

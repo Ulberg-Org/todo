@@ -1,0 +1,13 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T11:23:26Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The preview is as intended:
+- **1 update:** the node subnet gets its Event Hubs service endpoint, in place, with no replacement;
+- **20 new:** what the failed start never got to, the server among them;
+- **16 unchanged.**
+
+**Your steps:**
+1. **Approve #77:** <https://github.com/Ulberg-Org/platform/pull/77/files>, then "Review changes", "Approve", "Submit review". I'll merge it as soon as you've approved.
+2. **Then start dev:** <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then on the run "Review deployments", tick `dev`, "Approve and deploy".

@@ -1,0 +1,27 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T13:41:03Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+The `start` went through completely: 10 created and 1 updated, including the server restart (65 seconds) and the roles Job, which Pulumi waits for until it succeeds. That means pgaudit's extension and `app-agents`' sign-in are in place too.
+
+I couldn't verify the details in Azure myself: my agent session hit the 4-hour Conditional Access limit (signed in at 08:55, so that's working as intended).
+
+**To let me check myself,** sign the agent in again in your own terminal, with its passkey:
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+```
+Then I'll run the checks and report what they show.
+
+**Or run the commands from my previous message yourself.** What you should see:
+
+| Check | Expected |
+|---|---|
+| 1. Settings | `PGAUDIT`, `pg_stat_statements,pgaudit`, `ROLE,DDL`, `on`, `on`, all with `pendingRestart` = `False` |
+| 2. Defender | `Standard` |
+| 3. Diagnostics | `telemetry` on the server (allLogs), `telemetry-dev` on the subscription |
+| 4. Hubs | `insights-activity-logs`, a hub for the server's logs (`insights-logs-…`), and the old `azure-logs`; `IncomingMessages` above 0 after a few minutes |
+| 5. The hub's network | `Deny`, `trusted: true`, the nodes' subnet |
+| 6. The Job log | `roles applied to todo` |
+
+Once that's confirmed, the database's security (D93) and its signals (D97) are done. Next come open-code-review (I have the research ready), then Phase 3's last items: simplifying the environment stack, the access tests, and closing Phase 3.
