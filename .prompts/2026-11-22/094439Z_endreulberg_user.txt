@@ -1,0 +1,22 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T09:44:39Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+This looks like something where you should have used Results instead of an if else right?  `fsharp 
+
+<pasted_content id="3c6e">
+    let parse (fileName: string) (yaml: string) : Result<AzureEnvironment, string> =
+        let found = location.Match yaml
+
+        if found.Success then
+            Ok
+                {
+                    name = fileName.Substring("Pulumi.".Length, fileName.Length - "Pulumi..yaml".Length)
+                    location = found.Groups[1].Value
+                }
+        else
+            Error $"stacks/environment/{fileName}: azure-native:location is missing"
+</pasted_content id="3c6e">
+
+`

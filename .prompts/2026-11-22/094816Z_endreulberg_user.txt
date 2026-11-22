@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T09:48:16Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Add this to the style guide. That using Native F# style and concepts should go above using generic programming concepts. Secondly fun () -> is not needed in maps, you can use either _ -> or there should be a fully anonymous style. Both fo these should be in the style guides. Go online to verify

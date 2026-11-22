@@ -1,0 +1,13 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:33:27Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+`destroy` worked. `pulumi destroy` itself deleted all 36 remaining resources, so #66's fix held and the fallback wasn't needed. dev is down and costs nothing now.
+
+I couldn't confirm in Azure that `rg-dev` is gone, because my Azure session has expired. To renew it, run this in your own terminal (not through me) and sign in as the agent with its passkey:
+```
+AZURE_CONFIG_DIR=~/.azure-agent az login --tenant e17ac17e-d8cd-4280-a4e5-94ad2bb85549
+```
+
+Still waiting for your approval: **todo #34** (D95) at <https://github.com/Ulberg-Org/todo/pull/34/files>, then "Review changes", "Approve", "Submit review". After that I'll build D95, then the test for `claude-push.sh`, then simplify the environment stack.

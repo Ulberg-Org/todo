@@ -1,0 +1,17 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:35:12Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+D95 is built: **platform #70**. Its checks are running and I'm watching them. Merging #34 earlier was only the PLAN entry.
+
+- **`access` now owns `rg-<env>`**, with the cluster roles on the group: platform-read, the agents and CI's preview identity read; platform-write (through PIM) and CI's apply identity administer. A new cluster inherits them, so `start` and `destroy` never touch access.
+- **The environment stack** creates no group and no access any more (107 fewer lines). The `started` tag `destroy` relies on is now a small resource of its own, removed by `destroy`.
+- **The `destroy` fallback** empties the group instead of deleting it, so the group and its access survive. It's a script with its own test against a fake `az`, including a network that can only go after its cluster.
+- **The agent check** now expects the agents' cluster reads on `rg-<env>`.
+
+**The security trade-off:** the same roles now sit on the group and exist all the time, not only while dev runs. They'd cover any cluster put in `rg-dev`, and only the environment stack puts one there. When dev isn't running there's nothing to reach.
+
+**Tests:** format, F# style, no warnings, access 63/63, environment 8/8, the new script test and the teardown guard all pass in the sandbox.
+
+When CI is green, I'll check that the `access` preview shows the group and its 10 role assignments, then ask you to approve.

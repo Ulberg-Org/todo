@@ -65,15 +65,36 @@ A function first names what it needs, then puts the result together. The final e
 - **Flat `validation {}` blocks.** One line per field: `and! port = Field.port d.port`. The rule logic goes in a private `Field` module next to it, and generic checks go in `Parse`.
 - **Deep nesting is a smell.** Past three or four levels, give the inner parts names.
 
-## 9. Formatting and warnings (CI-enforced)
+## 9. Native F# first (the lambda rules are CI-enforced)
+
+Use what F# itself offers before constructs every language has. `reference/` does this throughout.
+
+- **Turn values into `Option` and `Result` with pipelines, not `if`.** A bool that decides success is a `Result`: `Result.requireTrue`, then `Result.map`. An option that must be there is `Result.requireSome`. A missing value gets a default with `Option.map` and `Option.defaultValue`. A choice between cases is a union and a `match`; a loop is `List.map`, `List.choose` or a fold; a sequence of steps is a pipeline or a computation expression.
+
+  ```fsharp
+  // Not
+  if found.Success then Ok { location = found.Groups[1].Value } else Error "location is missing"
+  // But
+  found.Success
+  |> Result.requireTrue "location is missing"
+  |> Result.map (fun _ -> { location = found.Groups[1].Value })
+  ```
+
+- **Lambdas as short as they can be:**
+  - `_.Name` (F# 8) when a lambda only reads a property, calls a method or indexes its argument: `List.map _.name`, `.Apply _.PrincipalId`. Not `fun x -> x.name`.
+  - `fun _ ->` when the argument isn't used, including `()`. Not `fun () ->`.
+  - A function by name instead of a lambda that only calls it: `List.map Email.value`, `Deployment.RunAsync run`.
+
+## 10. Formatting and warnings (CI-enforced)
 
 - Fantomas formats everything (`dotnet fantomas --check`). `TreatWarningsAsErrors` and nullness checking are on.
 - No warning suppressions without a comment saying why, and no `TODO` hacks.
 
-## Reading list (F# for Fun and Profit)
+## Reading list (F# for Fun and Profit, and Microsoft for §9)
 
 - [Designing with types](https://fsharpforfunandprofit.com/series/designing-with-types/): the series behind §4–5, especially [single case union types](https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/) and [making illegal states unrepresentable](https://fsharpforfunandprofit.com/posts/designing-with-types-making-illegal-states-unrepresentable/).
 - [The Option type](https://fsharpforfunandprofit.com/posts/the-option-type/): why F# uses `Option` instead of `null` (§3).
 - [Railway oriented programming](https://fsharpforfunandprofit.com/rop/): `Result`-based error handling and keeping effects at the edges (§1, §6).
 - [Using the core functions in practice](https://fsharpforfunandprofit.com/posts/elevated-world-3/): applicative validation that collects every error (§4).
+- [Lambda expressions](https://learn.microsoft.com/dotnet/fsharp/language-reference/functions/lambda-expressions-the-fun-keyword) and [Announcing F# 8](https://devblogs.microsoft.com/dotnet/announcing-fsharp-8/) (Microsoft): the `_.Name` shorthand (§9).
 - [Serializing your domain model](https://fsharpforfunandprofit.com/posts/serializing-your-domain-model/): DTOs at the boundary, domain types inside (§4).

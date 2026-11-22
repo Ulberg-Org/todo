@@ -1,0 +1,17 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:30:08Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've put your decision into PLAN as **D95** (todo #34):
+- **The access stack owns** each environment's resource group `rg-<env>`, together with every role assignment on it.
+- **The group is permanent:** `start` and `destroy` never create or remove access, so a failed teardown can't take away CI's access again.
+- **The `destroy` fallback** empties the group instead of deleting it.
+
+The test for `claude-push.sh` is in the same list.
+
+**Approve #34:** <https://github.com/Ulberg-Org/todo/pull/34/files>, then "Review changes", "Approve", "Submit review".
+
+The `destroy` that started at 09:24 is still running, and I'm watching it. When it finishes I'll tell you whether it worked, and whether the fallback had to step in.
+
+After that comes the D95 build, then `claude-push.sh`'s test, then simplifying the environment stack.
