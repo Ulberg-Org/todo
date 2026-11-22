@@ -3,28 +3,23 @@ role: assistant
 timestamp: 2026-11-22T08:52:50Z
 session: 65ce0d37-90f3-444e-87a8-31d5665c9866
 
-I couldn't merge #66 yet: its environment preview fails. The first scheduled `destroy` deleted 19 things before it got stuck on the database admin: everyone's cluster access, CI's included, the Kubernetes resources and the `todo` database. So the preview identity can no longer read the half-destroyed cluster, and the preview fails until it's gone.
+Both are done: monitoring, alerts and security are now planned work in the document (platform #67) and in PLAN as **D93** (todo #33).
+- **Security now, in Phase 3:**
+  - `pgaudit` logs role and privilege changes, DDL and failed sign-ins, and connections are logged too;
+  - **Microsoft Defender for open-source relational databases**, about 15 USD a month per server, billed by the hour, so a few kroner for dev's 4-hour runs.
+  - Customer-managed keys only if compliance ever requires them: Azure already encrypts at rest with its own keys.
+- **Monitoring and alerts, fixed scope in Phase 5:** the server's metrics, logs and Defender's findings go into Grafana, with alerts on:
+  - storage, connections, long queries and failed sign-ins;
+  - replication lag, failed backups and drills;
+  - every Defender alert.
 
-**Your steps to clear dev, in order:**
-1. **Activate `platform-write` in PIM** with your own account: <https://portal.azure.com/#view/Microsoft_Azure_PIMCommon/ActivationMenuBlade/~/aadgroup>
-2. **Delete the resource group `rg-dev`** (type `rg-dev` to confirm), about 10 minutes: <https://portal.azure.com/#view/HubsExtension/BrowseResourceGroups>
-3. **Run `destroy` (`dev`):** it finds everything gone and clears the state. <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>
-4. **Then I merge #66** (`DeletedWith`, already approved) once its preview is green again.
+I'll build `pgaudit` and Defender into the dev stack as part of Phase 3, after the simplification.
 
-**The database's operations, written down as you asked:**
-- **platform #67:** `docs/database-operations.md`. Each topic says what we do now and what we'd do later:
-  - backups: point-in-time restore for 35 days with geo-redundant backup, long-term ones in Azure Backup's vault that outlive the server, scheduled `pg_dump`, and restore drills with RPO and RTO;
-  - high availability: zone-redundant HA;
-  - read replicas: behind virtual endpoints, declared in `platform.yaml`;
-  - multi-region: a promotable replica in another region;
-  - connection pooling: the built-in PgBouncer;
-  - maintenance and upgrades;
-  - security: customer-managed keys, `pgaudit`;
-  - monitoring.
-- **todo #33 (PLAN v26):**
-  - **D91:** every developer's Claude, derived from `people.yaml`, in `platform-agents` or `app-agents`; everyone brings their own Claude.
-  - **D92:** the database's line between platform and app.
-  - **Phase 4:** the migrator identity and the migration Job.
-  - **A TODO for prod (Phase 6b),** pointing to the document.
+**Your steps, with direct links:**
+1. **Activate `platform-write` in PIM** (your own account): <https://portal.azure.com/#view/Microsoft_Azure_PIMCommon/ActivationMenuBlade/~/aadgroup>, then "Activate" on the `platform-write` row.
+2. **Delete `rg-dev`:** <https://portal.azure.com/#@e17ac17e-d8cd-4280-a4e5-94ad2bb85549/resource/subscriptions/21784576-1957-4336-89d8-a6ab6b571930/resourceGroups/rg-dev/overview>, then "Delete resource group", type `rg-dev`, and "Delete".
+3. **When it's gone, run `destroy`:** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>, then "Run workflow", environment `dev`, and "Run workflow".
+4. **Approve #67:** <https://github.com/Ulberg-Org/platform/pull/67/files>, then "Review changes", "Approve", "Submit review".
+5. **Approve todo #33:** <https://github.com/Ulberg-Org/todo/pull/33/files>, then the same.
 
-Please review and approve #67 and #33. After #66, I'll simplify the environment stack, then build D91.
+After step 3, I'll merge #66 (already approved) once its preview is green, and #67 and #33 when you've approved them.

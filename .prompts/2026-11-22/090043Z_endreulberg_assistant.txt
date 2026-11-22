@@ -1,0 +1,12 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:00:43Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I opened the fallback as **platform #68**. When `pulumi destroy` fails, `destroy` now deletes `rg-<env>` and then destroys again, so a failed teardown can never block every PR's preview like today. Its preview will probably fail until `start` has given the cluster access back, just like #66's.
+
+Your `start` is running, and I'm watching it. When it finishes:
+1. I check that #66's preview is green, and merge it (already approved).
+2. **You run `start` again**, so the new delete rules are recorded on dev: <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", `dev`, "Run workflow", then on the run "Review deployments", tick `dev`, "Approve and deploy".
+3. **You run `destroy` (`dev`):** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>, then "Run workflow", `dev`, "Run workflow".
+4. **Approve #68:** <https://github.com/Ulberg-Org/platform/pull/68/files>, then "Review changes", "Approve", "Submit review". Also **#67** (<https://github.com/Ulberg-Org/platform/pull/67/files>) and **todo #33** (<https://github.com/Ulberg-Org/todo/pull/33/files>), the same way.

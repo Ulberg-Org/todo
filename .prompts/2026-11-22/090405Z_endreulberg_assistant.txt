@@ -1,0 +1,8 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:04:05Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+**Re-run #66's failed jobs:** <https://github.com/Ulberg-Org/platform/actions/runs/45004507750>, then "Re-run jobs" (top right), "Re-run failed jobs", and confirm.
+
+When its preview is green, I'll merge #66 straight away. Then come your two remaining steps: `start` again (it records the new delete rules), then `destroy`.

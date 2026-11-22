@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:04:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+GitHub can now require **both**: rulesets have had a "required reviewers" rule since February 2026. It names specific teams that must each approve, for given file paths, on top of CODEOWNERS ([GitHub changelog](https://github.blog/changelog/2026-02-17-required-reviewer-rule-is-now-generally-available/), [docs](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets)). Our rulesets are code in `access`, so it fits there.
+
+Two decisions:
+
+❓ **Q1 - Both leads, or either one**: in **app repos**, should a change to workflows and scripts need **both** an app lead (`todo-leads`) **and** a platform lead (`platform-leads`)? In the **platform repo**, `platform-leads` alone, as it already owns the whole repo there. CODEOWNERS alone could only do "either one", which would add nothing in todo.
+
+➡️ Yes, both in app repos: the app lead knows the app, the platform lead knows what runs with which identity. Today you're in both teams, so for now it costs you one approval, as before.
+
+---
+
+❓ **Q2 - Which paths count as "workflows and scripts"**: everything that runs with an identity or on a developer's machine without anyone running it on purpose:
+- `.github/` (workflows, scripts, CODEOWNERS)
+- `.claude/` (hooks, which run on every developer's machine)
+- `.mcp.json` (commands Claude Code starts)
+- `Makefile` and `flake.nix` (run on developers' machines)
+- in the platform repo also `scripts/`, `sandbox/` and `cli/`
+
+➡️ Yes, those paths.
+
+I'll build it in `access` (the ruleset, with tests), once I've checked that our Pulumi GitHub provider supports the new rule. Meanwhile #66 is still waiting for the re-run of its failed jobs: <https://github.com/Ulberg-Org/platform/actions/runs/45004507750>, then "Re-run jobs", "Re-run failed jobs".

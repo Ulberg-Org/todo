@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T08:59:21Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+That's by design. People get no write rights in Azure: everything goes through CI (only the emergency accounts are Owner). So you can't delete `rg-dev` either, and I suggested a step that can't work. Sorry.
+
+We're now in a small deadlock:
+- **`destroy`** fails on the database admin (#66 fixes that);
+- **#66 can't be merged:** its preview fails, because the half-destroyed dev has no cluster access left;
+- **every other platform PR** fails the same preview until dev is gone.
+
+**Two ways out:**
+- **(a) Through CI, no emergency account (my recommendation):**
+  1. **Run `start` (`dev`)** with today's code from `main`. It recreates the cluster access, so #66's preview passes again. Its roles Job will fail, because the roles still exist on the server, but the access is created before that. That's fine here.
+  2. **I merge #66.**
+  3. **Run `start` again.** Pulumi records the new "goes with its parent" rules for the running dev.
+  4. **Run `destroy`.** It now removes everything.
+- **(b) The emergency account** (Owner, break-glass) deletes `rg-dev` in the portal. That's quicker, but it's the account for when CI itself is broken, and its use triggers the alerts (D40). I'd keep it for real emergencies.
+
+To keep this from happening again, my next PR lets `destroy` fall back to deleting the environment's resource group with CI's apply identity whenever `pulumi destroy` fails. dev is disposable, so that's always safe, and it can't deadlock again.
+
+For (a), step 1: <https://github.com/Ulberg-Org/platform/actions/workflows/start.yml>, then "Run workflow", environment `dev`, and "Run workflow". Then open the new run, "Review deployments", tick `dev`, and "Approve and deploy". Tell me when it has finished (whether it succeeded or failed) and I'll take steps 2 to 4.
