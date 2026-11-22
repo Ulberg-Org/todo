@@ -1,0 +1,25 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T21:08:10Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Here's where things stand. I'm blocked on one confirmation you can give.
+
+**PR A, platform #84** (open, CI running): "AKS pulls from our ACR, and the renderer is in it".
+- **A latent fault, fixed:** our ACR uses repository permissions (ABAC), where Azure ignores `AcrPull`. Dev could never have pulled an image from ACR. The nodes now get Container Registry Repository Reader.
+- **The renderer `v0.2.4` is copied into ACR by digest** with `az acr import`. It needs no new identity.
+- **Blocked:** the role's ID (`b93aa761-…`) comes from Microsoft's list, but my network can't reach Azure's API to confirm it ("The request is blocked"). **Please run this as yourself:**
+  ```
+  az role definition list --name "Container Registry Repository Reader" --query "[0].name" -o tsv
+  ```
+  If it prints `b93aa761-3e63-49ed-ac28-beffa264f7ac`, approve #84: <https://github.com/Ulberg-Org/platform/pull/84/files>. A wrong ID would fail the apply, so it has to be confirmed first.
+
+**Step B, ready locally (published once #84 is merged, as its own PR):** Argo CD in Azure, as locally.
+- **A script, run once per cluster by the environment stack.** It does exactly what the CLI does locally: the pinned chart with its digest checked, `values.yaml` and `values-dev.yaml`, then the root Application.
+- **One root Application template** for local and dev. The CLI fills it with its own `template`, and the script does the same.
+- **`values-dev.yaml`** names the renderer in ACR by digest, with a test that keeps it equal to `shared`'s.
+- **Checked:** no warnings, all tests pass (shared 10/10, environment 13/13), and the template fills in correctly for both environments.
+
+**After that, step C:** `baseline` and `gateway` healthy in dev, with the todo app following via its `platform.yaml`.
+
+**Still waiting for your approval:** todo #41 (Phase 3 done) and todo #42 (D100).

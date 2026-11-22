@@ -18,7 +18,7 @@ Effects live only at the edges (steps 1, 3 and 4), in functions whose name and s
 ## 2. No mutation and no hidden side effects (mutation is CI-enforced)
 
 - No `let mutable`, no `<-` assignment, no setting properties on an object after creating it. Build values in one expression (record construction, `List.map`, folds, object initializers in the constructor call).
-- No `|> ignore` to throw away a result. If a function returns something, use it or return it. If it returns nothing useful, it shouldn't be called in the middle of pure code. The exception is a fluent builder (ASP.NET, OpenTelemetry) that returns itself inside a configuration callback; use it sparingly.
+- No `|> ignore` to throw away a result. If a function returns something, use it or return it. If it returns nothing useful, it shouldn't be called in the middle of pure code. There are two exceptions: a fluent builder (ASP.NET, OpenTelemetry) that returns itself inside a configuration callback, used sparingly; and, in a Pulumi program's action step, a resource nothing needs a handle to (constructing it registers it), so `Command(…) |> ignore`. Never a made-up output or binding just to avoid `ignore`.
 - A function is either **pure** (same input, same output, no effects) or an **action** at the edge. A pure-looking function must never register, write, send or log.
 - Repeating an action with the same input must give the same result (idempotent). Pure planning plus declarative actions (Pulumi, `INSERT … ON CONFLICT`, PUT) gives that for free.
 - Collections are F# immutable ones (`list`, `Map`, `Set`). Arrays and .NET collections appear only at library boundaries.

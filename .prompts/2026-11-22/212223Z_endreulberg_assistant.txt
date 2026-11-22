@@ -1,0 +1,15 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T21:22:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Step B now sits cleanly on `main` (9 files, +113/−4).
+
+**Current status:**
+- **Merged:** platform #84 (pull role and renderer in ACR), todo #41 (Phase 3 done), todo #42 (D100).
+- **Running now:** #84's merge is the **first one with no click from you**: apply, then `start dev`. I'm checking three things:
+  - that the run needs 0 approvals;
+  - that `import-renderer` copies the renderer into ACR;
+  - that the nodes get the new pull role.
+
+As soon as that has gone through, I'll publish step B (Argo CD in Azure) as a PR, with that run as evidence that the renderer is in ACR and the cluster can pull it.
