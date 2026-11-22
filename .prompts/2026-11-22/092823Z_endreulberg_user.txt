@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T09:28:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Have you made it so that error can never happen again. It seems like the access things maybe should not be torn down in the same destry script? or maybe we should have had destroy content and destroy infra as two seperate. Where destroy infra also always destroyes content first

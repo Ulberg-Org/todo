@@ -1,0 +1,10 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:23:07Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I merged #69 once all its checks were green. `destroy` is back on `main`, with the fallback, and GitHub lists it as an active workflow again.
+
+**Run `destroy` (`dev`):** <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>, then "Run workflow", choose `dev`, and "Run workflow". It needs no approval. Tell me when it has finished and I'll check that `rg-dev` is gone and the state is empty. If `pulumi destroy` still fails, the new fallback deletes `rg-dev` and runs the destroy again.
+
+From now on the scheduled teardown also runs every 15 minutes again.

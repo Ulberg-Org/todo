@@ -1,0 +1,27 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:28:23Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Partly. The failure that caused today's mess is fixed, and the publish error is guarded but not yet tested. Your idea of keeping access out of the teardown is the right next step.
+
+**1. A push script deleting a file again:** `claude-push.sh` now compares the tree it published with my local commit, and stops if they differ, whatever the cause. It also stops before publishing if a file's upload returns nothing. There's no test of it yet. I'll add one (a fake `gh` whose upload returns nothing → the script must stop) as the first step of the next PR.
+
+**2. A half-destroyed environment blocking every PR:**
+- **The cause is gone (#66):** the database admin, the databases and everything in the cluster are now deleted together with the server or the cluster, not one by one.
+- **Any other failure (#69):** `destroy` falls back to deleting `rg-dev`, then destroys again.
+- **Still unproven:** neither has run yet. Your `destroy` run is the test.
+
+**3. Your two ideas:**
+- **Content first, then infrastructure:** #66 already does this, the lazy way. Everything inside the server or the cluster (roles, databases, Kubernetes objects, and from Phase 4 the apps) is deleted with them by Azure, so no separate step or ordering is needed. A separate "destroy content" stage would be more code for the same result.
+- **Access not torn down with the environment:** agreed, that was the real weak point. The first, failed destroy deleted CI's own access to the cluster, and that's what blocked every PR.
+
+The decision is where access should live. I recommend making the resource group `rg-dev` permanent, owned by the `access` stack along with every role assignment on it:
+- people, agents and CI (the D88 roles), all granted on the group rather than on `aks-dev`;
+- a new cluster inherits the access on creation, so `destroy` never touches it;
+- dev still costs nothing when stopped, because an empty group is free;
+- the fallback empties the group instead of deleting it.
+
+The alternative is to grant the same roles on the whole subscription. That's simpler, but it also covers prod later, which is too broad.
+
+If you agree, I'll put it into PLAN as D95 and build it after you've run `destroy` and I've confirmed it worked: <https://github.com/Ulberg-Org/platform/actions/workflows/destroy.yml>, then "Run workflow", `dev`, "Run workflow".
