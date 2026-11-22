@@ -1,0 +1,21 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:01:17Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Claude in the sandbox can now read Azure as its own agent identity: **platform #72**. The PLAN entry is **D96**, in **todo #36**.
+- **`sandbox/tokens`** now writes both the GitHub token and, in the platform profile only, two 1-hour Azure access tokens (resources and logs). It's one script instead of two copies of the GitHub code. The launcher runs it at start, and the proxy process every 45 minutes.
+- **`azure-read`** in the VM does reads of Azure resources (GET) and Log Analytics queries, and refuses anything else.
+- **The allowlist** adds only `management.azure.com` and `api.loganalytics.io`. Entra's sign-in endpoint stays blocked, so the VM can't get new tokens by itself.
+
+**Tested on my own VM:** `sandbox/test` passes all 14 checks, including the 4 new ones. A write (creating a resource group) got HTTP 403 `AuthorizationFailed` from Azure itself, reads listed the resource groups, and there's no Azure login in the VM. `azure-read` also has a unit test in CI.
+
+**Your steps:**
+1. **Apply what's merged (D95's `rg-dev`, among others).** `pulumi up` on `main` is waiting for you, and the run from 09:24 (#69) blocks the newest one:
+   - Cancel the old one: <https://github.com/Ulberg-Org/platform/actions/runs/45007357110>, then "Cancel workflow" (top right).
+   - Approve the newest, which contains everything up to #71: <https://github.com/Ulberg-Org/platform/actions/runs/45010143825>, then "Review deployments", tick `dev`, "Approve and deploy".
+2. **Approve** todo #36 (<https://github.com/Ulberg-Org/todo/pull/36/files>) and platform #72 (<https://github.com/Ulberg-Org/platform/pull/72/files>): "Review changes", "Approve", "Submit review".
+
+The sandbox's proxy process is still running the old code. It renews only the GitHub token, so the Azure tokens in my VM expire within the hour. After #72 is merged, restart the VM once (`limactl stop endre-agent-platform`, then `sandbox/sandbox platform`), and the 45-minute renewal applies to both.
+
+**Next in Phase 3:** D91 (an agent for every developer, `app-agents`), then D93 (`pgaudit` and Defender).

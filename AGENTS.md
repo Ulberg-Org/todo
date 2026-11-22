@@ -47,24 +47,26 @@ In practice, a change is not done until:
 - **F# code follows [`docs/fsharp-style.md`](docs/fsharp-style.md)**, in every file: input → domain → action → report, no mutation, no `null`, parse-don't-validate. CI enforces what it can.
 - No git pre-commit hooks. Every check (format, lint, tests, secret scanning) runs in CI.
 
-## 4. Claude's identities (D41, D52)
+## 4. Claude's identities (D41, D52, D91)
 
 Claude never uses your logins. It has its own identity in Azure and in GitHub, and `.claude/hooks/agent_identity.py` stops it from using yours by mistake (it's a guardrail; the real limits are the identities' rights).
 
-**Azure:** each infra developer's Claude has its own Entra account, `<name>-agent@<tenant>`, displayed as "Claude agent of <name> (<GitHub handle>)", with you as its manager and employee type `Agent` (`agents` in the platform repo's `access/people.yaml`). It is in the `platform-agents` group:
+**Azure:** every developer's Claude has its own Entra account, `<name>-agent@<tenant>`, displayed as "Claude agent of <name> (<GitHub handle>)", with you as its manager and employee type `Agent`: everyone in the platform repo's `access/people.yaml` developer groups gets one (D91). You bring your own Claude subscription; Claude's rights come only from this account and the GitHub app below, never from whose subscription it runs on. An infra developer's agent is in the `platform-agents` group:
 
 - **Azure (subscription):** Reader, Monitoring Reader, Log Analytics Reader, Cost Management Reader. **Entra:** Security Reader (sign-in and audit logs, Conditional Access). Nothing that writes, and no data-plane access to the Pulumi state or Key Vault secrets. The one exception is D52: it may *sign* with the Claude GitHub App's key.
 - Never PIM-eligible, so your activations never give Claude more rights. The nightly standing-access check covers it.
 - The same Conditional Access as you: a passkey, a fresh sign-in every 4 h for Azure tools and every 12 h otherwise.
 - Its sign-ins and actions are logged under its own name, so "you did X" and "your Claude did X" stay distinguishable.
 
-**GitHub:** Claude acts as the org's `ulberg-claude` app (`ulberg-claude[bot]`): contents, pull requests and workflow files (write), and Actions (read: run logs and previews, so it can see why a check failed or what an apply will change). It pushes branches and opens PRs; it can't approve (you're the code owner), re-run, cancel or approve workflow runs or deployments, or change settings, rulesets, environments or secrets. Its private key is a Key Vault key that only `platform-agents` may sign with, and never leaves Key Vault. `scripts/claude-github-token.sh` (platform repo) has Key Vault sign the app's JWT and stores a 1 h installation token in Claude's own `gh` profile; Claude runs it itself whenever the token expires. To publish a branch, Claude runs `scripts/claude-push.sh` (platform repo) instead of `git push`: the rulesets require verified signatures, and the app can't sign git commits, so the script makes one commit through GitHub's API (signed by GitHub, author `ulberg-claude[bot]`, you as `Co-authored-by`). Claude may merge a PR once you've approved it and checks pass.
+An app developer's agent is in `app-agents`: the database read-only and telemetry, like you; nothing in Azure or the cluster; a fresh sign-in every 12 h; and the same signing with the Claude GitHub App's key (D52), so it can open PRs. The rest below applies to both.
+
+**GitHub:** Claude acts as the org's `ulberg-claude` app (`ulberg-claude[bot]`): contents, pull requests and workflow files (write), and Actions (read: run logs and previews, so it can see why a check failed or what an apply will change). It pushes branches and opens PRs; it can't approve (you're the code owner), re-run, cancel or approve workflow runs or deployments, or change settings, rulesets, environments or secrets. Its private key is a Key Vault key that only the agents' groups (`platform-agents`, `app-agents`) may sign with, and never leaves Key Vault. `scripts/claude-github-token.sh` (platform repo) has Key Vault sign the app's JWT and stores a 1 h installation token in Claude's own `gh` profile; Claude runs it itself whenever the token expires. To publish a branch, Claude runs `scripts/claude-push.sh` (platform repo) instead of `git push`: the rulesets require verified signatures, and the app can't sign git commits, so the script makes one commit through GitHub's API (signed by GitHub, author `ulberg-claude[bot]`, you as `Co-authored-by`). Claude may merge a PR once you've approved it and checks pass.
 
 The hook blocks `az` without the agent's profile, `gh` and `git push` without Claude's `gh` profile and HTTPS pushes, and any command that names `AZURE_CONFIG_DIR`, `GH_CONFIG_DIR`, `GIT_CONFIG_*`, `GH_TOKEN=` or `GITHUB_TOKEN=` (Claude must not choose its own identity).
 
-One-time setup, after the apply has created the agent account (direct links are in the PR that adds you to `agents`):
+One-time setup, after the apply has created the agent account (direct links are in the PR that adds you to `access/people.yaml`):
 
-1. Assign the account an **Entra ID P2** licence (the `platform-agents` group does it).
+1. Its licence comes by group: an infra developer's agent gets **Entra ID P2** through `platform-agents`; an app developer's, like app developers themselves, needs none.
 2. Create a **Temporary Access Pass** for it. This needs **Authentication Administrator**, never Global Admin: activate it in PIM (<https://portal.azure.com/#view/Microsoft_Azure_PIMCommon/ActivationMenuBlade/~/aadmigratedroles>, 1 h, your passkey), then open the agent account in Entra (*Users* → the agent → *Authentication methods* → *Add authentication method* → *Temporary Access Pass*). The same applies when the agent's passkey is lost.
 3. In a private browser window, sign in as the agent at <https://aka.ms/mysecurityinfo> with the pass and **add a passkey**.
 4. In your own terminal (not through Claude): `AZURE_CONFIG_DIR=~/.azure-agent az login --tenant <tenant-id>`, and sign in as the agent with its passkey.
