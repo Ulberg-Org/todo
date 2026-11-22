@@ -1,0 +1,23 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:21:11Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Agreed. There's a choice in how, because our telemetry stack doesn't run in Azure until Phase 5. Azure doesn't push its own signals into Loki by itself: they leave through a "diagnostic setting" to a sink we choose. Grafana's documented route into Loki is an Event Hub read by Alloy ([Grafana: Azure Event Hubs logs to Loki](https://grafana.com/docs/alloy/latest/collect/azure-event-hubs-logs/), [`loki.source.azure_event_hubs`](https://grafana.com/docs/alloy/v1.22/reference/components/loki/loki.source.azure_event_hubs.md)).
+
+❓ **Q2 - Which route do the database's Azure signals take into our telemetry?**
+
+- **(a) Into Loki and Prometheus, exactly as locally (D58, D71):**
+  - **Logs** (pgaudit, connections, failed sign-ins, slow queries) and **Defender's alerts**: a diagnostic setting and Defender's continuous export send them to an **Event Hub in the environment**, created and deleted with dev, so it costs only the hours dev runs. In Phase 5, Alloy in the cluster reads it into Loki.
+  - **Metrics:** the in-cluster Postgres exporter as the statistics-only `todo_monitor` role (D64, as locally). Azure's host metrics (CPU, storage %) come through Alloy's Azure Monitor exporter with read access. No hub needed for those.
+  - Claude queries the same LogQL and PromQL locally and in Azure, through `mcp-grafana`.
+  - **Cost:** the hub must be Event Hubs Standard (Alloy needs its Kafka endpoint), about 0.03 USD an hour while dev runs.
+- **(b) A Log Analytics workspace, with Grafana reading it through its Azure Monitor data source.** Less code: no hub or reader. But the logs live in Azure in KQL instead of in Loki, so Claude's queries would differ between local and Azure, and `mcp-grafana` can't query KQL directly.
+
+➡️ **(a):** it keeps one stream and one query language for both people and Claude, which is what D58 and D71 decided. And the hub only exists while dev does.
+
+❓ **Q3 - What gets built now, and what in Phase 5?**
+
+➡️ **Now (D93):** pgaudit, connection logging, Defender's plan, and the **source side**: the Event Hub, the server's diagnostic setting, and Defender's continuous export to it. **Phase 5:** Alloy reading it into Loki, the exporters, dashboards and alerts.
+
+Until Phase 5 nothing reads the hub, so events are only kept for a day. They can still be read through Azure in the meantime, though.

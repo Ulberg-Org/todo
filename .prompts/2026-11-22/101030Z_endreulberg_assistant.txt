@@ -1,0 +1,33 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T10:10:30Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+I've built D91, so every developer now gets their own Claude agent identity: **platform #73** and **todo #37**. Before starting I merged todo #36 and platform #72, and the apply has run: `rg-dev` now exists, with its access (D95).
+
+**What changes:**
+- **`people.yaml` no longer has an `agents:` list.** Everyone in `infra-developers` or `app-developers` gets an agent account.
+- **Two agent groups:** infra developers' agents go in `platform-agents` as before. App developers' agents go in the new **`app-agents`** group, which gets:
+  - the database read-only, in `azure.sql`;
+  - a 12-hour sign-in, like app developers;
+  - nothing in Azure or the cluster, and no Security Reader.
+- **Both groups may sign with the Claude GitHub App's key,** so an app developer's Claude can also get its GitHub token and open PRs.
+- **The agent check** now compares each agent with the full list of its own group's rights. Before, it filtered the cluster and key-signing roles out for every agent, which would have hidden a cluster role wrongly given to an app developer's agent.
+- **The sandbox launcher** now checks that the person is a developer, instead of looking them up in the old `agents` list.
+- **AGENTS.md §4** in both repos covers every developer's agent, `app-agents`, bringing your own Claude subscription, and the licence step of the setup.
+
+**Tests:**
+- The access tests pass 60/60 with no warnings, and formatting and the F# style check are clean.
+- I ran the agent check against the real tenant. Your agent's Azure roles match exactly.
+- The Entra part of that check couldn't run from my machine: my agent lacks the Graph permissions it needs. CI runs it with the preview identity, which has them.
+
+**What to expect after the apply:** no new accounts, because you're the only developer and already have one. It creates the `app-agents` group and its key-signing role. `azure.sql` gives the group its database sign-in on the next `start`.
+
+#73's CI is running, and I'm checking that its `access` preview creates only `app-agents` and its key-signing role.
+
+**Your steps when it's green:**
+1. **Approve platform #73:** <https://github.com/Ulberg-Org/platform/pull/73/files>, then "Review changes", "Approve", "Submit review".
+2. **Approve todo #37:** <https://github.com/Ulberg-Org/todo/pull/37/files>, then the same.
+3. **After the merge, approve the apply:** open the newest "pulumi" run on `main` at <https://github.com/Ulberg-Org/platform/actions/workflows/pulumi.yml?query=branch%3Amain>, then "Review deployments", tick `dev`, and "Approve and deploy".
+
+**Next in Phase 3:** D93, the database's security (`pgaudit` and Microsoft Defender).
