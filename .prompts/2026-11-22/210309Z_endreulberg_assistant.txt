@@ -1,0 +1,20 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T21:03:09Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+**Q1: yes, it's the common practice.**
+- The usual pattern is that the IaC tool (Terraform or Pulumi) installs Argo CD **once**, along with a root Application. From then on Argo CD manages everything, **itself included**, from Git ("app of apps"). Sources: [OneUptime: bootstrap Argo CD with Terraform](https://oneuptime.com/blog/post/2026-02-26-bootstrap-argocd-terraform/view), [Argo CD's own cluster-bootstrapping docs](https://github.com/argoproj/argo-cd/blob/v2.7.1/docs/operator-manual/cluster-bootstrapping.md?plain=1), [Self-managed Argo CD](https://medium.com/devopsturkiye/self-managed-argo-cd-app-of-everything-a226eb100cf0), [GitOps bootstrap of a fresh cluster](https://abd-ulbasit.github.io/bookstore-kubernetes-guide/14-eks-in-production-a-to-z/10-gitops-bootstrap-fresh-cluster/).
+- **The known downside is the handoff.** If the IaC tool later changes what Argo CD has taken over, the two fight. The usual cure is the one I suggested: after installing, the stack ignores changes to it. Upgrading Argo CD then happens in Git (`components/argocd`), the same as locally.
+- **One limitation:** if something goes wrong with Argo CD's own Application, fixing it means a new `start`. For dev that's cheap.
+
+**Q2: yes, I was asking which registry, and Azure's own (ACR) it is.**
+- `release.yml` will also push the renderer to our ACR, signed like the app's images.
+- AKS pulls it with the nodes' existing pull role (`aks-dev-acr-pull`), so no new credentials.
+- The CLI image for developers' machines stays on GitHub's registry, so `make up` doesn't need an Azure login. Tell me if you want that moved too.
+
+**Q3: noted.** The goal is the same components in local, dev and prod. Dev starts with `argocd`, `baseline` and `gateway`, the rest follows phase by phase, and `dev.yaml`'s list grows until it matches local's.
+
+**Q4: yes, the UI with SSO comes as the next PR.**
+
+I'll write this as D100 in PLAN, then build the first step. Before the build I'll check against the cluster what can be checked: the chart, the image in ACR, and the root Application's render.
