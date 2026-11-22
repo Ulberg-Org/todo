@@ -1,0 +1,34 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T09:49:06Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Both rules are in the style guide as a new **§9 "Native F# first"**, and CI now enforces the lambda part. Formatting moves to §10.
+
+**What I checked:**
+- **Online:** `_.Name` is F# 8's shorthand for a lambda that only reads a property, calls a method or indexes its argument. It can't be used where `_` already discards an argument ([Announcing F# 8](https://devblogs.microsoft.com/dotnet/announcing-fsharp-8/), [Lambda expressions](https://learn.microsoft.com/fi-fi/dotnet/fsharp/language-reference/functions/lambda-expressions-the-fun-keyword)). Microsoft's [style guide](https://learn.microsoft.com/en-us/dotnet/fsharp/style-guide/) doesn't cover these cases, so the rules are ours.
+- **The reference app:**
+  - it uses `_.Member` about 612 times;
+  - `fun x -> x.Prop` appears only about 27 times, mostly in framework builder callbacks;
+  - it turns values into Option and Result with pipelines (`Option.map`, `Option.defaultValue`, `Result.map`, `Result.bind`, `Result.requireSome`);
+  - it never builds a Result with `if`.
+
+**§9 says:**
+- **Turn values into `Option` and `Result` with pipelines, not `if`:** `Result.requireTrue` then `Result.map`, `Result.requireSome`, `Option.map` then `Option.defaultValue`. Choices are unions with `match`, loops are `List.map` and folds. It includes your `parse` as the before-and-after example.
+- **Lambdas as short as they can be:**
+  - `_.Name` when a lambda only reads a member;
+  - `fun _ ->` when the argument isn't used, including `()`;
+  - a function by name instead of a lambda that only calls it, e.g. `Deployment.RunAsync(run)`.
+
+**CI:** `check_fsharp_style.sh` now refuses `fun () ->` and `fun x -> x.Name` in both repos. It found 13 places, all fixed.
+
+**PRs, to merge in this order:**
+1. **todo #35:** the guide, the check, and one fix in the backend. <https://github.com/Ulberg-Org/todo/pull/35/files>
+2. **platform #70** (D95), now also using `fun _ ->` and `.Apply(_.PrincipalId)`. Fantomas splits the version without parentheses over two lines, so the guide shows the form with them. <https://github.com/Ulberg-Org/platform/pull/70/files>
+3. **platform #71:** the guide's platform copy and 9 fixes in platform's code. Its CI fails until 1 and 2 are merged: it compares the guide with todo's `main`, and the last long lambda disappears with #70. I'll merge `main` into it afterwards. <https://github.com/Ulberg-Org/platform/pull/71/files>
+
+For each: "Review changes", "Approve", "Submit review". I'll merge them in that order once their checks are green.
+
+**Still waiting for your answers** on the sandbox's Azure token:
+- **Q1:** (a) short-lived access tokens with an `azure-read` helper, or (b) the agent's `az` profile copied into the VM.
+- **Q2:** platform profile only?
