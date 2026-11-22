@@ -1,0 +1,22 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T14:10:43Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Clear. One approval from you (the PR) gets everything into dev, and a second, separate one promotes to prod. So the first thing I'll build is removing the clicks in GitHub Actions. Argo CD comes after that.
+
+One decision is left for "everything automatic into dev":
+
+❓ **Q6 - What happens to dev after a merge?** Today dev only runs when someone starts it, and is destroyed after 4 hours. Without your clicks, something has to start it.
+- **(a) A merge starts or updates dev automatically.**
+  - A merge that touches dev (the infra or an app) runs `pulumi up` on dev, starting it if it's down.
+  - `destroy` removes it 4 hours after the latest merge, not the first start, so it stays up while we work and disappears when it's quiet.
+  - Cost: only the hours with activity, 2–3 NOK an hour.
+- **(b) Dev runs all the time.** No waiting for a start, but about 1,800–2,200 NOK a month, roughly four times the 500 NOK budget.
+
+➡️ **(a).**
+
+**What this means in practice** (I'll write it into PLAN as D99 when you've answered):
+- **Your PR approval is the only gate into dev,** also for `access`. The `dev` GitHub environment loses its required reviewer, but keeps "`main` only", so only merged code you've approved runs there. Merging stays my job, after your approval and green checks.
+- **Prod (Phase 6b)** gets its own environment, still with your approval in front: the second click.
+- **Argo CD in AKS** comes next, installed by the stack, reading the repos publicly. App changes auto-sync to dev on merge. Its UI goes through the gateway with Entra SSO.

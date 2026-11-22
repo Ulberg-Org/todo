@@ -1,0 +1,30 @@
+author: endreulberg
+role: assistant
+timestamp: 2026-11-22T13:58:56Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+todo #39 is merged. **#81 is blocked:** my cleanup push dismissed your approval. The repo's rules drop an approval when new commits arrive. Please approve it once more: <https://github.com/Ulberg-Org/platform/pull/81/files>, then "Review changes", "Approve", "Submit review". Its checks are green, and I'll merge straight after.
+
+**Meanwhile, open-code-review.** From the research ([README](https://github.com/alibaba/open-code-review), [action.yml](https://github.com/alibaba/open-code-review/blob/main/action.yml), [example workflow](https://github.com/alibaba/open-code-review/tree/main/examples/github_actions)):
+- **Official action:** Alibaba's own GitHub Action, Apache-2.0, published in Alibaba's npm namespace. That meets our supply-chain rule's "official source". I'd pin the action to a commit SHA and the CLI to an exact version, as their README recommends.
+- **Model:** it supports Anthropic directly. It needs an API URL and key as secrets, plus `pull-requests: write` to post comments.
+- **What it does:** it reviews only the diff (merge-base to head), posts comments on the lines, and keeps one summary comment.
+
+I need four decisions from you:
+
+❓ **Q1 - Whose LLM key?** BYOC covers Claude Code subscriptions, not CI. A review in CI needs an **Anthropic API key**, billed per token.
+➡️ **One org key** for the review, created in your Anthropic console with a spending limit (e.g. 20 USD a month), stored as an org secret that only these repos may use.
+
+❓ **Q2 - Which trigger?**
+- With `pull_request`, a PR could change the workflow itself and send out the secret.
+- With **`pull_request_target`**, `main`'s copy runs, exactly like our workflow guard. The action only reads the diff and never runs the PR's code.
+
+➡️ `pull_request_target`, with the rules file from `main` only (the action warns against taking it from the PR's branch).
+
+❓ **Q3 - Which model?**
+➡️ **`claude-sonnet-5-5`**: good enough for review, at a fraction of Opus's price. We can switch later.
+
+❓ **Q4 - Advisory or required?**
+➡️ **Advisory**, not a required check, at first. Comments only, nothing that blocks a merge. We can reconsider once we see how good its comments are.
+
+**One unknown:** the documentation for its telemetry page was unavailable. Before I build it, I'll read the CLI's source at the version we pin to see whether it sends anything anywhere other than the model, as the supply-chain rule asks for anything we can't vouch for.

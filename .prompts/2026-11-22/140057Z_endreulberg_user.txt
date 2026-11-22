@@ -1,0 +1,6 @@
+author: endreulberg
+role: user
+timestamp: 2026-11-22T14:00:57Z
+session: 65ce0d37-90f3-444e-87a8-31d5665c9866
+
+Q1) Yes, I understand, we'll skip that for now due to the need for an API key, I do not want to spend the money
